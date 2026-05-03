@@ -48,7 +48,13 @@ func _on_confirm_pressed():
 
 func _on_request_completed(result, response_code, headers, body):
 	confirm_button.disabled = false
-	var response = JSON.parse_string(body.get_string_from_utf8())
+	var body_string = body.get_string_from_utf8()
+	var response = JSON.parse_string(body_string)
+	
+	if response == null:
+		error_label.text = "Server error (Non-JSON response)"
+		print("Raw Body: ", body_string)
+		return
 	
 	if response_code in [200, 201]:
 		if is_login_mode:

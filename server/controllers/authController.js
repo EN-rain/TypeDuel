@@ -3,6 +3,13 @@ const jwt = require('jsonwebtoken');
 
 const register = (req, res) => {
   const { username, password, email } = req.body;
+  
+  // Alphanumeric check
+  const usernameRegex = /^[a-zA-Z0-9_]+$/;
+  if (!usernameRegex.test(username)) {
+    return res.status(400).json({ message: 'Username can only contain letters, numbers, and underscores' });
+  }
+
   const sql = 'INSERT INTO users (username, password, email) VALUES (?, ?, ?)';
   db.run(sql, [username, password, email], function(err) {
     if (err) {
