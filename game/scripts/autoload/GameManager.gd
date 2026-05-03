@@ -9,6 +9,14 @@ signal game_ended(results: Dictionary)
 var current_score: int = 0
 var is_game_active: bool = false
 
+# User Session Data
+var user_data: Dictionary = {
+	"id": 0,
+	"username": "",
+	"display_name": "",
+	"token": ""
+}
+
 func start_game() -> void:
 	is_game_active = true
 	current_score = 0

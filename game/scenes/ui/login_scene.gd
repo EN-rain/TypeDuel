@@ -59,7 +59,12 @@ func _on_request_completed(result, response_code, headers, body):
 	if response_code in [200, 201]:
 		if is_login_mode:
 			error_label.text = "Success!"
-			print("Token: ", response.token)
+			# Store user data in global GameManager
+			GameManager.user_data.id = response.user.id
+			GameManager.user_data.username = response.user.username
+			GameManager.user_data.display_name = response.user.display_name
+			GameManager.user_data.token = response.token
+			
 			# Transition to Main Menu
 			get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 		else:

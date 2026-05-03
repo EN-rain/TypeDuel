@@ -20,6 +20,20 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.1, 0.1, 0.12, 1)
 
+[node name="Greeting" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 50.0
+offset_right = 150.0
+offset_bottom = 83.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 24
+text = "Hi, Player!"
+horizontal_alignment = 1
+
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -48,6 +62,11 @@ custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 text = "Leaderboard"
 
+[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+text = "Settings"
+
 [node name="LogoutButton" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
@@ -55,4 +74,5 @@ text = "Logout"
 
 [connection signal="pressed" from="CenterContainer/VBoxContainer/PlayButton" to="." method="_on_play_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/LeaderboardButton" to="." method="_on_leaderboard_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/SettingsButton" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/LogoutButton" to="." method="_on_logout_pressed"]
