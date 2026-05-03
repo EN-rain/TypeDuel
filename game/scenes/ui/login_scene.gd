@@ -9,7 +9,7 @@ extends Control
 @onready var error_label = $VBoxContainer/ErrorLabel
 @onready var http_request = $HTTPRequest
 
-const BASE_URL = "http://localhost:3000/api/auth"
+const BASE_URL = "http://34.126.180.170:3000/api/auth"
 var is_login_mode = true
 
 func _ready():

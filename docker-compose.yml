@@ -1,0 +1,11 @@
+services:
+  server:
+    build: ./server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server/database:/usr/src/app/database
+    environment:
+      - PORT=3000
+      - JWT_SECRET=change_this_in_production
+    restart: always
