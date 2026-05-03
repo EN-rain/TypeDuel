@@ -1,9 +1,8 @@
 extends Control
 
 func _on_play_pressed():
-	print("Play pressed - Transitioning to Game...")
-	# Replace with your actual game scene path
-	# get_tree().change_scene_to_file("res://game/scenes/main_game.tscn")
+	print("Play pressed - Transitioning to Skill Selection...")
+	get_tree().change_scene_to_file("res://scenes/ui/skill_selection.tscn")
 
 func _on_leaderboard_pressed():
 	print("Leaderboard pressed")
