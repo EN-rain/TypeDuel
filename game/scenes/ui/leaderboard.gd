@@ -14,7 +14,9 @@ func fetch_leaderboard():
 
 func _on_request_completed(result, response_code, headers, body):
 	if response_code != 200:
-		print("Failed to fetch leaderboard")
+		var body_str = body.get_string_from_utf8()
+		print("Failed to fetch leaderboard. Code: ", response_code)
+		print("Response: ", body_str)
 		return
 		
 	var data = JSON.parse_string(body.get_string_from_utf8())
