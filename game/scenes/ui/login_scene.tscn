@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://ddvx3nrcraoi2"]
+
+[ext_resource type="Script" uid="uid://dsdrb5rouqcn" path="res://scenes/ui/login_scene.gd" id="1_script"]
+
+[node name="AuthScene" type="Control" unique_id=1989823630]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1476602903]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -75.0
+offset_right = 100.0
+offset_bottom = 75.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="ModeSelection" type="HBoxContainer" parent="VBoxContainer" unique_id=1347137463]
+layout_mode = 2
+alignment = 1
+
+[node name="LoginMode" type="Button" parent="VBoxContainer/ModeSelection" unique_id=1796452491]
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+text = "Login"
+
+[node name="RegisterMode" type="Button" parent="VBoxContainer/ModeSelection" unique_id=765247541]
+layout_mode = 2
+toggle_mode = true
+text = "Register"
+
+[node name="UsernameInput" type="LineEdit" parent="VBoxContainer" unique_id=1595294602]
+layout_mode = 2
+placeholder_text = "Username"
+
+[node name="PasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=2125274411]
+layout_mode = 2
+placeholder_text = "Password"
+secret = true
+
+[node name="ConfirmPasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=2125274412]
+visible = false
+layout_mode = 2
+placeholder_text = "Confirm Password"
+secret = true
+
+[node name="ConfirmButton" type="Button" parent="VBoxContainer" unique_id=1401338039]
+layout_mode = 2
+text = "Confirm"
+
+[node name="ErrorLabel" type="Label" parent="VBoxContainer" unique_id=968648316]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="HTTPRequest" type="HTTPRequest" parent="." unique_id=407115910]
