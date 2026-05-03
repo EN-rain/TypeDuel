@@ -6,7 +6,7 @@ func _on_play_pressed():
 	# get_tree().change_scene_to_file("res://game/scenes/main_game.tscn")
 
 func _on_leaderboard_pressed():
-	print("Leaderboard pressed")
+	get_tree().change_scene_to_file("res://scenes/ui/leaderboard.tscn")
 
 func _on_logout_pressed():
 	# Simple logout: go back to login scene

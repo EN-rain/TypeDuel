@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const db = require('./config/db');
 const authRoutes = require('./routes/auth');
+const gameRoutes = require('./routes/game');
 const socketHandler = require('./socket');
 
 const app = express();
@@ -31,6 +32,7 @@ db.exec(schema, (err) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/game', gameRoutes);
 
 // WebSocket
 socketHandler(io);

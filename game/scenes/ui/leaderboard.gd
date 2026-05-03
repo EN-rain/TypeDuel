@@ -1,0 +1,58 @@
+extends Control
+
+@onready var list = $VBoxContainer/ScrollContainer/List
+@onready var http_request = $HTTPRequest
+
+const BASE_URL = "http://34.126.180.170:3000/api/game/leaderboard"
+
+func _ready():
+	http_request.request_completed.connect(_on_request_completed)
+	fetch_leaderboard()
+
+func fetch_leaderboard():
+	http_request.request(BASE_URL)
+
+func _on_request_completed(result, response_code, headers, body):
+	if response_code != 200:
+		print("Failed to fetch leaderboard")
+		return
+		
+	var data = JSON.parse_string(body.get_string_from_utf8())
+	if data == null: return
+	
+	# Clear existing list
+	for child in list.get_children():
+		child.queue_free()
+		
+	# Populate list
+	var rank = 1
+	for entry in data:
+		var row = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 40)
+		
+		var rank_lbl = Label.new()
+		rank_lbl.custom_minimum_size = Vector2(50, 0)
+		rank_lbl.text = str(rank)
+		
+		var name_lbl = Label.new()
+		name_lbl.custom_minimum_size = Vector2(200, 0)
+		name_lbl.text = entry.username
+		
+		var wins_lbl = Label.new()
+		wins_lbl.custom_minimum_size = Vector2(80, 0)
+		wins_lbl.text = str(entry.wins)
+		
+		var wpm_lbl = Label.new()
+		wpm_lbl.custom_minimum_size = Vector2(80, 0)
+		wpm_lbl.text = str(snapped(entry.wpm, 0.1))
+		
+		row.add_child(rank_lbl)
+		row.add_child(name_lbl)
+		row.add_child(wins_lbl)
+		row.add_child(wpm_lbl)
+		
+		list.add_child(row)
+		rank += 1
+
+func _on_back_button_pressed():
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
