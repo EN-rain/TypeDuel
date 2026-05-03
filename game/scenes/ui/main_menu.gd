@@ -11,9 +11,8 @@ func _ready():
 	greeting_label.text = "Hi, " + name_to_show + "!"
 
 func _on_play_pressed():
-	# Start game logic
-	print("Play pressed")
-	# get_tree().change_scene_to_file("res://scenes/main_game.tscn")
+	print("Play pressed - Transitioning to Skill Selection...")
+	get_tree().change_scene_to_file("res://scenes/ui/skill_selection.tscn")
 
 func _on_leaderboard_pressed():
 	get_tree().change_scene_to_file("res://scenes/ui/leaderboard.tscn")
