@@ -1,10 +1,10 @@
-# Use Node.js LTS version
-FROM node:20-slim
+# Use the full Bookworm image for better compatibility with native modules
+FROM node:20-bookworm
 
 # Create app directory
 WORKDIR /usr/src/app
 
-# Install build tools for sqlite3 (if needed for native compilation)
+# Install build essentials
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -14,8 +14,9 @@ RUN apt-get update && apt-get install -y \
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies and force sqlite3 rebuild
-RUN npm install && npm rebuild sqlite3 --build-from-source
+# Install dependencies and force a fresh build of sqlite3 from source
+RUN npm install
+RUN npm rebuild sqlite3 --build-from-source
 
 # Copy app source
 COPY . .
