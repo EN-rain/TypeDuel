@@ -60,6 +60,8 @@ func _on_request_completed(result, response_code, headers, body):
 		if is_login_mode:
 			error_label.text = "Success!"
 			print("Token: ", response.token)
+			# Transition to Main Menu
+			get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 		else:
 			error_label.text = "Registered! Please login."
 			_on_mode_selected(true)

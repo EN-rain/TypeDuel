@@ -41,6 +41,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong on the server' });
 });
 
+// Auto-seed if empty
+db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
+    if (!err && row && row.count === 0) {
+        console.log("Database empty, auto-seeding dummy data...");
+        require('./scripts/seed');
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -15,7 +15,9 @@ const register = (req, res) => {
     if (err) {
       return res.status(400).json({ message: 'User already exists or invalid data' });
     }
-    res.status(201).json({ id: this.lastID, username });
+    const userId = this.lastID;
+    const token = jwt.sign({ id: userId, username }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+    res.status(201).json({ token, user: { id: userId, username } });
   });
 };
 
