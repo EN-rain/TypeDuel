@@ -1,0 +1,212 @@
+[gd_scene format=3 uid="uid://bwdxqk530p716"]
+
+[ext_resource type="Script" uid="uid://cdsv6vd7esyby" path="res://scenes/ui/custom_room.gd" id="1_custom_room_script"]
+
+[node name="CustomRoom" type="Control" unique_id=508700511]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_custom_room_script")
+metadata/_edit_lock_ = true
+
+[node name="BackButton" type="Button" parent="." unique_id=1300449507]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 120.0
+offset_bottom = 60.0
+text = "Back"
+
+[node name="StatusLabel" type="Label" parent="." unique_id=1720687791]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -212.0
+offset_top = -176.0
+offset_right = 221.0
+offset_bottom = -148.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 20
+text = "Waiting for opponent..."
+horizontal_alignment = 1
+
+[node name="Player1Name" type="Label" parent="." unique_id=973437162]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 0
+offset_left = 327.0
+offset_top = 248.0
+offset_right = 477.0
+offset_bottom = 274.0
+theme_override_font_sizes/font_size = 18
+text = "You"
+horizontal_alignment = 1
+
+[node name="Player1Tag" type="Label" parent="." unique_id=363448244]
+layout_mode = 0
+offset_left = 326.0
+offset_top = 295.0
+offset_right = 476.0
+offset_bottom = 312.0
+theme_override_font_sizes/font_size = 12
+text = "Host"
+horizontal_alignment = 1
+
+[node name="Player2Name" type="Label" parent="." unique_id=1574955879]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 0
+offset_left = 646.0
+offset_top = 275.0
+offset_right = 796.0
+offset_bottom = 301.0
+theme_override_font_sizes/font_size = 18
+text = "---"
+horizontal_alignment = 1
+
+[node name="Player2Tag" type="Label" parent="." unique_id=594675752]
+layout_mode = 0
+offset_left = 504.0
+offset_top = 201.0
+offset_right = 654.0
+offset_bottom = 218.0
+theme_override_font_sizes/font_size = 12
+text = "Waiting..."
+horizontal_alignment = 1
+
+[node name="StartButton" type="Button" parent="." unique_id=1078626780]
+custom_minimum_size = Vector2(200, 55)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -215.0
+offset_top = 201.0
+offset_right = 218.0
+offset_bottom = 256.0
+grow_horizontal = 2
+grow_vertical = 2
+disabled = true
+text = "Start Game"
+
+[node name="VSLabel" type="Label" parent="." unique_id=1982737506]
+layout_mode = 0
+offset_left = 543.0
+offset_top = 345.0
+offset_right = 576.0
+offset_bottom = 384.0
+theme_override_font_sizes/font_size = 28
+text = "VS"
+vertical_alignment = 1
+
+[node name="RoomCodeLabel" type="Label" parent="." unique_id=650404980]
+layout_mode = 0
+offset_left = 426.0
+offset_top = 30.0
+offset_right = 726.0
+offset_bottom = 48.0
+theme_override_font_sizes/font_size = 13
+text = "YOUR ROOM CODE"
+horizontal_alignment = 1
+
+[node name="RoomCode" type="Label" parent="." unique_id=381480670]
+layout_mode = 0
+offset_left = 426.0
+offset_top = 52.0
+offset_right = 726.0
+offset_bottom = 119.0
+theme_override_font_sizes/font_size = 48
+text = "------"
+horizontal_alignment = 1
+
+[node name="Characters" type="Control" parent="." unique_id=662568979]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 23.0
+offset_top = -24.0
+offset_right = 63.0
+offset_bottom = 16.0
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Characters" unique_id=20086058]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -90.0
+offset_right = 131.0
+offset_bottom = 90.0
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Character1" type="Button" parent="Characters/VBoxContainer" unique_id=282563812]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "PLAYER NAME 1"
+
+[node name="Character2" type="Button" parent="Characters/VBoxContainer" unique_id=1818998384]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "PLAYER NAME 2"
+
+[node name="Character3" type="Button" parent="Characters/VBoxContainer" unique_id=1929784093]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "PLAYER NAME 3"
+
+[node name="Skill" type="Control" parent="." unique_id=1150963434]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -59.0
+offset_top = -20.0
+offset_right = -19.0
+offset_bottom = 20.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Skill" unique_id=679984846]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -131.0
+offset_top = -90.0
+offset_bottom = 90.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Skill1" type="Button" parent="Skill/VBoxContainer" unique_id=2113046492]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Skill Name 1"
+
+[node name="Skill2" type="Button" parent="Skill/VBoxContainer" unique_id=260171594]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Skill Name 2"
+
+[node name="Skill3" type="Button" parent="Skill/VBoxContainer" unique_id=34176200]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Skill Name 3
+"
+
+[connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]
+[connection signal="pressed" from="StartButton" to="." method="_on_start_pressed"]

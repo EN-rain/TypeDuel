@@ -1,0 +1,82 @@
+{
+  "skills": [
+    {
+      "id": "quick_strike",
+      "name": "Quick Strike",
+      "description": "Base 10 DMG. Win streak grants +20% DMG bonus. Reliable and fast.",
+      "type": "offensive",
+      "cost": 0,
+      "stats": {
+        "base_damage": 10.0,
+        "win_bonus": 1.1,
+        "streak_bonus": 1.2,
+        "loss_penalty": 0.9
+      }
+    },
+    {
+      "id": "drain_touch",
+      "name": "Drain Touch",
+      "description": "Deals damage and applies bleed to opponent while healing you over 3 rounds.",
+      "type": "utility",
+      "cost": 0,
+      "stats": {
+        "base_damage": 10.0,
+        "bleed_value_high": 3.0,
+        "bleed_value_low": 2.0,
+        "heal_value": 2.0,
+        "duration": 3
+      }
+    },
+    {
+      "id": "whiplash",
+      "name": "Whiplash",
+      "description": "Accuracy-based DMG. Deals double damage if opponent is on a win streak.",
+      "type": "counter",
+      "cost": 0,
+      "stats": {
+        "base_damage": 10.0,
+        "streak_punish": 2.0,
+        "win_bonus": 1.15,
+        "loss_penalty": 0.85
+      }
+    },
+    {
+      "id": "soulbreak",
+      "name": "Soulbreak",
+      "description": "Deals damage and steals 2 CP from opponent. Bonus DMG at 8+ CP.",
+      "type": "offensive",
+      "cost": 0,
+      "stats": {
+        "base_damage": 10.0,
+        "cp_stolen": 2,
+        "bonus_threshold": 8,
+        "bonus_multiplier": 1.15
+      }
+    },
+    {
+      "id": "rupture",
+      "name": "Rupture",
+      "description": "High risk! Deals damage based on opponent's typos. 0 DMG if they have 0 typos.",
+      "type": "tactical",
+      "cost": 0,
+      "stats": {
+        "base_damage": 10.0,
+        "typo_multiplier": 1.5,
+        "debuff_multiplier": 0.8
+      }
+    },
+    {
+      "id": "deathmark",
+      "name": "Deathmark",
+      "description": "Marks the opponent to deal flat bonus damage over the next 2 rounds.",
+      "type": "offensive",
+      "cost": 0,
+      "stats": {
+        "base_damage": 10.0,
+        "mark_value_high": 4.0,
+        "mark_value_low": 2.0,
+        "duration": 2
+      }
+    }
+  ]
+}

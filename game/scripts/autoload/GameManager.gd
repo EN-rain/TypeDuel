@@ -17,6 +17,12 @@ var user_data: Dictionary = {
 	"token": ""
 }
 
+# Room / Matchmaking Data
+var current_room: String = ""
+var is_host: bool = true
+var is_solo: bool = false
+var selected_character: String = ""
+
 func start_game() -> void:
 	is_game_active = true
 	current_score = 0

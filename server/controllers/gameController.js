@@ -10,4 +10,14 @@ const getLeaderboard = (req, res) => {
     });
 };
 
-module.exports = { getLeaderboard };
+// In-memory online player tracker (keyed by user token)
+const onlinePlayers = new Set();
+
+const getOnlineCount = (req, res) => {
+    res.json({ online: onlinePlayers.size });
+};
+
+const setOnline = (token) => onlinePlayers.add(token);
+const setOffline = (token) => onlinePlayers.delete(token);
+
+module.exports = { getLeaderboard, getOnlineCount, setOnline, setOffline };

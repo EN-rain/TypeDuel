@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://bujr0kowc3f3j"]
+
+[ext_resource type="Texture2D" uid="uid://b6ipvn1tlup3d" path="res://assets/sprites/riven/riven-quickstrike1.png" id="1_qs1"]
+[ext_resource type="Texture2D" uid="uid://chhasnuoxyqyc" path="res://assets/sprites/riven/riven-quickstrike2.png" id="2_qs2"]
+[ext_resource type="Texture2D" uid="uid://dj2p7hm1bm4b5" path="res://assets/sprites/riven/riven-quickstrike3.png" id="3_qs3"]
+[ext_resource type="Texture2D" uid="uid://cewp5d6xhte3x" path="res://assets/sprites/riven/riven-quickstrike4.png" id="4_qs4"]
+[ext_resource type="Texture2D" uid="uid://s7slxy04taiy" path="res://assets/sprites/riven/riven-quickstrike5.png" id="5_qs5"]
+[ext_resource type="Texture2D" uid="uid://caj5key521de2" path="res://assets/sprites/riven/riven-quickstrike6.png" id="6_qs6"]
+[ext_resource type="Texture2D" uid="uid://hn3ldj3c7xd8" path="res://assets/sprites/riven/riven-quickstrike7.png" id="7_qs7"]
+[ext_resource type="Texture2D" uid="uid://b4cf32t6j4xwr" path="res://assets/sprites/riven/riven-quickstrike8.png" id="8_qs8"]
+
+[sub_resource type="Animation" id="Animation_quickstrike"]
+resource_name = "quickstrike"
+step = 0.125
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:texture")
+tracks/0/interp = 0
+tracks/0/loop_wrap = false
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [ExtResource("1_qs1"), ExtResource("2_qs2"), ExtResource("3_qs3"), ExtResource("4_qs4"), ExtResource("5_qs5"), ExtResource("6_qs6"), ExtResource("7_qs7"), ExtResource("8_qs8")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:position:x")
+tracks/1/interp = 1
+tracks/1/loop_wrap = false
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.375, 0.625, 1),
+"transitions": PackedFloat32Array(1, 2.5, 1, 1, 1),
+"update": 0,
+"values": [0.0, 10.0, 100.0, 500.0, 500.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Sprite2D:scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = false
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.375, 0.5, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(2, 2), Vector2(2, 2), Vector2(2.3, 2), Vector2(2, 2), Vector2(2, 2)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_riven"]
+_data = {
+&"quickstrike": SubResource("Animation_quickstrike")
+}
+
+[node name="Riven" type="Node2D" unique_id=1834907052]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1410981130]
+scale = Vector2(2, 2)
+texture = ExtResource("8_qs8")
+flip_h = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1952382565]
+libraries/ = SubResource("AnimationLibrary_riven")

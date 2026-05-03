@@ -10,7 +10,7 @@ signal status_applied(target: String, effect: Dictionary)
 #  State
 # ─────────────────────────────────────────────
 
-var selected_skill: String = ""
+var selected_skills: Array[String] = []
 
 # Per-round trackers (reset each round)
 var player_win_streak:    int = 0
@@ -38,9 +38,17 @@ const MAX_HP: int = 100
 #  Public API
 # ─────────────────────────────────────────────
 
-func set_skill(skill_name: String) -> void:
-	selected_skill = skill_name
-	print("[SkillsManager] Selected: ", skill_name)
+func toggle_skill(skill_name: String) -> void:
+	if selected_skills.has(skill_name):
+		selected_skills.erase(skill_name)
+		print("[SkillsManager] Removed: ", skill_name)
+	else:
+		if selected_skills.size() < 2:
+			selected_skills.append(skill_name)
+			print("[SkillsManager] Added: ", skill_name)
+		else:
+			print("[SkillsManager] Max skills reached (2)")
+	
 	skill_activated.emit(skill_name)
 
 
@@ -82,62 +90,63 @@ func resolve_round(wpm: float, accuracy: float, typos: int,
 	opp_hp_delta    += status_result.opp_hp_delta
 	log.append_array(status_result.log)
 
-	# ── Resolve skill ─────────────────────────
-	match selected_skill:
-		"quick_strike":
-			var result := _quick_strike(wpm_mod, typo_penalty, won, base_multiplier)
-			player_damage = result.damage
-			log.append_array(result.log)
+	# ── Resolve skills ─────────────────────────
+	for skill_id in selected_skills:
+		match skill_id:
+			"quick_strike":
+				var result := _quick_strike(wpm_mod, typo_penalty, won, base_multiplier)
+				player_damage += result.damage
+				log.append_array(result.log)
 
-		"drain_touch":
-			var result := _drain_touch(wpm_mod, typo_penalty, won, base_multiplier, opp_hp)
-			player_damage      = result.damage
-			player_hp_delta   += result.player_hp_delta
-			opp_hp_delta      += result.opp_hp_delta
-			log.append_array(result.log)
+			"drain_touch":
+				var result := _drain_touch(wpm_mod, typo_penalty, won, base_multiplier, opp_hp)
+				player_damage      += result.damage
+				player_hp_delta   += result.player_hp_delta
+				opp_hp_delta      += result.opp_hp_delta
+				log.append_array(result.log)
 
-		"whiplash":
-			var result := _whiplash(acc_mod, typo_penalty, won, base_multiplier)
-			player_damage = result.damage
-			if won:
-				opponent_cp = max(0, opponent_cp - 1)
-				log.append("[Whiplash] Opponent lost 1 CP → now %d CP" % opponent_cp)
-			else:
-				player_cp = max(0, player_cp - 1)
-				log.append("[Whiplash] You lost 1 CP → now %d CP" % player_cp)
-			log.append_array(result.log)
+			"whiplash":
+				var result := _whiplash(acc_mod, typo_penalty, won, base_multiplier)
+				player_damage += result.damage
+				if won:
+					opponent_cp = max(0, opponent_cp - 1)
+					log.append("[Whiplash] Opponent lost 1 CP → now %d CP" % opponent_cp)
+				else:
+					player_cp = max(0, player_cp - 1)
+					log.append("[Whiplash] You lost 1 CP → now %d CP" % player_cp)
+				log.append_array(result.log)
 
-		"soulbreak":
-			var result := _soulbreak(wpm_mod, typo_penalty, won, base_multiplier)
-			player_damage = result.damage
-			if won:
-				var stolen := 2
-				opponent_cp = max(0, opponent_cp - stolen)
-				player_cp  += stolen
-				log.append("[Soulbreak] Stole %d CP. You: %d | Opp: %d" % [stolen, player_cp, opponent_cp])
-			else:
-				var lost := 2
-				player_cp   = max(0, player_cp - lost)
-				opponent_cp += lost
-				log.append("[Soulbreak] Lost %d CP. You: %d | Opp: %d" % [lost, player_cp, opponent_cp])
-			log.append_array(result.log)
+			"soulbreak":
+				var result := _soulbreak(wpm_mod, typo_penalty, won, base_multiplier)
+				player_damage += result.damage
+				if won:
+					var stolen := 2
+					opponent_cp = max(0, opponent_cp - stolen)
+					player_cp  += stolen
+					log.append("[Soulbreak] Stole %d CP. You: %d | Opp: %d" % [stolen, player_cp, opponent_cp])
+				else:
+					var lost := 2
+					player_cp   = max(0, player_cp - lost)
+					opponent_cp += lost
+					log.append("[Soulbreak] Lost %d CP. You: %d | Opp: %d" % [lost, player_cp, opponent_cp])
+				log.append_array(result.log)
 
-		"rupture":
-			var result := _rupture(opp_typos, typo_penalty, won, base_multiplier)
-			player_damage = result.damage
-			if won:
-				opponent_next_round_base_modifier = 0.8
-				log.append("[Rupture] Opponent's next round base -20%")
-			else:
-				player_next_round_base_modifier = 0.8
-				log.append("[Rupture] Your next round base -20%")
-			log.append_array(result.log)
+			"rupture":
+				var result := _rupture(opp_typos, typo_penalty, won, base_multiplier)
+				player_damage += result.damage
+				if won:
+					opponent_next_round_base_modifier = 0.8
+					log.append("[Rupture] Opponent's next round base -20%")
+				else:
+					player_next_round_base_modifier = 0.8
+					log.append("[Rupture] Your next round base -20%")
+				log.append_array(result.log)
 
-		"deathmark":
-			var result := _deathmark(typo_penalty, won, base_multiplier, opp_hp)
-			player_damage  = result.damage
-			opp_hp_delta  += result.opp_hp_delta
-			log.append_array(result.log)
+			"deathmark":
+				var result := _deathmark(typo_penalty, won, base_multiplier, opp_hp)
+				player_damage  += result.damage
+				opp_hp_delta  += result.opp_hp_delta
+				log.append_array(result.log)
 
 	# ── Apply mark flat damage ────────────────
 	if won and not opponent_mark.is_empty():

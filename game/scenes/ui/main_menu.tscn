@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://main_menu_scene"]
+[gd_scene format=3 uid="uid://dyshtke5c6ysn"]
 
-[ext_resource type="Script" path="res://scenes/ui/main_menu.gd" id="1_menu_script"]
+[ext_resource type="Script" uid="uid://cy5gpbn70ymb4" path="res://scenes/ui/main_menu.gd" id="1_menu_script"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=126697270]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,69 +10,212 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu_script")
+metadata/_edit_lock_ = true
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Greeting" type="Label" parent="." unique_id=1598912125]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -306.0
+offset_top = 103.0
+offset_right = -6.0
+offset_bottom = 174.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 24
+text = "Hi, Player!
+Wlcome to"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="." unique_id=977881426]
+layout_mode = 0
+anchor_left = 0.2282986
+anchor_top = 0.25154322
+anchor_right = 0.4939236
+anchor_bottom = 0.38734567
+offset_top = -1.5258789e-05
+theme_override_font_sizes/font_size = 64
+text = "Type Duel"
+horizontal_alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="OnlineCount" type="Label" parent="." unique_id=793664029]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -55.5
+offset_right = 55.5
+offset_bottom = 19.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 13
+text = "● 0 players online"
+horizontal_alignment = 1
+
+[node name="PlayOnlineButton" type="Button" parent="." unique_id=1504719380]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -284.0
+offset_top = -124.0
+offset_right = -9.0
+offset_bottom = -13.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Play Online"
+
+[node name="JoinButton" type="Button" parent="." unique_id=893456260]
+layout_mode = 0
+offset_left = 729.0
+offset_top = 554.0
+offset_right = 860.0
+offset_bottom = 591.0
+text = "Join button
+"
+
+[node name="CreateRoomButton" type="Button" parent="." unique_id=895909165]
+layout_mode = 0
+offset_left = 723.0
+offset_top = 596.0
+offset_right = 867.0
+offset_bottom = 636.0
+text = "Create Room"
+
+[node name="LeaderboardButton" type="Button" parent="." unique_id=1083918896]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 0
+offset_left = 928.0
+offset_top = 465.0
+offset_right = 1128.0
+offset_bottom = 515.0
+text = "Leaderboard"
+
+[node name="SettingsButton" type="Button" parent="." unique_id=2029961460]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 0
+offset_left = 936.0
+offset_top = 406.0
+offset_right = 1136.0
+offset_bottom = 456.0
+text = "Settings"
+
+[node name="LogoutButton" type="Button" parent="." unique_id=727218776]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 1
+offset_right = 200.0
+offset_bottom = 50.0
+text = "Logout"
+
+[node name="JoinPanel" type="Panel" parent="." unique_id=647598721]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.1, 0.1, 0.12, 1)
 
-[node name="Greeting" type="Label" parent="."]
+[node name="Title" type="Label" parent="JoinPanel" unique_id=941959754]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 33.0
+grow_horizontal = 2
+text = "Join Custom Room"
+horizontal_alignment = 1
+
+[node name="CodeInput" type="LineEdit" parent="JoinPanel" unique_id=1391599962]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -25.0
+offset_right = 100.0
+offset_bottom = 15.0
+grow_horizontal = 2
+grow_vertical = 2
+placeholder_text = "Enter 6-char code"
+max_length = 6
+
+[node name="CancelBtn" type="Button" parent="JoinPanel" unique_id=2040571587]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 135.0
+offset_right = 180.0
+offset_bottom = 175.0
+text = "Cancel"
+
+[node name="SubmitBtn" type="Button" parent="JoinPanel" unique_id=162144470]
+layout_mode = 0
+offset_left = 220.0
+offset_top = 135.0
+offset_right = 320.0
+offset_bottom = 175.0
+text = "Join"
+
+[node name="ErrorLabel" type="Label" parent="JoinPanel" unique_id=1812166332]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -25.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="MatchmakingLabel" type="Label" parent="." unique_id=2000000001]
+visible = false
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -150.0
-offset_top = 50.0
+offset_top = 20.0
 offset_right = 150.0
-offset_bottom = 83.0
+offset_bottom = 60.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 24
-text = "Hi, Player!"
+text = "Searching for match..."
 horizontal_alignment = 1
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="MatchmakingTime" type="Label" parent="." unique_id=2000000002]
+visible = false
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 60.0
+offset_right = 150.0
+offset_bottom = 90.0
 grow_horizontal = 2
-grow_vertical = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
-layout_mode = 2
-theme_override_constants/separation = 20
-
-[node name="Title" type="Label" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 64
-text = "Type Duel"
+theme_override_font_sizes/font_size = 18
+text = "Time: 0:00"
 horizontal_alignment = 1
 
-[node name="PlayButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 50)
-layout_mode = 2
-text = "Play"
-
-[node name="LeaderboardButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 50)
-layout_mode = 2
-text = "Leaderboard"
-
-[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 50)
-layout_mode = 2
-text = "Settings"
-
-[node name="LogoutButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 50)
-layout_mode = 2
-text = "Logout"
-
-[connection signal="pressed" from="CenterContainer/VBoxContainer/PlayButton" to="." method="_on_play_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/LeaderboardButton" to="." method="_on_leaderboard_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/SettingsButton" to="." method="_on_settings_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/LogoutButton" to="." method="_on_logout_pressed"]
+[connection signal="pressed" from="PlayOnlineButton" to="." method="_on_play_online_pressed"]
+[connection signal="pressed" from="JoinButton" to="." method="_on_join_pressed"]
+[connection signal="pressed" from="CreateRoomButton" to="." method="_on_custom_room_pressed"]
+[connection signal="pressed" from="LeaderboardButton" to="." method="_on_leaderboard_pressed"]
+[connection signal="pressed" from="SettingsButton" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="LogoutButton" to="." method="_on_logout_pressed"]
+[connection signal="pressed" from="JoinPanel/CancelBtn" to="." method="_on_cancel_join_pressed"]
+[connection signal="pressed" from="JoinPanel/SubmitBtn" to="." method="_on_submit_join_pressed"]

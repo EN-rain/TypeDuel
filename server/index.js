@@ -4,6 +4,7 @@ const cors = require('cors');
 const db = require('./config/db');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
+const roomRoutes = require('./routes/rooms');
 const fs = require('fs');
 const path = require('path');
 
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
+app.use('/api/rooms', roomRoutes);
 
 // Database Initialization
 const initDb = () => {
