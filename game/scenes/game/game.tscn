@@ -1,8 +1,8 @@
 [gd_scene format=4 uid="uid://0o7jtm5hk7k2"]
 
-[ext_resource type="PackedScene" uid="uid://dv64idwkd6y2s" path="res://scenes/game/player1.tscn" id="1_bfhks"]
+[ext_resource type="PackedScene" uid="uid://dv64idwkd6y2s" path="res://scenes/entities/player1.tscn" id="1_bfhks"]
 [ext_resource type="Texture2D" uid="uid://c1qfj3rwamvrn" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_kfd0b"]
-[ext_resource type="PackedScene" uid="uid://bhsqu21n228sp" path="res://scenes/game/player2.tscn" id="2_lakwo"]
+[ext_resource type="PackedScene" uid="uid://bhsqu21n228sp" path="res://scenes/entities/player2.tscn" id="2_lakwo"]
 [ext_resource type="Texture2D" uid="uid://dbamtkwlahpin" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png" id="3_lakwo"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5mgl0"]
