@@ -1,0 +1,26 @@
+# Godot-specific ignores
+.godot/
+*.import
+export_preset.cfg
+/android/
+
+# Imported assets (sometimes you want to ignore them if you share source)
+# assets/imported/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE-specific
+.vscode/
+.idea/
+*.swp
+*.tmp
+
+# Mobile build artifacts
+*.apk
+*.aab
+*.ipa
+
+# Project specific
+setup_folders.ps1
