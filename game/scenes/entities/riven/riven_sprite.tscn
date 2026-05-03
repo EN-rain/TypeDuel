@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://caj5key521de2" path="res://assets/sprites/riven/riven-quickstrike6.png" id="6_qs6"]
 [ext_resource type="Texture2D" uid="uid://hn3ldj3c7xd8" path="res://assets/sprites/riven/riven-quickstrike7.png" id="7_qs7"]
 [ext_resource type="Texture2D" uid="uid://b4cf32t6j4xwr" path="res://assets/sprites/riven/riven-quickstrike8.png" id="8_qs8"]
+[ext_resource type="Script" uid="uid://bvqxw7ykq8m7k" path="res://scenes/entities/riven/riven_sprite.gd" id="9_script"]
 
 [sub_resource type="Animation" id="Animation_quickstrike"]
 resource_name = "quickstrike"
@@ -54,12 +55,21 @@ _data = {
 &"quickstrike": SubResource("Animation_quickstrike")
 }
 
-[node name="Riven" type="Node2D" unique_id=1834907052]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_riven"]
+radius = 15.0
+height = 60.0
+
+[node name="Riven" type="CharacterBody2D" unique_id=1834907052]
+script = ExtResource("9_script")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1410981130]
 scale = Vector2(2, 2)
-texture = ExtResource("8_qs8")
+texture = ExtResource("1_qs1")
 flip_h = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1952382565]
 libraries/ = SubResource("AnimationLibrary_riven")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=123456789]
+position = Vector2(0, 10)
+shape = SubResource("CapsuleShape2D_riven")

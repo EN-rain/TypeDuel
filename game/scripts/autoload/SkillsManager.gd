@@ -60,14 +60,17 @@ func toggle_skill(skill_name: String) -> void:
 ##   won       – did the player win this round?
 ##   opp_hp    – opponent's current HP (needed for conditional bonuses)
 ##   player_hp – player's current HP (needed for bleed/heal caps)
+##   chosen_skill – the skill activated this round
 ##
 ## Returns a Dictionary:
 ##   { "player_damage": float, "opp_damage": float,
 ##     "player_hp_delta": float, "opp_hp_delta": float,
 ##     "log": Array[String] }
-func resolve_round(wpm: float, accuracy: float, typos: int,
-		opp_typos: int, won: bool,
-		opp_hp: float, player_hp: float) -> Dictionary:
+func resolve_round(
+		wpm: float, accuracy: float, typos: int, opp_typos: int,
+		won: bool,
+		opp_hp: float, player_hp: float,
+		chosen_skill: String = "") -> Dictionary:
 
 	var log: Array[String] = []
 	var player_damage: float = 0.0
@@ -89,50 +92,86 @@ func resolve_round(wpm: float, accuracy: float, typos: int,
 	player_hp_delta += status_result.player_hp_delta
 	opp_hp_delta    += status_result.opp_hp_delta
 	log.append_array(status_result.log)
+	
+	# ── Apply Base Damage ────────────────────────
+	if won:
+		player_damage += HPManager.player_base_dmg * base_multiplier
+	
+	# ── Evaluate Player Passives ─────────────────
+	match HPManager.player_passive:
+		"Overdrive": # Zephon
+			if wpm > 80:
+				player_mana = min(10, player_mana + 1)
+				log.append("[Passive: Overdrive] WPM > 80, gained 1 Mana!")
+		"Bloodlust": # Riven
+			if won:
+				player_win_streak += 1
+			else:
+				player_win_streak = 0
+			if player_win_streak >= 2:
+				log.append("[Passive: Bloodlust] 2 wins! Paused 3HP self-damage.")
+			else:
+				player_hp_delta -= 3
+				log.append("[Passive: Bloodlust] Took 3 self-damage.")
+		"Survivor": # Caelum
+			if player_hp < HPManager.player_max_hp * 0.4:
+				player_damage += 3
+				log.append("[Passive: Survivor] Low HP, +3 DMG!")
+		"Equilibrium": # Nyxara
+			player_damage *= 1.1 # simplified for odd round
+			log.append("[Passive: Equilibrium] +10% DMG!")
+		"Tactician": # Valdris
+			if won:
+				player_mana = min(10, player_mana + 1)
+				log.append("[Passive: Tactician] Won round, +1 Mana!")
+		"Grace": # Liora
+			if accuracy > 80.0:
+				player_hp_delta += 3
+				log.append("[Passive: Grace] Accuracy > 80%, Healed 3HP!")
+		"Vengeance": # Malachar
+			if opp_damage > 0: # simplifed
+				HPManager.player_base_dmg += 2
+				log.append("[Passive: Vengeance] Took damage, gained +2 permanent DMG!")
 
-	# ── Resolve skills ─────────────────────────
-	for skill_id in selected_skills:
-		match skill_id:
+	# ── Resolve skill ─────────────────────────
+	var char_base = HPManager.player_base_dmg
+	if chosen_skill != "":
+		match chosen_skill:
 			"quick_strike":
-				var result := _quick_strike(wpm_mod, typo_penalty, won, base_multiplier)
+				var result := _quick_strike(wpm_mod, typo_penalty, won, base_multiplier, char_base)
 				player_damage += result.damage
 				log.append_array(result.log)
 
 			"drain_touch":
-				var result := _drain_touch(wpm_mod, typo_penalty, won, base_multiplier, opp_hp)
+				var result := _drain_touch(wpm_mod, typo_penalty, won, base_multiplier, opp_hp, char_base)
 				player_damage      += result.damage
 				player_hp_delta   += result.player_hp_delta
 				opp_hp_delta      += result.opp_hp_delta
 				log.append_array(result.log)
 
 			"whiplash":
-				var result := _whiplash(acc_mod, typo_penalty, won, base_multiplier)
+				var result := _whiplash(acc_mod, typo_penalty, won, base_multiplier, char_base)
 				player_damage += result.damage
 				if won:
-					opponent_cp = max(0, opponent_cp - 1)
-					log.append("[Whiplash] Opponent lost 1 CP → now %d CP" % opponent_cp)
+					opponent_mana = max(0, opponent_mana - 1)
+					log.append("[Whiplash] Opponent lost 1 Mana → now %d Mana" % opponent_mana)
 				else:
-					player_cp = max(0, player_cp - 1)
-					log.append("[Whiplash] You lost 1 CP → now %d CP" % player_cp)
+					player_mana = max(0, player_mana - 1)
+					log.append("[Whiplash] You lost 1 Mana → now %d Mana" % player_mana)
 				log.append_array(result.log)
 
 			"soulbreak":
-				var result := _soulbreak(wpm_mod, typo_penalty, won, base_multiplier)
+				var result := _soulbreak(wpm_mod, typo_penalty, won, base_multiplier, char_base)
 				player_damage += result.damage
 				if won:
 					var stolen := 2
-					opponent_cp = max(0, opponent_cp - stolen)
-					player_cp  += stolen
-					log.append("[Soulbreak] Stole %d CP. You: %d | Opp: %d" % [stolen, player_cp, opponent_cp])
-				else:
-					var lost := 2
-					player_cp   = max(0, player_cp - lost)
-					opponent_cp += lost
-					log.append("[Soulbreak] Lost %d CP. You: %d | Opp: %d" % [lost, player_cp, opponent_cp])
+					opponent_mana = max(0, opponent_mana - stolen)
+					player_mana = min(10, player_mana + stolen)
+					log.append("[Soulbreak] Stole %d Mana! You: %d | Opp: %d" % [stolen, player_mana, opponent_mana])
 				log.append_array(result.log)
 
 			"rupture":
-				var result := _rupture(opp_typos, typo_penalty, won, base_multiplier)
+				var result := _rupture(opp_typos, typo_penalty, won, base_multiplier, char_base)
 				player_damage += result.damage
 				if won:
 					opponent_next_round_base_modifier = 0.8
@@ -143,7 +182,7 @@ func resolve_round(wpm: float, accuracy: float, typos: int,
 				log.append_array(result.log)
 
 			"deathmark":
-				var result := _deathmark(typo_penalty, won, base_multiplier, opp_hp)
+				var result := _deathmark(typo_penalty, won, base_multiplier, opp_hp, char_base)
 				player_damage  += result.damage
 				opp_hp_delta  += result.opp_hp_delta
 				log.append_array(result.log)
@@ -181,8 +220,8 @@ func resolve_round(wpm: float, accuracy: float, typos: int,
 func reset_round_state() -> void:
 	player_win_streak   = 0
 	opponent_win_streak = 0
-	player_cp           = 0
-	opponent_cp         = 0
+	player_mana         = 0
+	opponent_mana       = 0
 	player_bleed        = {}
 	opponent_bleed      = {}
 	player_heal         = {}
@@ -196,9 +235,9 @@ func reset_round_state() -> void:
 #  Skill Implementations
 # ─────────────────────────────────────────────
 
-func _quick_strike(wpm_mod: float, typo_penalty: float, won: bool, base_mult: float) -> Dictionary:
+func _quick_strike(wpm_mod: float, typo_penalty: float, won: bool, base_mult: float, char_base: float) -> Dictionary:
 	var log: Array[String] = []
-	var base: float = 10.0 * (1.0 + wpm_mod) * base_mult - typo_penalty
+	var base: float = char_base * (1.0 + wpm_mod) * base_mult - typo_penalty
 	var damage: float = base
 
 	if won:
@@ -220,9 +259,9 @@ func _quick_strike(wpm_mod: float, typo_penalty: float, won: bool, base_mult: fl
 
 
 func _drain_touch(wpm_mod: float, typo_penalty: float, won: bool,
-		base_mult: float, opp_hp: float) -> Dictionary:
+		base_mult: float, opp_hp: float, char_base: float) -> Dictionary:
 	var log: Array[String] = []
-	var base: float = 10.0 * (1.0 + wpm_mod) * base_mult - typo_penalty
+	var base: float = char_base * (1.0 + wpm_mod) * base_mult - typo_penalty
 	var damage: float = base
 	var player_hp_delta: float = 0.0
 	var opp_hp_delta:    float = 0.0
@@ -240,9 +279,9 @@ func _drain_touch(wpm_mod: float, typo_penalty: float, won: bool,
 			"opp_hp_delta": opp_hp_delta, "log": log }
 
 
-func _whiplash(acc_mod: float, typo_penalty: float, won: bool, base_mult: float) -> Dictionary:
+func _whiplash(acc_mod: float, typo_penalty: float, won: bool, base_mult: float, char_base: float) -> Dictionary:
 	var log: Array[String] = []
-	var base: float = 10.0 * (1.0 + acc_mod) * base_mult - typo_penalty
+	var base: float = char_base * (1.0 + acc_mod) * base_mult - typo_penalty
 	var damage: float = base
 
 	if won:
@@ -259,14 +298,14 @@ func _whiplash(acc_mod: float, typo_penalty: float, won: bool, base_mult: float)
 	return { "damage": damage, "log": log }
 
 
-func _soulbreak(wpm_mod: float, typo_penalty: float, won: bool, base_mult: float) -> Dictionary:
+func _soulbreak(wpm_mod: float, typo_penalty: float, won: bool, base_mult: float, char_base: float) -> Dictionary:
 	var log: Array[String] = []
-	var base: float = 10.0 * (1.0 + wpm_mod) * base_mult - typo_penalty
+	var base: float = char_base * (1.0 + wpm_mod) * base_mult - typo_penalty
 	var damage: float = base
 
-	if won and player_cp >= 8:
+	if won and player_mana >= 8:
 		damage *= 1.15
-		log.append("[Soulbreak] 8+ CP bonus ×1.15 → %.1f" % damage)
+		log.append("[Soulbreak] 8+ Mana bonus ×1.15 → %.1f" % damage)
 	elif won:
 		log.append("[Soulbreak] Win — base %.1f" % damage)
 	else:
@@ -275,7 +314,7 @@ func _soulbreak(wpm_mod: float, typo_penalty: float, won: bool, base_mult: float
 	return { "damage": damage, "log": log }
 
 
-func _rupture(opp_typos: int, typo_penalty: float, won: bool, base_mult: float) -> Dictionary:
+func _rupture(opp_typos: int, typo_penalty: float, won: bool, base_mult: float, char_base: float) -> Dictionary:
 	var log: Array[String] = []
 	var damage: float = 0.0
 
@@ -283,15 +322,15 @@ func _rupture(opp_typos: int, typo_penalty: float, won: bool, base_mult: float) 
 		log.append("[Rupture] Opponent had 0 typos → 0 damage (high risk!)")
 		return { "damage": 0.0, "log": log }
 
-	damage = (10.0 + opp_typos * 1.5 - typo_penalty) * base_mult
-	log.append("[Rupture] 10 + (%d×1.5) - %.1f = %.1f" % [opp_typos, typo_penalty, damage])
+	damage = (char_base + opp_typos * 1.5 - typo_penalty) * base_mult
+	log.append("[Rupture] %.1f + (%d×1.5) - %.1f = %.1f" % [char_base, opp_typos, typo_penalty, damage])
 
 	return { "damage": damage, "log": log }
 
 
-func _deathmark(typo_penalty: float, won: bool, base_mult: float, opp_hp: float) -> Dictionary:
+func _deathmark(typo_penalty: float, won: bool, base_mult: float, opp_hp: float, char_base: float) -> Dictionary:
 	var log: Array[String] = []
-	var base: float = 10.0 * 0.9 * base_mult - typo_penalty
+	var base: float = char_base * 0.9 * base_mult - typo_penalty
 	var damage: float = base
 	var opp_hp_delta: float = 0.0
 

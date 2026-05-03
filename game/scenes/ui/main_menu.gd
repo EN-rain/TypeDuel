@@ -1,6 +1,6 @@
 extends Control
 
-const SERVER = "http://34.143.153.96:3000"
+const SERVER = "http://127.0.0.1:3000"
 
 @onready var greeting_label  = $Greeting
 @onready var online_count_label = $OnlineCount
@@ -15,17 +15,27 @@ var is_matchmaking = false
 var matchmaking_start_time = 0.0
 var matchmaking_code = ""
 var poll_timer = 0.0
+var _heartbeat_timer: float = 0.0
 
 func _ready():
 	var name_to_show = GameManager.user_data.display_name
 	if name_to_show == "":
 		name_to_show = GameManager.user_data.username
 	greeting_label.text = "Hi, " + name_to_show + "!"
+	
 	_fetch_online_count()
+	_send_heartbeat()
+	
 	matchmaking_label.hide()
 	matchmaking_time_label.hide()
 
 func _process(delta):
+	_heartbeat_timer += delta
+	if _heartbeat_timer >= 15.0:
+		_heartbeat_timer = 0.0
+		_send_heartbeat()
+		_fetch_online_count()
+	
 	if is_matchmaking:
 		var elapsed = Time.get_ticks_msec() / 1000.0 - matchmaking_start_time
 		var minutes = int(elapsed) / 60
@@ -38,18 +48,40 @@ func _process(delta):
 				poll_timer = 0.0
 				_check_matchmaking_status()
 
+# ── Heartbeat & Online Count ──────────────────────────────────────────────
+
 func _fetch_online_count():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_online_count_received.bind(http))
 	http.request(SERVER + "/api/game/online-count")
 
-func _on_online_count_received(result, code, _headers, body, http: HTTPRequest):
-	http.queue_free()
+func _on_online_count_received(_result, code, _headers, body, http: HTTPRequest):
+	if is_instance_valid(http):
+		http.queue_free()
 	if code == 200:
 		var json = JSON.parse_string(body.get_string_from_utf8())
 		if json and json.has("online"):
-			online_count_label.text = "● %d players online" % json["online"]
+			var c = json["online"]
+			if c == 1:
+				online_count_label.text = "● 1 player online"
+			else:
+				online_count_label.text = "● %d players online" % c
+
+func _send_heartbeat():
+	if GameManager.user_data.id == 0:
+		return
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_heartbeat_done.bind(http))
+	var body = JSON.stringify({ "user_id": GameManager.user_data.id, "session_id": GameManager.session_id })
+	http.request(SERVER + "/api/game/heartbeat", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+
+func _on_heartbeat_done(_result, _code, _headers, _body, http: HTTPRequest):
+	if is_instance_valid(http):
+		http.queue_free()
+
+# ── Actions ──────────────────────────────────────────────────────────────────
 
 func _on_solo_play_pressed():
 	print("Solo Play pressed")
@@ -94,7 +126,8 @@ func _on_submit_join_pressed():
 	http.request(SERVER + "/api/rooms/join", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
 
 func _on_join_done(_result, req_code, _headers, body, http):
-	http.queue_free()
+	if is_instance_valid(http):
+		http.queue_free()
 	var json = {}
 	if body.size() > 0:
 		json = JSON.parse_string(body.get_string_from_utf8())
@@ -146,7 +179,8 @@ func _on_play_online_pressed():
 	http.request(SERVER + "/api/rooms/matchmake", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
 
 func _on_matchmake_done(_result, code, _headers, body, http):
-	http.queue_free()
+	if is_instance_valid(http):
+		http.queue_free()
 	if not is_matchmaking: return # already cancelled
 	
 	if code == 200:
@@ -173,7 +207,8 @@ func _check_matchmaking_status():
 	http.request(SERVER + "/api/rooms/" + matchmaking_code)
 
 func _on_poll_match_done(_result, code, _headers, body, http):
-	http.queue_free()
+	if is_instance_valid(http):
+		http.queue_free()
 	if not is_matchmaking: return
 	
 	if code == 200:

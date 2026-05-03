@@ -27,11 +27,20 @@ const createRoom = (req, res) => {
     }
     rooms[code] = {
         code,
-        host_id: user_id,
-        host_name: display_name || 'Player',
-        guest_id: null,
-        guest_name: null,
-        created_at: Date.now()
+        host_id:        user_id,
+        host_name:      display_name || 'Player',
+        host_character: null,
+        host_skills:    [],
+        guest_id:       null,
+        guest_name:     null,
+        guest_character: null,
+        guest_skills:   [],
+        status:         'lobby',
+        host_progress:  0.0,
+        host_typos:     0,
+        guest_progress: 0.0,
+        guest_typos:    0,
+        created_at:     Date.now()
     };
     return res.json({ ok: true, code });
 };
@@ -47,14 +56,16 @@ const joinRoom = (req, res) => {
     if (!room) {
         return res.status(404).json({ message: 'Room not found' });
     }
-    if (room.host_id === user_id) {
+    if (room.host_id == user_id) {   // loose == handles string/int mismatch
         return res.status(403).json({ message: 'Cannot join your own room' });
     }
-    if (room.guest_id && room.guest_id !== user_id) {
+    if (room.guest_id && room.guest_id != user_id) {
         return res.status(409).json({ message: 'Room is full' });
     }
-    room.guest_id   = user_id;
-    room.guest_name = display_name || 'Player';
+    room.guest_id      = user_id;
+    room.guest_name    = display_name || 'Player';
+    room.guest_character = null;
+    room.guest_skills  = [];
     return res.json({ ok: true, room });
 };
 
@@ -79,8 +90,10 @@ const matchmake = (req, res) => {
 
     for (const code in rooms) {
         if (!rooms[code].guest_id && rooms[code].host_id !== user_id) {
-            rooms[code].guest_id = user_id;
-            rooms[code].guest_name = display_name || 'Player';
+            rooms[code].guest_id       = user_id;
+            rooms[code].guest_name     = display_name || 'Player';
+            rooms[code].guest_character = null;
+            rooms[code].guest_skills   = [];
             return res.json({ ok: true, role: 'guest', room: rooms[code] });
         }
     }
@@ -91,13 +104,68 @@ const matchmake = (req, res) => {
     }
     rooms[code] = {
         code,
-        host_id: user_id,
-        host_name: display_name || 'Player',
-        guest_id: null,
-        guest_name: null,
-        created_at: Date.now()
+        host_id:         user_id,
+        host_name:       display_name || 'Player',
+        host_character:  null,
+        host_skills:     [],
+        guest_id:        null,
+        guest_name:      null,
+        guest_character: null,
+        guest_skills:    [],
+        created_at:      Date.now()
     };
     return res.json({ ok: true, role: 'host', code });
 };
 
-module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, matchmake };
+// GET /api/rooms  (debug: list all active rooms)
+const listRooms = (req, res) => {
+    res.json(Object.values(rooms));
+};
+
+// PATCH /api/rooms/:code/select
+// Body: { user_id, character, skills }
+const updateSelections = (req, res) => {
+    const code = req.params.code.toUpperCase();
+    const { user_id, character, skills } = req.body;
+    const room = rooms[code];
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+
+    if (room.host_id == user_id) {
+        if (character !== undefined) room.host_character = character;
+        if (skills !== undefined)    room.host_skills    = skills;
+    } else if (room.guest_id == user_id) {
+        if (character !== undefined) room.guest_character = character;
+        if (skills !== undefined)    room.guest_skills    = skills;
+    } else {
+        return res.status(403).json({ message: 'Not in this room' });
+    }
+    return res.json({ ok: true });
+};
+
+// POST /api/rooms/:code/start
+const startRoomGame = (req, res) => {
+    const code = req.params.code.toUpperCase();
+    const room = rooms[code];
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+    room.status = 'started';
+    return res.json({ ok: true });
+};
+
+// PATCH /api/rooms/:code/progress
+const updateProgress = (req, res) => {
+    const code = req.params.code.toUpperCase();
+    const { user_id, progress, typos } = req.body;
+    const room = rooms[code];
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+
+    if (room.host_id == user_id) {
+        room.host_progress = progress;
+        if (typos !== undefined) room.host_typos = typos;
+    } else if (room.guest_id == user_id) {
+        room.guest_progress = progress;
+        if (typos !== undefined) room.guest_typos = typos;
+    }
+    return res.json({ ok: true });
+};
+
+module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, matchmake, listRooms, updateSelections, startRoomGame, updateProgress };

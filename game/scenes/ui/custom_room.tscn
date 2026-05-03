@@ -72,10 +72,10 @@ horizontal_alignment = 1
 
 [node name="Player2Tag" type="Label" parent="." unique_id=594675752]
 layout_mode = 0
-offset_left = 504.0
-offset_top = 201.0
-offset_right = 654.0
-offset_bottom = 218.0
+offset_left = 647.0
+offset_top = 272.0
+offset_right = 797.0
+offset_bottom = 289.0
 theme_override_font_sizes/font_size = 12
 text = "Waiting..."
 horizontal_alignment = 1

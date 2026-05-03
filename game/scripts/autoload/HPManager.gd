@@ -8,17 +8,62 @@ signal entity_died(entity: String)
 
 var player_hp: float = 100.0
 var opponent_hp: float = 100.0
-var max_hp: float = 100.0
+var player_max_hp: float = 100.0
+var opponent_max_hp: float = 100.0
+
+var player_base_dmg: float = 10.0
+var opponent_base_dmg: float = 10.0
+var player_passive: String = ""
+var opponent_passive: String = ""
+
+var characters_data = []
+
+func _ready():
+	var path = "c:/Users/LENOVO/Documents/type-duel/server/data/characters.json"
+	var file = FileAccess.open(path, FileAccess.READ)
+	if file:
+		var json = JSON.parse_string(file.get_as_text())
+		if json and typeof(json) == TYPE_DICTIONARY and json.has("characters"):
+			characters_data = json["characters"]
+		elif json and typeof(json) == TYPE_ARRAY:
+			characters_data = json
+
+func init_game():
+	var my_char = GameManager.selected_character
+	var opp_char = GameManager.opponent_character
+	
+	player_max_hp = 100.0
+	opponent_max_hp = 100.0
+	player_base_dmg = 10.0
+	opponent_base_dmg = 10.0
+	player_passive = ""
+	opponent_passive = ""
+	
+	for c in characters_data:
+		if typeof(c) == TYPE_DICTIONARY:
+			if c.get("name") == my_char:
+				player_max_hp = float(c.get("hp", 100.0))
+				player_base_dmg = float(c.get("base_dmg", 10.0))
+				player_passive = c.get("passive", "")
+			if c.get("name") == opp_char:
+				opponent_max_hp = float(c.get("hp", 100.0))
+				opponent_base_dmg = float(c.get("base_dmg", 10.0))
+				opponent_passive = c.get("passive", "")
+				
+	player_hp = player_max_hp
+	opponent_hp = opponent_max_hp
+	hp_changed.emit("player", player_hp, player_max_hp)
+	hp_changed.emit("opponent", opponent_hp, opponent_max_hp)
 
 func set_hp(entity: String, value: float):
 	if entity == "player":
-		player_hp = clamp(value, 0, max_hp)
-		hp_changed.emit("player", player_hp, max_hp)
+		player_hp = clamp(value, 0, player_max_hp)
+		hp_changed.emit("player", player_hp, player_max_hp)
 		if player_hp <= 0:
 			entity_died.emit("player")
 	elif entity == "opponent":
-		opponent_hp = clamp(value, 0, max_hp)
-		hp_changed.emit("opponent", opponent_hp, max_hp)
+		opponent_hp = clamp(value, 0, opponent_max_hp)
+		hp_changed.emit("opponent", opponent_hp, opponent_max_hp)
 		if opponent_hp <= 0:
 			entity_died.emit("opponent")
 
@@ -35,7 +80,4 @@ func heal(entity: String, amount: float):
 		set_hp("opponent", opponent_hp + amount)
 
 func reset():
-	player_hp = max_hp
-	opponent_hp = max_hp
-	hp_changed.emit("player", player_hp, max_hp)
-	hp_changed.emit("opponent", opponent_hp, max_hp)
+	init_game()

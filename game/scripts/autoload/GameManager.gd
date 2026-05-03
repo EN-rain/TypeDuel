@@ -22,6 +22,13 @@ var current_room: String = ""
 var is_host: bool = true
 var is_solo: bool = false
 var selected_character: String = ""
+var opponent_character: String = ""
+
+# Unique session ID to count multiple windows of the same user separately
+var session_id: String = ""
+
+func _ready():
+	session_id = str(randi()) + "_" + str(Time.get_ticks_msec())
 
 func start_game() -> void:
 	is_game_active = true

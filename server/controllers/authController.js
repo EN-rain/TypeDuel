@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const jwt = require('jsonwebtoken');
+const { setOnline } = require('./gameController');
 
 const register = (req, res) => {
   const { username, password, email } = req.body;
@@ -17,6 +18,7 @@ const register = (req, res) => {
     }
     const userId = this.lastID;
     const token = jwt.sign({ id: userId, username }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+    setOnline(userId);
     res.status(201).json({ token, user: { id: userId, username, display_name: username } });
   });
 };
@@ -29,6 +31,7 @@ const login = (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+    setOnline(user.id);
     res.json({ token, user: { id: user.id, username: user.username, display_name: user.display_name || user.username } });
   });
 };

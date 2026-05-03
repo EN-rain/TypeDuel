@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://cwxaob2fjjw0e"]
+[gd_scene format=3 uid="uid://dvhr3ib2bt6ui"]
 
-[ext_resource type="Script" uid="uid://dojphdx4whb40" path="res://scenes/ui/skill_selection.gd" id="1_skill_selection_script"]
+[ext_resource type="Script" path="res://scenes/ui/skill_selection.gd" id="1_skill_selection_script"]
 
 [node name="SkillSelection" type="Control" unique_id=1495751273]
 layout_mode = 3
@@ -128,10 +128,10 @@ theme_override_font_sizes/font_size = 24
 text = "START DUEL"
 
 [connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]
-[connection signal="pressed" from="StartButton" to="." method="_on_start_game_pressed"]
 [connection signal="pressed" from="HBoxContainer/QuickStrike" to="." method="_on_skill_pressed" binds= ["quick_strike"]]
 [connection signal="pressed" from="HBoxContainer/DrainTouch" to="." method="_on_skill_pressed" binds= ["drain_touch"]]
 [connection signal="pressed" from="HBoxContainer/Whiplash" to="." method="_on_skill_pressed" binds= ["whiplash"]]
 [connection signal="pressed" from="HBoxContainer/Soulbreak" to="." method="_on_skill_pressed" binds= ["soulbreak"]]
 [connection signal="pressed" from="HBoxContainer/Rupture" to="." method="_on_skill_pressed" binds= ["rupture"]]
 [connection signal="pressed" from="HBoxContainer/Deathmark" to="." method="_on_skill_pressed" binds= ["deathmark"]]
+[connection signal="pressed" from="StartButton" to="." method="_on_start_game_pressed"]
