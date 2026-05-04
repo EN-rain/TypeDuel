@@ -985,10 +985,10 @@ func _show_passive_popup(passive_type: String) -> void:
 	if GameManager.is_solo:
 		return
 	# Mutations received are caused by the opponent, so show above the opponent sprite.
-	var target_node := p2
+	var target_node: Node2D = p2
 	if target_node == null:
 		return
-	var label := Label.new()
+	var label: Label = Label.new()
 	label.text = passive_type.capitalize() + " activated"
 	label.modulate = Color(1, 1, 1, 1)
 	add_child(label)
