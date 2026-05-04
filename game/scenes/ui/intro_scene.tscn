@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://b62aubm6c0tru"]
+
+[sub_resource type="Animation" id="Animation_x734n"]
+length = 0.001
+
+[sub_resource type="Animation" id="Animation_472hf"]
+resource_name = "intro"
+length = 2.0
+loop_mode = 2
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_x734n"]
+_data = {
+&"RESET": SubResource("Animation_x734n"),
+&"intro": SubResource("Animation_472hf")
+}
+
+[node name="IntroSceme" type="Control" unique_id=1581311148]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=240114090]
+libraries/ = SubResource("AnimationLibrary_x734n")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1804544828]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0

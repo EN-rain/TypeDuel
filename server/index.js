@@ -18,11 +18,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Request Logging Middleware
-app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-    next();
-});
+if (process.env.LOG_REQUESTS === 'true') {
+    app.use((req, res, next) => {
+        console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+        next();
+    });
+}
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -33,6 +34,7 @@ app.use('/api/game', gameRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/friends', friendsRoutes);
+app.get('/api/health', (req, res) => res.sendStatus(200));
 
 
 // Database Initialization
@@ -76,6 +78,41 @@ app.listen(PORT, () => {
 
     purgeOldMessages(); // Run once on startup
     setInterval(purgeOldMessages, 60 * 60 * 1000); // Then every hour
+
+    // Purge unused uploads older than 12 hours
+    const purgeOldUploads = () => {
+        const uploadsDir = path.join(__dirname, 'uploads');
+        if (!fs.existsSync(uploadsDir)) return;
+
+        db.all('SELECT DISTINCT profile_icon FROM users WHERE profile_icon IS NOT NULL AND profile_icon != "default"', (err, rows) => {
+            if (err) {
+                console.error('Upload purge DB error:', err.message);
+                return;
+            }
+
+            const activeIcons = new Set(rows.map(row => row.profile_icon));
+            const now = Date.now();
+            const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+
+            fs.readdir(uploadsDir, (err, files) => {
+                if (err) return;
+                files.forEach(file => {
+                    if (file.startsWith('.') || activeIcons.has(file)) return;
+                    const filePath = path.join(uploadsDir, file);
+                    fs.stat(filePath, (err, stats) => {
+                        if (!err && (now - stats.mtimeMs > TWELVE_HOURS)) {
+                            fs.unlink(filePath, (err) => {
+                                if (!err) console.log(`Purged unused upload: ${file}`);
+                            });
+                        }
+                    });
+                });
+            });
+        });
+    };
+
+    purgeOldUploads();
+    setInterval(purgeOldUploads, 60 * 60 * 1000); // Check every hour
 });
 
 // Global Error Handler

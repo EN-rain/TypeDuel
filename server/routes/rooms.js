@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const roomController = require('../controllers/roomController');
+const authMiddleware = require('../middleware/auth');
 
-router.post('/create',           roomController.createRoom);
-router.post('/join',             roomController.joinRoom);
-router.post('/matchmake',        roomController.matchmake);
-router.get('/',                  roomController.listRooms);
-router.patch('/:code/select',    roomController.updateSelections);
-router.patch('/:code/progress',  roomController.updateProgress);
-router.post('/:code/start',      roomController.startRoomGame);
-router.get('/:code',             roomController.getRoomStatus);
-router.delete('/:code',          roomController.closeRoom);
+router.post('/create',           authMiddleware, roomController.createRoom);
+router.post('/join',             authMiddleware, roomController.joinRoom);
+router.post('/matchmake',        authMiddleware, roomController.matchmake);
+router.get('/',                  authMiddleware, roomController.listRooms);
+router.patch('/:code/select',    authMiddleware, roomController.updateSelections);
+router.patch('/:code/progress',  authMiddleware, roomController.updateProgress);
+router.post('/:code/start',      authMiddleware, roomController.startRoomGame);
+router.get('/:code',             authMiddleware, roomController.getRoomStatus);
+router.delete('/:code',          authMiddleware, roomController.closeRoom);
 
 module.exports = router;

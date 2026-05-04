@@ -19,6 +19,11 @@ func _ready():
 	register_mode_btn.pressed.connect(_on_mode_selected.bind(false))
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	http_request.request_completed.connect(_on_request_completed)
+	
+	# Fade in
+	modulate.a = 0.0
+	var tween = create_tween()
+	tween.tween_property(self, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 func _on_mode_selected(login):
 	is_login_mode = login
@@ -68,10 +73,15 @@ func _on_request_completed(result, response_code, headers, body):
 			GameManager.user_data.profile_icon = response.user.get("profile_icon", "default")
 			GameManager.user_data.token = response.token
 			
-			# Transition to Main Menu
-			get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+			# Transition to Main Menu with fade out
+			_fade_out_and_transition("res://scenes/ui/main_menu.tscn")
 		else:
 			error_label.text = "Registered! Please login."
 			_on_mode_selected(true)
 	else:
 		error_label.text = response.message if response and response.has("message") else "Failed"
+
+func _fade_out_and_transition(scene_path: String):
+	var tween = create_tween()
+	tween.tween_property(self, "modulate:a", 0.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.finished.connect(func(): get_tree().change_scene_to_file(scene_path))

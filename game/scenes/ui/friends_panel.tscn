@@ -1,5 +1,14 @@
 [gd_scene format=3 uid="uid://bkqnn57tfo72j"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_req_badge"]
+bg_color = Color(0.9, 0.2, 0.2, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+expand_margin_left = 4.0
+expand_margin_right = 4.0
+
 [node name="FriendsPanel" type="Panel" unique_id=603351127]
 unique_name_in_owner = true
 anchors_preset = 8
@@ -51,6 +60,25 @@ text = " Add "
 unique_name_in_owner = true
 layout_mode = 2
 text = " Req "
+
+[node name="ReqUnreadLabel" type="Label" parent="VBoxContainer/SearchHBox/ReqBtn" unique_id=8381196]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -6.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 8.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_req_badge")
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1949724439]
 layout_mode = 2

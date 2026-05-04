@@ -38,7 +38,7 @@ drag_and_drop_selection_enabled = false
 [node name="ChatPanel" type="Panel" parent="." unique_id=1299220153]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = -350.0
+offset_left = -427.0
 offset_top = -608.0
 offset_bottom = 40.0
 
@@ -54,27 +54,50 @@ offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TabContainer" type="HBoxContainer" parent="ChatPanel/VBoxContainer"]
+[node name="TabContainer" type="HBoxContainer" parent="ChatPanel/VBoxContainer" unique_id=291931917]
 layout_mode = 2
 
-[node name="GlobalBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer"]
+[node name="GlobalBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=923167655]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Global"
 
-[node name="FriendBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer"]
+[node name="LocalBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=123456789]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Local"
+
+[node name="FriendBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=807212193]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Friends"
 
-[node name="ScrollContainer" type="ScrollContainer" parent="ChatPanel/VBoxContainer" unique_id=1129583243]
+[node name="ContentHBox" type="HBoxContainer" parent="ChatPanel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="FriendsListScroll" type="ScrollContainer" parent="ChatPanel/VBoxContainer/ContentHBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="FriendsListVBox" type="VBoxContainer" parent="ChatPanel/VBoxContainer/ContentHBox/FriendsListScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ChatPanel/VBoxContainer/ContentHBox" unique_id=1129583243]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_horizontal = 3
 horizontal_scroll_mode = 0
 
-[node name="MessagesVBox" type="VBoxContainer" parent="ChatPanel/VBoxContainer/ScrollContainer" unique_id=1475129079]
+[node name="MessagesVBox" type="VBoxContainer" parent="ChatPanel/VBoxContainer/ContentHBox/ScrollContainer" unique_id=1475129079]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

@@ -281,12 +281,17 @@ grow_horizontal = 0
 text = "Friends"
 
 [node name="Label" type="Label" parent="FriendsButton" unique_id=557679567]
-custom_minimum_size = Vector2(50, 50)
-layout_mode = 0
-offset_left = -22.0
-offset_top = 4.0
-offset_right = 28.0
-offset_bottom = 54.0
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 10.0
+offset_bottom = 10.0
+grow_horizontal = 0
+grow_vertical = 0
 text = "1"
 horizontal_alignment = 1
 vertical_alignment = 1

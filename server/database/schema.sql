@@ -6,9 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE,
   profile_icon TEXT DEFAULT "default",
   last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
+  session_token TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-
 
 CREATE TABLE IF NOT EXISTS leaderboard (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,9 +27,11 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   username TEXT,
   room_id TEXT, -- 'global' for global chat
   message TEXT,
+  is_read BOOLEAN DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users (id)
 );
+
 CREATE TABLE IF NOT EXISTS friends (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,

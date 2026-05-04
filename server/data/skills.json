@@ -1,81 +1,49 @@
 {
   "skills": [
     {
-      "id": "quick_strike",
-      "name": "Quick Strike",
-      "description": "Base 10 DMG. Win streak grants +20% DMG bonus. Reliable and fast.",
+      "id": "quickslash",
+      "name": "Quickslash",
+      "description": "WPM-based. Win +10% DMG, Lose -10%. Win streak +10% extra. Lose streak = 0 DMG.",
       "type": "offensive",
-      "cost": 0,
+      "cost": 2,
       "stats": {
-        "base_damage": 10.0,
+        "base_formula": "CEIL(BaseDMG * (1 + (WPM-40)/100) - typos*2)",
         "win_bonus": 1.1,
-        "streak_bonus": 1.2,
-        "loss_penalty": 0.9
-      }
-    },
-    {
-      "id": "drain_touch",
-      "name": "Drain Touch",
-      "description": "Deals damage and applies bleed to opponent while healing you over 3 rounds.",
-      "type": "utility",
-      "cost": 0,
-      "stats": {
-        "base_damage": 10.0,
-        "bleed_value_high": 3.0,
-        "bleed_value_low": 2.0,
-        "heal_value": 2.0,
-        "duration": 3
+        "win_streak_bonus": 1.2,
+        "lose_penalty": 0.9,
+        "lose_streak_damage": 0,
+        "full_power_bonus": 1.2
       }
     },
     {
       "id": "whiplash",
       "name": "Whiplash",
-      "description": "Accuracy-based DMG. Deals double damage if opponent is on a win streak.",
+      "description": "Accuracy-based. Win +15% DMG + opp loses 1 Mana. Lose -15% + you lose 1 Mana. Opp on streak = DMG x2.",
       "type": "counter",
-      "cost": 0,
+      "cost": 2,
       "stats": {
-        "base_damage": 10.0,
-        "streak_punish": 2.0,
+        "base_formula": "CEIL(BaseDMG * (1 + (acc-80)/100) - typos*2)",
         "win_bonus": 1.15,
-        "loss_penalty": 0.85
+        "win_streak_punish_multiplier": 2.0,
+        "lose_penalty": 0.85,
+        "mana_drain_win": 1,
+        "mana_drain_lose": 1,
+        "full_power_extra_mana_drain": 1
       }
     },
     {
       "id": "soulbreak",
       "name": "Soulbreak",
-      "description": "Deals damage and steals 2 CP from opponent. Bonus DMG at 8+ CP.",
-      "type": "offensive",
-      "cost": 0,
+      "description": "WPM-based. Win steals 2 Mana. Lose gives 2 Mana to opponent. 8+ Mana = +15% DMG.",
+      "type": "utility",
+      "cost": 3,
       "stats": {
-        "base_damage": 10.0,
-        "cp_stolen": 2,
-        "bonus_threshold": 8,
-        "bonus_multiplier": 1.15
-      }
-    },
-    {
-      "id": "rupture",
-      "name": "Rupture",
-      "description": "High risk! Deals damage based on opponent's typos. 0 DMG if they have 0 typos.",
-      "type": "tactical",
-      "cost": 0,
-      "stats": {
-        "base_damage": 10.0,
-        "typo_multiplier": 1.5,
-        "debuff_multiplier": 0.8
-      }
-    },
-    {
-      "id": "deathmark",
-      "name": "Deathmark",
-      "description": "Marks the opponent to deal flat bonus damage over the next 2 rounds.",
-      "type": "offensive",
-      "cost": 0,
-      "stats": {
-        "base_damage": 10.0,
-        "mark_value_high": 4.0,
-        "mark_value_low": 2.0,
-        "duration": 2
+        "base_formula": "CEIL(BaseDMG * (1 + (WPM-40)/100) - typos*2)",
+        "high_mana_threshold": 8,
+        "high_mana_bonus": 1.15,
+        "mana_steal_win": 2,
+        "mana_give_lose": 2,
+        "full_power_mana_steal": 4
       }
     }
   ]

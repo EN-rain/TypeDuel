@@ -13,8 +13,8 @@ var opponent_max_hp: float = 100.0
 
 var player_base_dmg: float = 10.0
 var opponent_base_dmg: float = 10.0
-var player_passive: String = ""
-var opponent_passive: String = ""
+var player_innate: String = ""
+var opponent_innate: String = ""
 
 var characters_data = []
 
@@ -36,24 +36,36 @@ func init_game():
 	opponent_max_hp = 100.0
 	player_base_dmg = 10.0
 	opponent_base_dmg = 10.0
-	player_passive = ""
-	opponent_passive = ""
+	player_innate = ""
+	opponent_innate = ""
 	
 	for c in characters_data:
 		if typeof(c) == TYPE_DICTIONARY:
 			if c.get("name") == my_char:
 				player_max_hp = float(c.get("hp", 100.0))
 				player_base_dmg = float(c.get("base_dmg", 10.0))
-				player_passive = c.get("passive", "")
+				player_innate = c.get("innate", "")
 			if c.get("name") == opp_char:
 				opponent_max_hp = float(c.get("hp", 100.0))
 				opponent_base_dmg = float(c.get("base_dmg", 10.0))
-				opponent_passive = c.get("passive", "")
+				opponent_innate = c.get("innate", "")
 				
 	player_hp = player_max_hp
 	opponent_hp = opponent_max_hp
 	hp_changed.emit("player", player_hp, player_max_hp)
 	hp_changed.emit("opponent", opponent_hp, opponent_max_hp)
+	
+	# ── DEBUG: confirm character stats loaded ──────────────────────────
+	print("╔══════ HPManager Init ══════╗")
+	print("║ PLAYER   : %-12s        ║" % my_char)
+	print("║   HP     : %.0f / %.0f             ║" % [player_hp, player_max_hp])
+	print("║   BaseDMG: %.0f                   ║" % player_base_dmg)
+	print("║   Innate : %s              ║" % player_innate)
+	print("║ OPPONENT : %-12s        ║" % opp_char)
+	print("║   HP     : %.0f / %.0f             ║" % [opponent_hp, opponent_max_hp])
+	print("║   BaseDMG: %.0f                   ║" % opponent_base_dmg)
+	print("║   Innate : %s              ║" % opponent_innate)
+	print("╚════════════════════════════╝")
 
 func set_hp(entity: String, value: float):
 	if entity == "player":
