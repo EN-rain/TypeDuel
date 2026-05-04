@@ -8,29 +8,55 @@ const dummyData = [
     { username: 'GodotExpert', wins: 25, wpm: 80, accuracy: 99.0 }
 ];
 
+const run = (sql, params = []) =>
+    new Promise((resolve, reject) => {
+        db.run(sql, params, function(err) {
+            if (err) reject(err);
+            else resolve(this);
+        });
+    });
+
+const get = (sql, params = []) =>
+    new Promise((resolve, reject) => {
+        db.get(sql, params, (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+
+async function ensureUser(username) {
+    const existing = await get('SELECT id FROM users WHERE username = ?', [username]);
+    if (existing && existing.id) return existing.id;
+
+    await run(
+        'INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
+        [username, 'password123', `${username.toLowerCase()}@example.com`]
+    );
+
+    const created = await get('SELECT id FROM users WHERE username = ?', [username]);
+    return created.id;
+}
+
+async function upsertLeaderboard(userId, username, wins, wpm, accuracy) {
+    const row = await get('SELECT id FROM leaderboard WHERE user_id = ?', [userId]);
+    if (row && row.id) {
+        await run('UPDATE leaderboard SET wins = ?, wpm = ?, accuracy = ?, username = ? WHERE user_id = ?', [wins, wpm, accuracy, username, userId]);
+    } else {
+        await run('INSERT INTO leaderboard (user_id, username, wins, wpm, accuracy) VALUES (?, ?, ?, ?, ?)', [userId, username, wins, wpm, accuracy]);
+    }
+}
+
 async function seed() {
     console.log('Seeding dummy leaderboard data...');
 
     for (const data of dummyData) {
-        // First create a dummy user
-        const userSql = 'INSERT INTO users (username, password, email) VALUES (?, ?, ?)';
-        db.run(userSql, [data.username, 'password123', `${data.username.toLowerCase()}@example.com`], function(err) {
-            if (err) {
-                console.log(`User ${data.username} might already exist, skipping user creation.`);
-            }
-            
-            const userId = this ? this.lastID : 1; // Fallback if user exists
-            
-            // Add to leaderboard
-            const leaderboardSql = 'INSERT INTO leaderboard (user_id, username, wins, wpm, accuracy) VALUES (?, ?, ?, ?, ?)';
-            db.run(leaderboardSql, [userId, data.username, data.wins, data.wpm, data.accuracy], (err) => {
-                if (err) {
-                    console.error(`Error adding ${data.username} to leaderboard:`, err.message);
-                } else {
-                    console.log(`Added ${data.username} to leaderboard with ${data.wins} wins.`);
-                }
-            });
-        });
+        try {
+            const userId = await ensureUser(data.username);
+            await upsertLeaderboard(userId, data.username, data.wins, data.wpm, data.accuracy);
+            console.log(`Ensured ${data.username} on leaderboard with ${data.wins} wins.`);
+        } catch (err) {
+            console.error(`Seed error for ${data.username}:`, err.message);
+        }
     }
 }
 

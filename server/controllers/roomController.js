@@ -52,6 +52,8 @@ const createRoom = (req, res) => {
         first_finish_at:   0,
         first_finish_by:   null,      // 'host' | 'guest'
         round_id:          0,
+        host_hp:           0,
+        guest_hp:          0,
         created_at:     Date.now()
     };
     return res.json({ ok: true, code });
@@ -201,6 +203,9 @@ const startRoomGame = (req, res) => {
     room.guest_typos = 0;
     room.host_mutations = [];
     room.guest_mutations = [];
+    // HP is set by host client via /hp once the game scene initializes.
+    room.host_hp = room.host_hp || 0;
+    room.guest_hp = room.guest_hp || 0;
     room.seq = (room.seq || 0) + 1;
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
@@ -275,4 +280,29 @@ const updateProgress = (req, res) => {
     return res.json({ ok: true });
 };
 
-module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, matchmake, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress };
+// PATCH /api/rooms/:code/hp
+// Body: { user_id, host_hp, guest_hp }
+// Host is authoritative for HP sync.
+const updateHP = (req, res) => {
+    const code = req.params.code.toUpperCase();
+    const { user_id, host_hp, guest_hp } = req.body;
+    const room = rooms[code];
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+    if (room.host_id != user_id) return res.status(403).json({ message: 'Only host may sync hp' });
+
+    const hostHpNum = Number(host_hp);
+    const guestHpNum = Number(guest_hp);
+    if (!Number.isFinite(hostHpNum) || !Number.isFinite(guestHpNum)) {
+        return res.status(400).json({ message: 'host_hp and guest_hp must be numbers' });
+    }
+
+    room.host_hp = hostHpNum;
+    room.guest_hp = guestHpNum;
+    room.seq = (room.seq || 0) + 1;
+    if (process.env.LOG_ROOMS === 'true') {
+        console.log(`[rooms] ${code} hp host=${room.host_hp} guest=${room.guest_hp}`);
+    }
+    return res.json({ ok: true, room: roomSnapshot(room) });
+};
+
+module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, matchmake, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP };

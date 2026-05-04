@@ -104,6 +104,10 @@ func _ready():
 		seed(GameManager.current_room.hash())
 	else:
 		randomize()
+
+	# Host publishes initial HP so both clients converge if one loads late.
+	if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
+		_host_sync_hp()
 		
 	_spawn_players()
 	
@@ -511,6 +515,9 @@ func _process(delta):
 					countdown_label.text = "⏱ Opp: %d" % max(0, int(ceil(snap_timer)))
 			# If both players are finished, resolve immediately (don’t wait for snap to expire).
 			if i_finished and enemy_finished:
+				snap_active = false
+				if countdown_label:
+					countdown_label.hide()
 				_resolve_and_advance("buff")
 				return
 			if snap_timer <= 0.0:
@@ -674,6 +681,22 @@ func _apply_room_phase(room: Dictionary, sent_local_ms: float = -1.0, recv_local
 	_server_first_finish_at_ms = float(room.get("first_finish_at", _server_first_finish_at_ms))
 	_server_first_finish_by = "" if room.get("first_finish_by", null) == null else str(room.get("first_finish_by"))
 	_server_round_id = int(room.get("round_id", _server_round_id))
+
+	# HP sync (host authoritative)
+	if room.has("host_hp") and room.has("guest_hp"):
+		var host_hp_v: float = float(room.get("host_hp", 0))
+		var guest_hp_v: float = float(room.get("guest_hp", 0))
+		if host_hp_v > 0 or guest_hp_v > 0:
+			if GameManager.is_host:
+				if abs(HPManager.player_hp - host_hp_v) > 0.01:
+					HPManager.set_hp("player", host_hp_v)
+				if abs(HPManager.opponent_hp - guest_hp_v) > 0.01:
+					HPManager.set_hp("opponent", guest_hp_v)
+			else:
+				if abs(HPManager.player_hp - guest_hp_v) > 0.01:
+					HPManager.set_hp("player", guest_hp_v)
+				if abs(HPManager.opponent_hp - host_hp_v) > 0.01:
+					HPManager.set_hp("opponent", host_hp_v)
 	if _server_phase == "skill_select" and _server_phase_started_at_ms > 0.0:
 		_predicted_typing_started_at_ms = _server_phase_started_at_ms + 10000.0
 
@@ -707,6 +730,25 @@ func _host_set_phase(phase: String, round_id: int) -> void:
 			http.queue_free()
 	)
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/phase", GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, body)
+
+func _host_sync_hp() -> void:
+	if GameManager.current_room == "" or GameManager.user_data.id == 0:
+		return
+	if GameManager.is_solo or not GameManager.is_host:
+		return
+	var http := HTTPRequest.new()
+	add_child(http)
+	var payload: Dictionary = {
+		"user_id": GameManager.user_data.id,
+		"host_hp": HPManager.player_hp,
+		"guest_hp": HPManager.opponent_hp
+	}
+	var body := JSON.stringify(payload)
+	http.request_completed.connect(func(_r, _c, _h, _b):
+		if is_instance_valid(http):
+			http.queue_free()
+	)
+	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/hp", GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, body)
 
 @export var correct_color: Color = Color.GREEN
 @export var wrong_color: Color = Color.RED
@@ -883,6 +925,10 @@ func _on_i_finished():
 	if enemy_finished:
 		# Enemy already finished before us — we're the loser
 		snap_active = false
+		if countdown_label:
+			countdown_label.hide()
+		# Send an immediate final progress update (progress=1.0) so the winner can stop snap early.
+		_sync_progress_to_server()
 		_log("[Round] We finished SECOND (enemy faster) — DEBUFF resolution")
 		_resolve_and_advance("debuff")
 	else:
@@ -914,6 +960,11 @@ func _resolve_and_advance(finish_mode: String):
 	if current_state == GameState.RESOLVING: return
 	current_state = GameState.RESOLVING
 	_last_resolved_round_id = max(_last_resolved_round_id, _server_round_id)
+	# Hide timers while resolving so UI can't show stale snap/60s countdown.
+	if countdown_label:
+		countdown_label.hide()
+	if typing_label:
+		typing_label.hide()
 	
 	var elapsed_ms: float = float(Time.get_ticks_msec() - sentence_start_time)
 	# Guard against ultra-small elapsed time (debug skip / hitch / clock issues) producing extreme WPM and damage.
@@ -946,6 +997,10 @@ func _resolve_and_advance(finish_mode: String):
 		HPManager.heal("opponent", result.opp_hp_delta)
 	if result.player_damage > 0:
 		HPManager.take_damage("opponent", result.player_damage)
+
+	# Online: host syncs authoritative HP after every resolution so the other client can't diverge.
+	if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
+		_host_sync_hp()
 	
 	# ── DEBUG: Skill Animation Stub ──────────────────────────────────────
 	print("╔══════════════════════════════════════════╗")
@@ -1014,6 +1069,9 @@ func _on_skill_pressed(skill_index: int):
 			# Don't hide — let player pick a different skill
 
 func _save_match_history(won: bool):
+	# Only save for logged-in users.
+	if GameManager.user_data.id == 0:
+		return
 	var wpm = 0.0
 	var accuracy = 0.0
 	# we just use some simple stats for now, or total average if possible.
@@ -1027,6 +1085,12 @@ func _save_match_history(won: bool):
 		time_elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
 	if time_elapsed_min > 0:
 		wpm = (float(total_keystrokes) / 5.0) / time_elapsed_min
+	if not is_finite(wpm):
+		wpm = 0.0
+	if not is_finite(accuracy):
+		accuracy = 0.0
+	wpm = clampf(wpm, 0.0, 250.0)
+	accuracy = clampf(accuracy, 0.0, 100.0)
 
 	var req = HTTPRequest.new()
 	add_child(req)
@@ -1034,7 +1098,11 @@ func _save_match_history(won: bool):
 	var data = {
 		"user_id": GameManager.user_data.id,
 		"username": GameManager.user_data.username,
-		"match_type": "online" if not GameManager.is_solo else "custom",
+		# Distinguish matchmaking vs custom lobby.
+		# - solo:      custom
+		# - online mm: online
+		# - online room (invite/custom lobby): custom
+		"match_type": "custom" if GameManager.is_solo else ("online" if GameManager.is_matchmaking else "custom"),
 		"wpm": wpm,
 		"accuracy": accuracy,
 		"typos": typos_count,

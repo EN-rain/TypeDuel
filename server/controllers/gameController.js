@@ -5,7 +5,13 @@ const onlinePlayers = new Map();
 const ONLINE_TIMEOUT_MS = 20000; // 20 seconds (heartbeat is every 15s)
 
 const getLeaderboard = (req, res) => {
-    const sql = 'SELECT users.username, leaderboard.wins, leaderboard.wpm, leaderboard.accuracy FROM leaderboard JOIN users ON leaderboard.user_id = users.id ORDER BY leaderboard.wins DESC LIMIT 10';
+    const sql = `
+        SELECT users.username, leaderboard.wins, leaderboard.wpm, leaderboard.accuracy
+        FROM leaderboard
+        JOIN users ON leaderboard.user_id = users.id
+        ORDER BY leaderboard.wins DESC, leaderboard.wpm DESC, leaderboard.accuracy DESC
+        LIMIT 10
+    `;
     db.all(sql, [], (err, rows) => {
         if (err) {
             console.error("Leaderboard query error:", err.message);
@@ -61,8 +67,27 @@ const saveMatchHistory = (req, res) => {
     const { user_id, username, match_type, wpm, accuracy, typos, won } = req.body;
     if (!user_id) return res.status(400).json({ message: 'user_id required' });
 
+    const userIdNum = Number(user_id);
+    if (!Number.isFinite(userIdNum) || userIdNum <= 0) {
+        return res.status(400).json({ message: 'user_id must be a positive number' });
+    }
+
+    const safeUsername = (typeof username === 'string' && username.trim() !== '') ? username.trim() : null;
+    const safeMatchType = (match_type === 'online' || match_type === 'custom') ? match_type : 'online';
+
+    const wpmNum = Number(wpm);
+    const accNum = Number(accuracy);
+    const typosNum = Number(typos);
+    if (!Number.isFinite(wpmNum) || wpmNum < 0) return res.status(400).json({ message: 'wpm must be a non-negative number' });
+    if (!Number.isFinite(accNum) || accNum < 0 || accNum > 100) return res.status(400).json({ message: 'accuracy must be 0..100' });
+    if (!Number.isFinite(typosNum) || typosNum < 0) return res.status(400).json({ message: 'typos must be a non-negative number' });
+
+    if (typeof won !== 'boolean') {
+        return res.status(400).json({ message: 'won must be boolean' });
+    }
+
     const sql = 'INSERT INTO match_history (user_id, username, match_type, wpm, accuracy, typos, won) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    db.run(sql, [user_id, username, match_type, wpm, accuracy, typos, won ? 1 : 0], function(err) {
+    db.run(sql, [userIdNum, safeUsername, safeMatchType, wpmNum, accNum, typosNum, won ? 1 : 0], function(err) {
         if (err) {
             console.error("Error saving match history:", err.message);
             return res.status(500).json({ message: 'Error saving match history' });
@@ -70,11 +95,11 @@ const saveMatchHistory = (req, res) => {
         
         // Let's also update the leaderboard for wins if they won
         if (won) {
-            db.get("SELECT * FROM leaderboard WHERE user_id = ?", [user_id], (err, row) => {
+            db.get("SELECT * FROM leaderboard WHERE user_id = ?", [userIdNum], (err, row) => {
                 if (!err && row) {
-                    db.run("UPDATE leaderboard SET wins = wins + 1, wpm = ?, accuracy = ? WHERE user_id = ?", [wpm, accuracy, user_id]);
+                    db.run("UPDATE leaderboard SET wins = wins + 1, wpm = ?, accuracy = ? WHERE user_id = ?", [wpmNum, accNum, userIdNum]);
                 } else if (!err && !row) {
-                    db.run("INSERT INTO leaderboard (user_id, username, wins, wpm, accuracy) VALUES (?, ?, 1, ?, ?)", [user_id, username, wpm, accuracy]);
+                    db.run("INSERT INTO leaderboard (user_id, username, wins, wpm, accuracy) VALUES (?, ?, 1, ?, ?)", [userIdNum, safeUsername || String(userIdNum), wpmNum, accNum]);
                 }
             });
         }
@@ -84,13 +109,27 @@ const saveMatchHistory = (req, res) => {
 
 const getMatchHistory = (req, res) => {
     const { user_id } = req.params;
+    const userIdNum = Number(user_id);
+    if (!Number.isFinite(userIdNum) || userIdNum <= 0) {
+        return res.status(400).json({ message: 'Invalid user_id' });
+    }
     
     // Get all matches
-    db.all("SELECT * FROM match_history WHERE user_id = ? ORDER BY created_at DESC", [user_id], (err, rows) => {
+    db.all("SELECT * FROM match_history WHERE user_id = ? ORDER BY created_at DESC", [userIdNum], (err, rows) => {
         if (err) {
             console.error("Error fetching match history:", err.message);
             return res.status(500).json({ message: 'Error fetching match history' });
         }
+
+        // Sanitize null/invalid values so the Godot UI doesn't crash on formatting.
+        rows = rows.map(r => ({
+            ...r,
+            match_type: (r.match_type === 'online' || r.match_type === 'custom') ? r.match_type : 'online',
+            wpm: Number.isFinite(Number(r.wpm)) ? Number(r.wpm) : 0,
+            accuracy: Number.isFinite(Number(r.accuracy)) ? Number(r.accuracy) : 0,
+            typos: Number.isFinite(Number(r.typos)) ? Number(r.typos) : 0,
+            won: !!r.won,
+        }));
         
         // Calculate overall stats
         let totalWpm = 0;
