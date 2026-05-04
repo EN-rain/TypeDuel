@@ -1,53 +1,25 @@
 {
   "characters": [
     {
-      "name": "Caelum",
-      "hp": 105,
-      "base_dmg": 9,
-      "passive": "Survivor",
-      "description": "Every round below 40% HP, base DMG increases by +3 (max +9 DMG bonus at lowest HP)."
-    },
-    {
-      "name": "Nyxara",
-      "hp": 100,
-      "base_dmg": 11,
-      "passive": "Equilibrium",
-      "description": "Alternates every round: Odd rounds → +10% DMG | Even rounds → -10% DMG taken."
-    },
-    {
-      "name": "Valdris",
-      "hp": 95,
-      "base_dmg": 10,
-      "passive": "Tactician",
-      "description": "Starts every match with 4CP. Every round win gives +1 extra CP on top of normal gain."
+      "name": "Riven",
+      "hp": 85,
+      "base_dmg": 22,
+      "innate": "Bloodlust",
+      "description": "Every round she deals damage she loses 2HP. Win 2 consecutive rounds to pause self-damage and reset the streak."
     },
     {
       "name": "Liora",
-      "hp": 110,
-      "base_dmg": 8,
-      "passive": "Grace",
-      "description": "Every round accuracy above 80% heals 3HP (capped at 15HP total heal per match)."
-    },
-    {
-      "name": "Malachar",
-      "hp": 60,
-      "base_dmg": 18,
-      "passive": "Vengeance",
-      "description": "Every round opponent deals damage, Malachar gains +2 DMG permanently."
+      "hp": 100,
+      "base_dmg": 16,
+      "innate": "Grace",
+      "description": "Every round accuracy above 97% heals 3HP. Capped at 15HP total per match."
     },
     {
       "name": "Zephon",
       "hp": 85,
-      "base_dmg": 10,
-      "passive": "Overdrive",
-      "description": "Every round WPM > 80 gains +1 CP automatically. Stacks every qualifying round."
-    },
-    {
-      "name": "Riven",
-      "hp": 80,
-      "base_dmg": 15,
-      "passive": "Bloodlust",
-      "description": "Deals high damage but loses 3HP every round. Win 2 consecutive rounds to pause self-damage for 1 round."
+      "base_dmg": 20,
+      "innate": "Overdrive",
+      "description": "When Mana reaches 9 or higher, gain +5 bonus damage to your attack."
     }
   ]
 }

@@ -15,8 +15,16 @@ signal friends_updated
 @onready var global_btn = %GlobalBtn
 @onready var friend_btn = %FriendBtn
 
-var room_id: String = "global"
-var current_tab: String = "global" # "global" or "friends"
+var room_id: String = "":
+	set(val):
+		room_id = val
+		if is_inside_tree():
+			if room_id == "" or room_id == "global":
+				%LocalBtn.hide()
+			else:
+				%LocalBtn.show()
+				_fetch_messages("local")
+var current_tab: String = "global" # "global", "local", or "friends"
 var last_message_ids: Dictionary = {"global": 0}
 var message_histories: Dictionary = {"global": []}
 var current_dm_room: String = ""
@@ -27,6 +35,8 @@ var is_expanded: bool = false
 var pfp_cache: Dictionary = {}
 var pfp_popup: PopupMenu
 var current_target_username: String = ""
+# Tracks messages we've already shown optimistically to prevent poll duplicates
+var _pending_sent: Array = [] # Array of {room_key, username, text}
 
 func _ready():
 	# Start with panel off-screen to the left
@@ -34,6 +44,7 @@ func _ready():
 	
 	# Tab buttons
 	global_btn.pressed.connect(_switch_tab.bind("global"))
+	%LocalBtn.pressed.connect(_switch_tab.bind("local"))
 	friend_btn.pressed.connect(_switch_tab.bind("friends"))
 	_update_tab_visuals()
 	
@@ -44,7 +55,14 @@ func _ready():
 	real_input.text_submitted.connect(_on_send_pressed)
 	send_button.pressed.connect(func(): _on_send_pressed(real_input.text))
 	
+	if room_id == "" or room_id == "global":
+		%LocalBtn.hide()
+	else:
+		%LocalBtn.show()
+	
 	_fetch_messages("global")
+	if room_id != "" and room_id != "global":
+		_fetch_messages("local")
 	
 func _input(event):
 	# Collapse if clicking outside the panel while expanded
@@ -60,6 +78,8 @@ func _process(delta):
 	if poll_timer >= poll_interval:
 		poll_timer = 0.0
 		_fetch_messages("global")
+		if room_id != "" and room_id != "global":
+			_fetch_messages("local")
 		if current_dm_room != "":
 			_fetch_messages(current_dm_room)
 	
@@ -73,21 +93,30 @@ func _switch_tab(tab_name: String):
 		_fetch_friends_for_sidebar()
 		if is_expanded and current_dm_room != "":
 			_mark_dm_read(current_dm_room)
-	else:
+		fake_input.placeholder_text = "Send a message..."
+	elif current_tab == "local":
 		friends_list_scroll.hide()
+		fake_input.placeholder_text = "Local chat..."
+	else: # global
+		friends_list_scroll.hide()
+		fake_input.placeholder_text = "No messages yet..."
 		
 	_rebuild_chat_view()
 	_update_tab_visuals()
 
 func _update_tab_visuals():
 	global_btn.disabled = (current_tab == "global")
+	%LocalBtn.disabled = (current_tab == "local")
 	friend_btn.disabled = (current_tab == "friends")
 
 func _rebuild_chat_view():
 	for child in messages_vbox.get_children():
 		child.queue_free()
 	
-	var room_to_show = room_id if current_tab == "global" else current_dm_room
+	var room_to_show = ""
+	if current_tab == "global": room_to_show = "global"
+	elif current_tab == "local": room_to_show = "local"
+	else: room_to_show = current_dm_room
 	if room_to_show == "" or not message_histories.has(room_to_show):
 		return
 		
@@ -127,7 +156,9 @@ func _fetch_messages(room_name: String):
 	var http = HTTPRequest.new()
 	add_child(http)
 	
-	var target_room = room_id if room_name == "global" else room_name
+	var target_room = "global"
+	if room_name == "local": target_room = room_id
+	elif room_name != "global": target_room = room_name
 	http.request_completed.connect(_on_messages_received.bind(http, room_name))
 	http.request(GameManager.SERVER_URL + "/api/chat/messages?room_id=" + target_room + "&since=" + str(last_message_ids[room_name]), GameManager.get_auth_headers())
 
@@ -138,16 +169,32 @@ func _on_messages_received(_result, code, _headers, body, http: HTTPRequest, roo
 	if code == 200:
 		var json = JSON.parse_string(body.get_string_from_utf8())
 		if json is Array and json.size() > 0:
+			var needs_scroll = false
 			for msg in json:
-				message_histories[room_name].append(msg)
+				# Update the poll cursor first
 				last_message_ids[room_name] = max(last_message_ids[room_name], msg.id)
 				
-				var is_showing_this_room = (current_tab == "global" and room_name == "global") or (current_tab == "friends" and room_name == current_dm_room)
+				# Check if this is a message WE sent that's already shown optimistically
+				var is_pending = false
+				for i in _pending_sent.size():
+					var p = _pending_sent[i]
+					if p.room_key == room_name and p.text == msg.message and p.username == msg.username:
+						_pending_sent.remove_at(i)
+						is_pending = true
+						break
+				
+				if is_pending:
+					continue # Already shown, skip
+					
+				message_histories[room_name].append(msg)
+				
+				var is_showing_this_room = (current_tab == "global" and room_name == "global") or (current_tab == "local" and room_name == "local") or (current_tab == "friends" and room_name == current_dm_room)
 				if is_showing_this_room:
 					_add_message_to_vbox(msg)
+					needs_scroll = true
 			
-			var is_showing_this_room = (current_tab == "global" and room_name == "global") or (current_tab == "friends" and room_name == current_dm_room)
-			if is_showing_this_room:
+			var is_showing_this_room = (current_tab == "global" and room_name == "global") or (current_tab == "local" and room_name == "local") or (current_tab == "friends" and room_name == current_dm_room)
+			if needs_scroll and is_showing_this_room:
 				await get_tree().process_frame
 				scroll_container.scroll_vertical = int(scroll_container.get_v_scroll_bar().max_value)
 				if is_expanded and room_name.begins_with("dm_"):
@@ -156,6 +203,8 @@ func _on_messages_received(_result, code, _headers, body, http: HTTPRequest, roo
 			if room_name == "global":
 				var last = json[-1]
 				fake_input.placeholder_text = "%s: %s" % [last.username, last.message]
+			elif room_name == "local":
+				fake_input.placeholder_text = "Local chat..."
 			elif room_name.begins_with("dm_"):
 				# Signal main menu to refresh friends list for unread badges
 				friends_updated.emit()
@@ -284,7 +333,13 @@ func _on_send_pressed(text: String):
 	var my_name = GameManager.user_data.display_name
 	if my_name == "": my_name = GameManager.user_data.username
 	
-	var target_room = room_id if current_tab == "global" else current_dm_room
+	var target_room = "global"
+	var state_key = current_tab # "global", "local", or "dm_..."
+	if current_tab == "local": 
+		target_room = room_id
+	elif current_tab == "friends": 
+		target_room = current_dm_room
+		state_key = current_dm_room
 	
 	# --- Optimistic render: show message instantly without waiting for poll ---
 	var local_msg = {
@@ -295,7 +350,15 @@ func _on_send_pressed(text: String):
 		"room_id": target_room,
 		"profile_icon": GameManager.user_data.get("profile_icon", "default")
 	}
-	message_histories[target_room if message_histories.has(target_room) else (room_id if current_tab == "global" else current_dm_room)].append(local_msg)
+	
+	if not message_histories.has(state_key):
+		message_histories[state_key] = []
+		last_message_ids[state_key] = 0
+	
+	# Register as pending so the poll doesn't show it again
+	_pending_sent.append({ "room_key": state_key, "username": my_name, "text": text })
+	
+	message_histories[state_key].append(local_msg)
 	_add_message_to_vbox(local_msg)
 	await get_tree().process_frame
 	scroll_container.scroll_vertical = int(scroll_container.get_v_scroll_bar().max_value)
@@ -314,10 +377,10 @@ func _on_send_pressed(text: String):
 			var json = JSON.parse_string(resp_body.get_string_from_utf8())
 			if json is Dictionary and json.has("id"):
 				# Advance the poll cursor past this message so it isn't fetched again
-				if last_message_ids.has(target_room):
-					last_message_ids[target_room] = max(last_message_ids[target_room], json.id)
+				if last_message_ids.has(state_key):
+					last_message_ids[state_key] = max(last_message_ids[state_key], json.id)
 				else:
-					last_message_ids[target_room] = json.id
+					last_message_ids[state_key] = json.id
 		http.queue_free()
 	)
 	http.request(GameManager.SERVER_URL + "/api/chat/send", GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)

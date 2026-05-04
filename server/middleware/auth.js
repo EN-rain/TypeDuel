@@ -13,6 +13,7 @@ const authMiddleware = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
+    console.error('JWT Verify Error:', err.message, 'Token:', token);
     res.status(401).json({ message: 'Token is not valid' });
   }
 };

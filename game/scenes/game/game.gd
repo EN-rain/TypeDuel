@@ -10,11 +10,21 @@ var is_typing = false
 var typos_count = 0
 var total_keystrokes = 0
 
-enum GameState { SKILL_SELECT, TYPING }
+enum GameState { SKILL_SELECT, TYPING, RESOLVING }
 var current_state = GameState.SKILL_SELECT
+
+# Skill phase
 var skill_timer: float = 10.0
-var chosen_skill_index: int = 1
+var chosen_skill_index: int = -1
 var chosen_skill_id: String = ""
+
+# Typing / round timers
+var round_timer: float = 60.0       # 60 s main countdown
+var snap_active: bool = false        # snap-to-10s mode active?
+var snap_timer: float = 10.0        # countdown after first player finishes
+var i_finished: bool = false         # this client finished the sentence
+var enemy_finished: bool = false     # enemy finished (detected via poll)
+
 var enemy_typing_progress: float = 0.0
 var typos_in_current_word: int = 0
 
@@ -34,9 +44,13 @@ var SERVER: String:
 var last_progress_sync: float = 0.0
 var last_poll_time: float     = 0.0
 
+var _last_mutation_index: int = 0
+var _queued_mutations: Array = []
+var _perfect_words_streak: int = 0
+
 func _ready():
 	HPManager.init_game()
-	SkillsManager.reset_round_state()
+	SkillsManager.reset_match()
 	_spawn_players()
 	if not GameManager.is_solo and GameManager.current_room != "":
 		seed(GameManager.current_room.hash())
@@ -60,14 +74,17 @@ func _ready():
 	start_skill_phase()
 
 func _on_entity_died(entity: String):
-	if current_state == GameState.TYPING or current_state == GameState.SKILL_SELECT:
-		# Game Over
-		current_state = GameState.SKILL_SELECT # prevent input
+	# Only trigger game over if we are not already resolving/ended
+	if current_state == GameState.RESOLVING:
+		# Let the current resolution finish naturally,
+		# but kill the awaited timer and force end immediately
+		pass
+	if current_state == GameState.TYPING or current_state == GameState.SKILL_SELECT or current_state == GameState.RESOLVING:
+		current_state = GameState.RESOLVING  # block further input
 		
 		var victory_scene = load("res://scenes/ui/victory_screen.tscn").instantiate()
 		$HUD.add_child(victory_scene)
 		
-		# If opponent died, we win. If player died, we lose.
 		var won = (entity == "opponent")
 		_save_match_history(won)
 		victory_scene.set_result(won)
@@ -75,17 +92,33 @@ func _on_entity_died(entity: String):
 func start_skill_phase():
 	current_state = GameState.SKILL_SELECT
 	skill_timer = 10.0
-	chosen_skill_index = 1
-	chosen_skill_id = ""
+	chosen_skill_index = -1
+	chosen_skill_id    = ""  # No skill chosen yet
+	i_finished    = false
+	enemy_finished = false
+	snap_active   = false
+	snap_timer    = 10.0
+	round_timer   = 60.0
 	
+	current_index = 0
+	target_sentence = ""
+	enemy_typing_progress = 0.0 # <--- Ensure we reset local knowledge
+	
+	# Update skill button labels + disable if not enough mana
 	if SkillsManager.selected_skills.size() > 0:
-		chosen_skill_id = SkillsManager.selected_skills[0]
+		var s1 = SkillsManager.selected_skills[0]
 		if has_node("HUD/SkillSelect/HBoxContainer/Skill1"):
-			$HUD/SkillSelect/HBoxContainer/Skill1.text = SkillsManager.selected_skills[0].capitalize()
+			var btn1 = $HUD/SkillSelect/HBoxContainer/Skill1
+			btn1.text = "%s (%dM)" % [s1.capitalize(), SkillsManager.SKILL_COSTS.get(s1, 0)]
+			btn1.disabled = not SkillsManager.can_pick_skill(s1)
 	if SkillsManager.selected_skills.size() > 1:
+		var s2 = SkillsManager.selected_skills[1]
 		if has_node("HUD/SkillSelect/HBoxContainer/Skill2"):
-			$HUD/SkillSelect/HBoxContainer/Skill2.text = SkillsManager.selected_skills[1].capitalize()
+			var btn2 = $HUD/SkillSelect/HBoxContainer/Skill2
+			btn2.text = "%s (%dM)" % [s2.capitalize(), SkillsManager.SKILL_COSTS.get(s2, 0)]
+			btn2.disabled = not SkillsManager.can_pick_skill(s2)
 			
+	print("[Phase] SKILL SELECT — Mana: %d | Skills: %s" % [SkillsManager.player_mana, str(SkillsManager.selected_skills)])
 	skill_select.show()
 	countdown_label.show()
 	typing_label.hide()
@@ -93,9 +126,31 @@ func start_skill_phase():
 func start_typing_phase():
 	current_state = GameState.TYPING
 	skill_select.hide()
-	countdown_label.hide()
+	
+	skill_timer = 0.0
+	is_typing = false
+	current_index = 0
+	total_keystrokes = 0
+	typos_count = 0
+	typos_in_current_word = 0
+	typed_statuses.clear()
 	pick_random_sentence()
+	
 	typing_label.show()
+	countdown_label.show()
+	countdown_label.text = "60"
+	update_typing_ui()
+	
+	set_meta("jumble_triggered_this_round", false)
+	
+	if SkillsManager.selected_passive == "stutter" and SkillsManager.opponent_win_streak > 0:
+		_queued_mutations.append({ "type": "stutter" })
+		
+	if SkillsManager.selected_passive == "phantom" and SkillsManager.phantom_stack > 0:
+		for i in range(SkillsManager.phantom_stack):
+			_queued_mutations.append({ "type": "phantom" })
+			
+	print("[Round] Starting TYPING Phase. Target: ", target_sentence)
 
 func _spawn_players():
 	var p1_scene = load("res://scenes/entities/riven/riven_sprite.tscn")
@@ -144,7 +199,7 @@ func pick_random_sentence():
 	typos_in_current_word = 0
 	total_keystrokes = 0
 	if stats_label:
-		stats_label.text = "WPM: 0 | Typos: 0 | Accuracy: 100% | Mana: %d" % SkillsManager.player_mana
+		stats_label.text = "WPM: 0 | Typos: 0 | Accuracy: 100% | Mana: " + str(SkillsManager.player_mana)
 	update_typing_ui()
 
 func _process(delta):
@@ -156,6 +211,25 @@ func _process(delta):
 			start_typing_phase()
 			
 	elif current_state == GameState.TYPING:
+		# ── Main 60s round timer ──────────────────────
+		if snap_active:
+			snap_timer -= delta
+			if countdown_label:
+				countdown_label.text = "⏱ Opp: %d" % max(0, int(ceil(snap_timer)))
+			if snap_timer <= 0.0:
+				print("[Round] Snap timer expired — FULL POWER resolution")
+				_resolve_and_advance("full_power")
+				return
+		else:
+			round_timer -= delta
+			if countdown_label:
+				countdown_label.text = "%d" % max(0, int(ceil(round_timer)))
+			if round_timer <= 0.0:
+				print("[Round] 60s expired — NO ATTACK resolution")
+				_resolve_and_advance("no_attack")
+				return
+		
+		# ── Stats HUD ─────────────────────────────────
 		var time_elapsed_min = 0.0
 		if is_typing and sentence_start_time > 0:
 			time_elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
@@ -169,21 +243,22 @@ func _process(delta):
 		if stats_label:
 			stats_label.text = "WPM: %d | Typos: %d | Accuracy: %.1f%% | Mana: %d" % [wpm, typos_count, accuracy, SkillsManager.player_mana]
 	
-	# Update visual progress lines to show HP
-	own_progress_bar.max_value = HPManager.player_max_hp
-	own_progress_bar.value = HPManager.player_hp
+	# ── Progress bars (HP display) ─────────────────
+	own_progress_bar.max_value  = HPManager.player_max_hp
+	own_progress_bar.value      = HPManager.player_hp
 	enemy_progress_bar.max_value = HPManager.opponent_max_hp
-	enemy_progress_bar.value = HPManager.opponent_hp
+	enemy_progress_bar.value    = HPManager.opponent_hp
 	
-	# Networking sync
+	# ── Networking sync ────────────────────────────
 	var now = Time.get_ticks_msec() / 1000.0
-	if now - last_progress_sync > 0.3:
-		last_progress_sync = now
-		_sync_progress_to_server()
-	
-	if now - last_poll_time > 1.0:
-		last_poll_time = now
-		_poll_opponent_progress()
+	if current_state == GameState.TYPING:
+		if now - last_progress_sync > 0.3:
+			last_progress_sync = now
+			_sync_progress_to_server()
+		
+		if now - last_poll_time > 1.0:
+			last_poll_time = now
+			_poll_opponent_progress()
 
 func _sync_progress_to_server():
 	if GameManager.current_room == "" or GameManager.user_data.id == 0: return
@@ -194,11 +269,15 @@ func _sync_progress_to_server():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
-	var body = JSON.stringify({
+	var payload = {
 		"user_id": GameManager.user_data.id,
 		"progress": prog,
 		"typos": typos_count
-	})
+	}
+	if _queued_mutations.size() > 0:
+		payload["send_mutation"] = _queued_mutations.pop_front()
+	
+	var body = JSON.stringify(payload)
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/progress", GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, body)
 
 func _poll_opponent_progress():
@@ -210,31 +289,107 @@ func _poll_opponent_progress():
 
 func _on_poll_progress_done(_result, _code, _headers, body, http):
 	http.queue_free()
+	if current_state != GameState.TYPING: return
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if json:
 		var opp_prog = 0.0
 		var opp_typos = 0
+		var my_muts = []
 		if GameManager.is_host:
-			opp_prog = json.get("guest_progress", 0.0)
+			opp_prog  = json.get("guest_progress", 0.0)
 			opp_typos = json.get("guest_typos", 0)
+			my_muts   = json.get("host_mutations", [])
 		else:
-			opp_prog = json.get("host_progress", 0.0)
+			opp_prog  = json.get("host_progress", 0.0)
 			opp_typos = json.get("host_typos", 0)
+			my_muts   = json.get("guest_mutations", [])
+			
+		while _last_mutation_index < my_muts.size():
+			_apply_mutation(my_muts[_last_mutation_index])
+			_last_mutation_index += 1
 		
+		set_meta("opp_typos", opp_typos)
 		enemy_typing_progress = opp_prog * 100.0
 		
-		# Save opp_typos temporarily so we can pass it to resolve_round
-		set_meta("opp_typos", opp_typos)
-		
-		if not GameManager.is_solo and enemy_typing_progress >= 100.0:
-			if current_state == GameState.TYPING:
-				typing_label.hide()
-				_on_sentence_completed()
+		# Online: enemy finished
+		if not GameManager.is_solo and enemy_typing_progress >= 100.0 and not enemy_finished:
+			enemy_finished = true
+			if i_finished:
+				# We finished first, enemy just caught up within snap window
+				snap_active = false
+				print("[Round] Enemy finished within snap window — BUFF resolution")
+				_resolve_and_advance("buff")
+			else:
+				# Enemy finished before us — start snap for us
+				print("[Round] Enemy finished first — snap timer started for us")
+				if round_timer > 10.0:
+					snap_timer = 10.0
+				else:
+					snap_timer = round_timer
+				snap_active = true
 
 @export var correct_color: Color = Color.GREEN
 @export var wrong_color: Color = Color.RED
 @export var current_char_color: Color = Color.YELLOW
 @export var upcoming_color: Color = Color.WHITE
+
+func _apply_mutation(mut: Dictionary):
+	var type = mut.get("type", "")
+	print("[Mutation] Receiving mutation: ", type)
+	
+	if type == "stutter_effect2":
+		var prev_space = target_sentence.rfind(" ", current_index - 2)
+		var start = prev_space + 1 if prev_space != -1 else 0
+		var word_just_typed = target_sentence.substr(start, current_index - 1 - start)
+		target_sentence = target_sentence.substr(0, current_index) + word_just_typed + " " + target_sentence.substr(current_index)
+		update_typing_ui()
+		return
+		
+	var remaining_text = target_sentence.substr(current_index)
+	var first_space = remaining_text.find(" ")
+	if first_space == -1: return # No unstarted words left
+	
+	var unstarted_part = remaining_text.substr(first_space + 1)
+	var words = unstarted_part.split(" ")
+	if words.size() == 0: return
+	
+	if type == "reversal":
+		var w_idx = randi() % words.size()
+		var w = words[w_idx]
+		var rw = ""
+		for i in range(w.length() - 1, -1, -1): rw += w[i]
+		words[w_idx] = rw
+	elif type == "jumble":
+		var max_len = 0
+		for w in words:
+			if w.length() > max_len: max_len = w.length()
+		var cands = []
+		for i in range(words.size()):
+			if words[i].length() == max_len: cands.append(i)
+		var w_idx = cands[randi() % cands.size()]
+		var chars = []
+		for c in words[w_idx]: chars.append(c)
+		chars.shuffle()
+		var nw = ""
+		for c in chars: nw += c
+		words[w_idx] = nw
+	elif type == "erosion":
+		if words[0].length() > 0:
+			var w = words[0]
+			words[0] = w + w[w.length()-1]
+	elif type == "phantom":
+		var w_idx = randi() % words.size()
+		var w = words[w_idx]
+		if w.length() > 0:
+			var c_idx = randi() % w.length()
+			words[w_idx] = w.substr(0, c_idx) + "_" + w.substr(c_idx + 1)
+	elif type == "stutter":
+		var w_idx = randi() % words.size()
+		words[w_idx] = words[w_idx] + " " + words[w_idx]
+		set_meta("stutter_effect2_pending", true)
+
+	target_sentence = target_sentence.substr(0, current_index + first_space + 1) + " ".join(words)
+	update_typing_ui()
 
 func update_typing_ui():
 	if accuracy_warning:
@@ -285,29 +440,85 @@ func _unhandled_input(event):
 					typos_in_current_word += 1
 					
 				if expected_char == " ":
+					# Word completed
 					if typos_in_current_word == 0:
-						SkillsManager.player_mana = min(10, SkillsManager.player_mana + 1)
+						# Accurate word: trigger mana + passive
+						var cur_wpm = 0.0
+						var elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
+						if elapsed_min > 0:
+							cur_wpm = (float(current_index) / 5.0) / elapsed_min
+						SkillsManager.on_accurate_word(cur_wpm)
+						
+						_perfect_words_streak += 1
+						if SkillsManager.selected_passive == "erosion" and _perfect_words_streak % 3 == 0:
+							_queued_mutations.append({ "type": "erosion" })
 					typos_in_current_word = 0
+					
+					# Handle stutter effect 2
+					if get_meta("stutter_effect2_pending", false):
+						set_meta("stutter_effect2_pending", false)
+						_apply_mutation({ "type": "stutter_effect2" })
+						
+					# Jumble check
+					if SkillsManager.selected_passive == "jumble" and SkillsManager.player_mana >= 7 and not get_meta("jumble_triggered_this_round", false):
+						set_meta("jumble_triggered_this_round", true)
+						_queued_mutations.append({ "type": "jumble" })
 				
 				typed_statuses.append(is_correct)
 				current_index += 1
 				update_typing_ui()
 				
 				if current_index >= target_sentence.length():
+					# Last word accurate?
 					if typos_in_current_word == 0:
-						SkillsManager.player_mana = min(10, SkillsManager.player_mana + 1)
-						
+						var elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
+						var cur_wpm = (float(current_index) / 5.0) / elapsed_min if elapsed_min > 0 else 0.0
+						SkillsManager.on_accurate_word(cur_wpm)
+					
 					var accuracy = 100.0
 					if total_keystrokes > 0:
 						accuracy = (float(total_keystrokes - typos_count) / float(total_keystrokes)) * 100.0
-						
+					
 					if accuracy < 60.0:
 						if accuracy_warning:
 							accuracy_warning.show()
 					else:
-						_on_sentence_completed()
+						_on_i_finished()
 
-func _on_sentence_completed():
+## Called when THIS player finishes typing.
+func _on_i_finished():
+	if i_finished: return  # guard against double-trigger
+	i_finished = true
+	typing_label.hide()
+	
+	if enemy_finished:
+		# Enemy already finished before us — we're the loser
+		snap_active = false
+		print("[Round] We finished SECOND (enemy was faster) — DEBUFF resolution")
+		_resolve_and_advance("debuff")
+	else:
+		# We finished first!
+		SkillsManager.on_finish_first()
+		if SkillsManager.selected_passive == "reversal":
+			_queued_mutations.append({ "type": "reversal" })
+		if GameManager.is_solo:
+			# Solo: auto-resolve as buff (no real opponent)
+			print("[Round] Solo mode — BUFF resolution")
+			_resolve_and_advance("buff")
+		else:
+			# Start snap timer
+			if round_timer > 10.0:
+				snap_timer = 10.0
+			else:
+				snap_timer = round_timer
+			snap_active = true
+			print("[Round] We finished FIRST — snap timer: %.1f s" % snap_timer)
+			countdown_label.show()
+
+func _resolve_and_advance(finish_mode: String):
+	if current_state == GameState.RESOLVING: return
+	current_state = GameState.RESOLVING
+	
 	var time_elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
 	var words = target_sentence.length() / 5.0
 	var wpm = int(words / time_elapsed_min) if time_elapsed_min > 0 else 0
@@ -315,64 +526,86 @@ func _on_sentence_completed():
 	var accuracy = 100.0
 	if total_keystrokes > 0:
 		accuracy = (float(total_keystrokes - typos_count) / float(total_keystrokes)) * 100.0
-		
-	print("--- Sentence Completed ---")
-	print("WPM: ", wpm)
-	print("Typos: ", typos_count)
-	print("Accuracy: ", ("%.1f" % accuracy) + "%")
-	print("--------------------------")
 	
-	# Determine if we won the round
-	var won = (current_index >= target_sentence.length())
-	
-	# Execute round combat logic
 	var result = SkillsManager.resolve_round(
 		float(wpm), accuracy, typos_count,
-		get_meta("opp_typos", 0), # now synchronized!
-		won, HPManager.opponent_hp, HPManager.player_hp,
-		chosen_skill_id
+		get_meta("opp_typos", 0),
+		finish_mode,
+		chosen_skill_id,
+		HPManager.opponent_hp, HPManager.player_hp
 	)
 	
-	# Apply damage and healing locally
+	for line in result.log:
+		print("[Combat] ", line)
+	
+	# Apply HP changes
 	if result.player_hp_delta != 0:
 		HPManager.heal("player", result.player_hp_delta)
 	if result.opp_hp_delta != 0:
 		HPManager.heal("opponent", result.opp_hp_delta)
-		
-	# Deal the attack damage
 	if result.player_damage > 0:
 		HPManager.take_damage("opponent", result.player_damage)
-	if result.opp_damage > 0:
-		HPManager.take_damage("player", result.opp_damage)
-		
-	for line in result.log:
-		print("[Combat] ", line)
 	
-	typing_label.hide()
+	# ── DEBUG: Skill Animation Stub ──────────────────────────────────────
+	print("╔══════════════════════════════════════════╗")
+	if chosen_skill_id == "":
+		print("║  [NO SKILL] — Base attack only           ║")
+	else:
+		match finish_mode:
+			"buff":
+				print("║  🎯 [%s] — BUFF  (you finished 1st)   ║" % chosen_skill_id.to_upper())
+			"debuff":
+				print("║  ⬇️ [%s] — DEBUFF (you finished 2nd) ║" % chosen_skill_id.to_upper())
+			"full_power":
+				print("║  💥 [%s] — FULL POWER! (opp timed out)║" % chosen_skill_id.to_upper())
+			"tie":
+				print("║  ⚡ [%s] — TIE (both get buff)        ║" % chosen_skill_id.to_upper())
+			"no_attack":
+				print("║  ⏱️ [TIMEOUT] — No skill fires         ║")
+	print("║  Player: %-30s  ║" % GameManager.user_data.username)
+	print("║  DMG dealt:  %-5.0f                         ║" % result.player_damage)
+	print("║  HP delta:   %+.0f                          ║" % result.player_hp_delta)
 	
-	print("Executing Skill ", chosen_skill_index)
-	print("Waiting for animation...")
+	# Update phantom stack before advancing
+	var final_accuracy = 100.0
+	if total_keystrokes > 0:
+		final_accuracy = (float(total_keystrokes - typos_count) / float(total_keystrokes)) * 100.0
+	if SkillsManager.selected_passive == "phantom":
+		if final_accuracy >= 90.0 and SkillsManager.phantom_stack > 0:
+			SkillsManager.phantom_stack = min(3, SkillsManager.phantom_stack + 1)
+		elif final_accuracy >= 85.0 and SkillsManager.phantom_stack == 0:
+			SkillsManager.phantom_stack = 1
+		else:
+			SkillsManager.phantom_stack = 0
+			
+	if HPManager.player_hp <= 0 or HPManager.opponent_hp <= 0:
+		pass
 	
-	if p1 and p1.has_node("AnimationPlayer"):
-		p1.get_node("AnimationPlayer").play("quickstrike")
-		
+	print("║  Your HP:    %.0f / %.0f                     ║" % [HPManager.player_hp, HPManager.player_max_hp])
+	print("║  Opp HP:     %.0f / %.0f                     ║" % [HPManager.opponent_hp, HPManager.opponent_max_hp])
+	print("║  Mana:       %d                             ║" % SkillsManager.player_mana)
+	print("╚══════════════════════════════════════════╝")
+	# ─────────────────────────────────────────────────────────────────────
+	
 	await get_tree().create_timer(2.0).timeout
-	
-	if p1 and p1.has_node("AnimationPlayer"):
-		var anim = p1.get_node("AnimationPlayer")
-		anim.stop()
-		anim.seek(0, true)
-		if p1.has_node("Sprite2D"):
-			p1.get_node("Sprite2D").texture = load("res://assets/sprites/riven/riven-quickstrike1.png")
-		
 	start_skill_phase()
 
+## DEPRECATED — kept as a compatibility stub
+func _on_sentence_completed():
+	_on_i_finished()
+
 func _on_skill_pressed(skill_index: int):
-	if skill_index - 1 < SkillsManager.selected_skills.size():
-		chosen_skill_index = skill_index
-		chosen_skill_id = SkillsManager.selected_skills[skill_index - 1]
-		print("Selected skill: ", chosen_skill_id)
-	skill_select.hide()
+	var idx = skill_index - 1
+	if idx < SkillsManager.selected_skills.size():
+		var skill = SkillsManager.selected_skills[idx]
+		if SkillsManager.can_pick_skill(skill):
+			chosen_skill_index = skill_index
+			chosen_skill_id    = skill
+			print("[Skill] Selected: %s (cost %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0)])
+			skill_select.hide()  # Only hide if the pick succeeded
+		else:
+			print("[Skill] Not enough Mana for %s (need %d, have %d)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0), SkillsManager.player_mana])
+			# Don't hide — let player pick a different skill
 
 func _save_match_history(won: bool):
 	var wpm = 0.0
@@ -381,9 +614,13 @@ func _save_match_history(won: bool):
 	if total_keystrokes > 0:
 		accuracy = (float(total_keystrokes - typos_count) / float(total_keystrokes)) * 100.0
 	
-	var time_elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
+	# Guard: if player never started typing, sentence_start_time is 0
+	# which would produce a meaningless gigantic elapsed time
+	var time_elapsed_min = 0.0
+	if is_typing and sentence_start_time > 0:
+		time_elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
 	if time_elapsed_min > 0:
-		wpm = (total_keystrokes / 5.0) / time_elapsed_min
+		wpm = (float(total_keystrokes) / 5.0) / time_elapsed_min
 
 	var req = HTTPRequest.new()
 	add_child(req)

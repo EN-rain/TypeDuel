@@ -63,6 +63,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Global"
 
+[node name="LocalBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=123456789]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Local"
+
 [node name="FriendBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=807212193]
 unique_name_in_owner = true
 layout_mode = 2

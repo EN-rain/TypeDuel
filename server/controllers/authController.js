@@ -1,6 +1,6 @@
 const db = require('../config/db');
 const jwt = require('jsonwebtoken');
-const { isUserOnline, setOnline } = require('./gameController');
+const { isUserOnline, setOnline, setOffline } = require('./gameController');
 
 const crypto = require('crypto');
 
@@ -38,7 +38,10 @@ const login = (req, res) => {
     }
     
     // Block login if already active on another device
-    if (isUserOnline(user.id)) {
+    const online = isUserOnline(user.id);
+    console.log(`Login attempt for ${username}. isOnline: ${online}`);
+    if (online) {
+        console.log(`Blocking login for ${username} - already active`);
         return res.status(403).json({ message: 'Account is already active on another device. Please wait until it is closed.' });
     }
     
@@ -99,4 +102,13 @@ const uploadPfp = (req, res) => {
   });
 };
 
-module.exports = { register, login, updateProfile, uploadPfp };
+const logout = (req, res) => {
+  const { user_id } = req.body;
+  if (user_id) {
+    setOffline(user_id);
+    console.log(`User ${user_id} logged out and marked offline.`);
+  }
+  res.json({ ok: true });
+};
+
+module.exports = { register, login, updateProfile, uploadPfp, logout };

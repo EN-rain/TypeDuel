@@ -1,0 +1,2297 @@
+[
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 5,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED",
+			"JUMBLE_UNREACHABLE"
+		],
+		"p1": "Riven",
+		"p1_pass": "jumble",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "soulbreak",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 2,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED",
+			"JUMBLE_UNREACHABLE"
+		],
+		"p1": "Riven",
+		"p1_pass": "jumble",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 2,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "stutter",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 2,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "stutter",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 2,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "phantom",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 2,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "stutter",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "reversal",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "phantom",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 2,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "soulbreak",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "stutter",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Riven",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 5,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 6,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "quickslash",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "phantom",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "quickslash",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 6,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED",
+			"JUMBLE_UNREACHABLE"
+		],
+		"p1": "Liora",
+		"p1_pass": "jumble",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "phantom",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 7,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "jumble",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "stutter",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 6,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 6,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "jumble",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "phantom",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 7,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "jumble",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "soulbreak",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "jumble",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED",
+			"JUMBLE_UNREACHABLE"
+		],
+		"p1": "Liora",
+		"p1_pass": "jumble",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 5,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 6,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 6,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "jumble",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED",
+			"JUMBLE_UNREACHABLE"
+		],
+		"p1": "Liora",
+		"p1_pass": "jumble",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 7,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"TOO_SLOW"
+		],
+		"p1": "Liora",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 8,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Liora",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "phantom",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "stutter",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 5,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "reversal",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "phantom",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 5,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 5,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Riven",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Riven"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 5,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED",
+			"JUMBLE_UNREACHABLE"
+		],
+		"p1": "Zephon",
+		"p1_pass": "jumble",
+		"p1_skill": "soulbreak",
+		"p2": "Liora",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Liora"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED",
+			"JUMBLE_UNREACHABLE"
+		],
+		"p1": "Zephon",
+		"p1_pass": "jumble",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 2,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "phantom",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "stutter",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "reversal",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "quickslash",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "whiplash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "stutter",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "whiplash",
+		"p2": "Zephon",
+		"p2_pass": "erosion",
+		"p2_skill": "soulbreak",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "stutter",
+		"p2_skill": "quickslash",
+		"rounds": 3,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "jumble",
+		"p2_skill": "quickslash",
+		"rounds": 4,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "reversal",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "reversal",
+		"p2_skill": "whiplash",
+		"rounds": 2,
+		"winner": "Zephon"
+	},
+	{
+		"flags": [
+			"PASSIVE_NEVER_TRIGGERED"
+		],
+		"p1": "Zephon",
+		"p1_pass": "erosion",
+		"p1_skill": "soulbreak",
+		"p2": "Zephon",
+		"p2_pass": "phantom",
+		"p2_skill": "whiplash",
+		"rounds": 4,
+		"winner": "Zephon"
+	}
+]

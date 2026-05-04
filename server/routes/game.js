@@ -8,5 +8,7 @@ router.get('/online-count',  gameController.getOnlineCount);
 router.post('/heartbeat',    authMiddleware, gameController.heartbeat);
 router.post('/history',      authMiddleware, gameController.saveMatchHistory);
 router.get('/history/:user_id', authMiddleware, gameController.getMatchHistory);
+// DEV ONLY: instantly clear all online sessions (use during debug resets)
+router.post('/dev/clear-online', gameController.clearAllOnline);
 
 module.exports = router;

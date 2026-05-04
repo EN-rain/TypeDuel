@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 // Track online players by user_id with timestamps
 const onlinePlayers = new Map();
-const ONLINE_TIMEOUT_MS = 30000; // 30 seconds
+const ONLINE_TIMEOUT_MS = 20000; // 20 seconds (heartbeat is every 15s)
 
 const getLeaderboard = (req, res) => {
     const sql = 'SELECT users.username, leaderboard.wins, leaderboard.wpm, leaderboard.accuracy FROM leaderboard JOIN users ON leaderboard.user_id = users.id ORDER BY leaderboard.wins DESC LIMIT 10';
@@ -118,4 +118,12 @@ const getMatchHistory = (req, res) => {
     });
 };
 
-module.exports = { getLeaderboard, getOnlineCount, heartbeat, setOnline, setOffline, isUserOnline, saveMatchHistory, getMatchHistory };
+// DEV ONLY: clear all online sessions instantly (for debug resets)
+const clearAllOnline = (req, res) => {
+    const count = onlinePlayers.size;
+    onlinePlayers.clear();
+    console.log(`[DEV] Cleared ${count} online session(s).`);
+    res.json({ ok: true, cleared: count });
+};
+
+module.exports = { getLeaderboard, getOnlineCount, heartbeat, setOnline, setOffline, isUserOnline, saveMatchHistory, getMatchHistory, clearAllOnline };

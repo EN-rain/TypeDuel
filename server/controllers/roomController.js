@@ -31,15 +31,19 @@ const createRoom = (req, res) => {
         host_name:      display_name || 'Player',
         host_character: null,
         host_skills:    [],
+        host_passive:   "",
         guest_id:       null,
         guest_name:     null,
         guest_character: null,
         guest_skills:   [],
+        guest_passive:  "",
         status:         'lobby',
         host_progress:  0.0,
         host_typos:     0,
+        host_mutations: [],
         guest_progress: 0.0,
         guest_typos:    0,
+        guest_mutations:[],
         created_at:     Date.now()
     };
     return res.json({ ok: true, code });
@@ -66,6 +70,7 @@ const joinRoom = (req, res) => {
     room.guest_name    = display_name || 'Player';
     room.guest_character = null;
     room.guest_skills  = [];
+    room.guest_passive = "";
     return res.json({ ok: true, room });
 };
 
@@ -94,6 +99,7 @@ const matchmake = (req, res) => {
             rooms[code].guest_name     = display_name || 'Player';
             rooms[code].guest_character = null;
             rooms[code].guest_skills   = [];
+            rooms[code].guest_passive  = "";
             return res.json({ ok: true, role: 'guest', room: rooms[code] });
         }
     }
@@ -108,10 +114,14 @@ const matchmake = (req, res) => {
         host_name:       display_name || 'Player',
         host_character:  null,
         host_skills:     [],
+        host_passive:    "",
         guest_id:        null,
         guest_name:      null,
         guest_character: null,
         guest_skills:    [],
+        guest_passive:   "",
+        host_mutations:  [],
+        guest_mutations: [],
         created_at:      Date.now()
     };
     return res.json({ ok: true, role: 'host', code });
@@ -126,16 +136,18 @@ const listRooms = (req, res) => {
 // Body: { user_id, character, skills }
 const updateSelections = (req, res) => {
     const code = req.params.code.toUpperCase();
-    const { user_id, character, skills } = req.body;
+    const { user_id, character, skills, passive } = req.body;
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
     if (room.host_id == user_id) {
         if (character !== undefined) room.host_character = character;
         if (skills !== undefined)    room.host_skills    = skills;
+        if (passive !== undefined)   room.host_passive   = passive;
     } else if (room.guest_id == user_id) {
         if (character !== undefined) room.guest_character = character;
         if (skills !== undefined)    room.guest_skills    = skills;
+        if (passive !== undefined)   room.guest_passive   = passive;
     } else {
         return res.status(403).json({ message: 'Not in this room' });
     }
@@ -154,16 +166,18 @@ const startRoomGame = (req, res) => {
 // PATCH /api/rooms/:code/progress
 const updateProgress = (req, res) => {
     const code = req.params.code.toUpperCase();
-    const { user_id, progress, typos } = req.body;
+    const { user_id, progress, typos, send_mutation } = req.body;
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
     if (room.host_id == user_id) {
-        room.host_progress = progress;
+        if (progress !== undefined) room.host_progress = progress;
         if (typos !== undefined) room.host_typos = typos;
+        if (send_mutation) room.guest_mutations.push(send_mutation);
     } else if (room.guest_id == user_id) {
-        room.guest_progress = progress;
+        if (progress !== undefined) room.guest_progress = progress;
         if (typos !== undefined) room.guest_typos = typos;
+        if (send_mutation) room.host_mutations.push(send_mutation);
     }
     return res.json({ ok: true });
 };

@@ -91,7 +91,7 @@ func _process(delta):
 		_refresh_friends_list()
 
 	_heartbeat_timer += delta
-	if _heartbeat_timer >= 15.0:
+	if _heartbeat_timer >= 8.0:
 		_heartbeat_timer = 0.0
 		_send_heartbeat()
 		_fetch_online_count()
@@ -150,6 +150,7 @@ func _on_solo_play_pressed():
 	print("Solo Play pressed")
 	GameManager.is_host = true
 	GameManager.is_solo = true
+	GameManager.is_matchmaking = false
 	GameManager.current_room = ""
 	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
@@ -157,6 +158,7 @@ func _on_custom_room_pressed():
 	print("Custom Room pressed")
 	GameManager.is_host = true
 	GameManager.is_solo = false
+	GameManager.is_matchmaking = false
 	GameManager.current_room = ""
 	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
@@ -199,6 +201,7 @@ func _on_join_done(_result, req_code, _headers, body, http):
 		GameManager.current_room = join_input.text.strip_edges().to_upper()
 		GameManager.is_host = false
 		GameManager.is_solo = false
+		GameManager.is_matchmaking = false
 		get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 	else:
 		if json and json.has("message"):
@@ -253,6 +256,7 @@ func _on_matchmake_done(_result, code, _headers, body, http):
 			GameManager.current_room = json.room.code
 			GameManager.is_host = false
 			GameManager.is_solo = false
+			GameManager.is_matchmaking = true
 			get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 		else:
 			# Waiting for guest
@@ -281,6 +285,7 @@ func _on_poll_match_done(_result, code, _headers, body, http):
 			GameManager.current_room = matchmaking_code
 			GameManager.is_host = true
 			GameManager.is_solo = false
+			GameManager.is_matchmaking = true
 			get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
 func _on_leaderboard_pressed():
@@ -290,6 +295,8 @@ func _on_settings_pressed():
 	get_tree().change_scene_to_file(SCENE_SETTINGS)
 
 func _on_logout_pressed():
+	# Notify server we're going offline
+	GameManager.send_logout()
 	# Clear session
 	GameManager.user_data = {
 		"id": 0,

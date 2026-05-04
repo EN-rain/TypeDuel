@@ -6,12 +6,16 @@ const POLL_INTERVAL = 2.0
 
 const CHARACTERS = ["Riven", "Zephon", "Liora"]
 const SKILLS = [
-	{"id": "quick_strike",  "name": "Quick Strike"},
-	{"id": "drain_touch",   "name": "Drain Touch"},
-	{"id": "whiplash",      "name": "Whiplash"},
-	{"id": "soulbreak",     "name": "Soulbreak"},
-	{"id": "rupture",       "name": "Rupture"},
-	{"id": "deathmark",     "name": "Deathmark"},
+	{"id": "quickslash", "name": "Quickslash (2M)"},
+	{"id": "whiplash",   "name": "Whiplash (2M)"},
+	{"id": "soulbreak",  "name": "Soulbreak (3M)"},
+]
+const PASSIVES = [
+	{"id": "reversal", "name": "Reversal"},
+	{"id": "jumble",   "name": "Jumble"},
+	{"id": "phantom",  "name": "Phantom"},
+	{"id": "stutter",  "name": "Stutter"},
+	{"id": "erosion",  "name": "Erosion"},
 ]
 
 @onready var room_code_label  = $RoomCode
@@ -23,9 +27,11 @@ const SKILLS = [
 @onready var player1_tag      = $Player1Tag
 @onready var char_container   = $Characters/VBoxContainer
 @onready var skill_container  = $Skill/VBoxContainer
+var passive_container: VBoxContainer
 
 @export var selected_char_color: Color = Color.GREEN
 @export var selected_skill_color: Color = Color.CYAN
+@export var selected_passive_color: Color = Color.PURPLE
 
 var room_code: String   = ""
 var my_user_id: int     = 0
@@ -38,10 +44,12 @@ var _heartbeat_timer: float = 0.0
 # Opponent's last known selections (populated from poll)
 var _opp_character: String    = ""
 var _opp_skills: Array        = []
+var _opp_passive: String      = ""
 
 # Dynamically built button arrays
 var _char_buttons: Array      = []
 var _skill_buttons: Array     = []
+var _passive_buttons: Array   = []
 
 func _ready():
 	my_user_id = GameManager.user_data.id
@@ -75,13 +83,48 @@ func _ready():
 		room_code_label.hide()
 		if has_node("RoomCodeLabel"):
 			$RoomCodeLabel.hide()
+			
+	if GameManager.is_matchmaking:
+		room_code_label.hide()
+		if has_node("RoomCodeLabel"):
+			$RoomCodeLabel.hide()
 
 	# Click to copy
 	room_code_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	room_code_label.gui_input.connect(_on_room_code_input)
 
+	_setup_passive_container()
 	_setup_ui()
 	_setup_chat()
+
+func _setup_passive_container():
+	# Dynamically inject the passive container into the UI
+	var p_ctrl = Control.new()
+	p_ctrl.anchors_preset = Control.PRESET_CENTER_BOTTOM
+	p_ctrl.offset_top = -180
+	add_child(p_ctrl)
+	
+	passive_container = VBoxContainer.new()
+	passive_container.anchors_preset = Control.PRESET_CENTER_BOTTOM
+	passive_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	passive_container.grow_vertical = Control.GROW_DIRECTION_BOTH
+	passive_container.add_theme_constant_override("separation", 15)
+	p_ctrl.add_child(passive_container)
+	
+	# Add a title
+	var lbl = Label.new()
+	lbl.text = "Passive Skill"
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	passive_container.add_child(lbl)
+	
+	# Create an HBox for the passive buttons to sit horizontally
+	var hbox = HBoxContainer.new()
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_theme_constant_override("separation", 10)
+	passive_container.add_child(hbox)
+	
+	# Redirect passive_container to hbox so the setup loop places buttons there
+	passive_container = hbox
 
 func _setup_chat():
 	if room_code == "" or not has_node("ChatBox"): return
@@ -91,7 +134,7 @@ func _setup_chat():
 
 func _process(delta: float):
 	_heartbeat_timer += delta
-	if _heartbeat_timer >= 15.0:
+	if _heartbeat_timer >= 8.0:
 		_heartbeat_timer = 0.0
 		_send_heartbeat()
 
@@ -122,7 +165,8 @@ func _sync_selections():
 	var body = JSON.stringify({
 		"user_id":   my_user_id,
 		"character": GameManager.selected_character,
-		"skills":    SkillsManager.selected_skills
+		"skills":    SkillsManager.selected_skills,
+		"passive":   SkillsManager.selected_passive
 	})
 	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code + "/select", GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, body)
 
@@ -145,6 +189,10 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if not json: return
 
 	if json.get("status") == "started":
+		# Write opponent character to GameManager BEFORE changing scene
+		GameManager.opponent_character = _opp_character
+		GameManager.opponent_passive = _opp_passive
+		print("[Lobby] Starting game | Me: %s (%s) | Opp: %s (%s)" % [GameManager.selected_character, SkillsManager.selected_passive, GameManager.opponent_character, GameManager.opponent_passive])
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
 		return
 
@@ -163,6 +211,9 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 			
 			var g_skills = json.get("guest_skills")
 			_opp_skills = g_skills if g_skills != null else []
+			
+			var g_passive = json.get("guest_passive")
+			_opp_passive = str(g_passive) if g_passive != null else ""
 		_check_start_ready()
 	else:
 		player1_name.text = str(json.get("host_name", "Host"))
@@ -177,7 +228,11 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		
 		var h_skills = json.get("host_skills")
 		_opp_skills = h_skills if h_skills != null else []
-		var my_ready   = GameManager.selected_character != "" and SkillsManager.selected_skills.size() >= 2
+		
+		var h_passive = json.get("host_passive")
+		_opp_passive = str(h_passive) if h_passive != null else ""
+		
+		var my_ready   = GameManager.selected_character != "" and SkillsManager.selected_skills.size() >= 2 and SkillsManager.selected_passive != ""
 		if my_ready:
 			status_label.text = "Waiting for host to start..."
 		else:
@@ -188,8 +243,13 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 func _setup_ui():
 	for c in char_container.get_children(): c.queue_free()
 	for c in skill_container.get_children(): c.queue_free()
+	# Empty out passive buttons (skip label)
+	for c in passive_container.get_children():
+		if c is Button: c.queue_free()
+	
 	_char_buttons.clear()
 	_skill_buttons.clear()
+	_passive_buttons.clear()
 
 	for char_name in CHARACTERS:
 		var btn = Button.new()
@@ -206,6 +266,15 @@ func _setup_ui():
 		skill_container.add_child(btn)
 		btn.pressed.connect(_on_skill_selected.bind(skill["id"]))
 		_skill_buttons.append(btn)
+		
+	for psv in PASSIVES:
+		var btn = Button.new()
+		btn.text = psv["name"]
+		btn.custom_minimum_size = Vector2(100, 40)
+		passive_container.add_child(btn)
+		btn.pressed.connect(_on_passive_selected.bind(psv["id"]))
+		_passive_buttons.append(btn)
+		
 	_refresh_ui()
 
 func _on_char_selected(char_name: String):
@@ -218,12 +287,20 @@ func _on_skill_selected(skill_id: String):
 	_refresh_ui()
 	_sync_selections()
 
+func _on_passive_selected(passive_id: String):
+	SkillsManager.selected_passive = passive_id
+	_refresh_ui()
+	_sync_selections()
+
 func _refresh_ui():
 	for i in _char_buttons.size():
 		_char_buttons[i].modulate = selected_char_color if GameManager.selected_character == CHARACTERS[i] else Color.WHITE
 	for i in _skill_buttons.size():
 		var id = SKILLS[i]["id"]
 		_skill_buttons[i].modulate = selected_skill_color if SkillsManager.selected_skills.has(id) else Color.WHITE
+	for i in _passive_buttons.size():
+		var id = PASSIVES[i]["id"]
+		_passive_buttons[i].modulate = selected_passive_color if SkillsManager.selected_passive == id else Color.WHITE
 	
 	# Update own tag
 	if GameManager.is_host:
@@ -241,14 +318,18 @@ func _refresh_ui():
 
 func _check_start_ready():
 	if not GameManager.is_host: return
-	var my_ready  = GameManager.selected_character != "" and SkillsManager.selected_skills.size() >= 2
-	var opp_ready = guest_joined and _opp_character != "" and _opp_skills.size() >= 2
+	var my_ready  = GameManager.selected_character != "" and SkillsManager.selected_skills.size() >= 2 and SkillsManager.selected_passive != ""
+	var opp_ready = false
+	if GameManager.is_solo:
+		opp_ready = true
+	else:
+		opp_ready = guest_joined and _opp_character != "" and _opp_skills.size() >= 2 and _opp_passive != ""
 	start_button.disabled = not (my_ready and opp_ready)
 
 	if not guest_joined:
 		status_label.text = "Waiting for opponent..."
 	elif not my_ready:
-		status_label.text = "Pick 1 character and 2 skills."
+		status_label.text = "Pick 1 character, 2 skills, 1 passive."
 	elif not opp_ready:
 		status_label.text = "Waiting for opponent to choose..."
 	else:
@@ -257,6 +338,14 @@ func _check_start_ready():
 # ── Navigation ───────────────────────────────────────────────────────────────
 
 func _on_start_pressed():
+	if GameManager.is_solo:
+		# Auto-generate an opponent for solo mode
+		GameManager.opponent_character = CHARACTERS[randi() % CHARACTERS.size()]
+		GameManager.opponent_passive = PASSIVES[randi() % PASSIVES.size()]["id"]
+		print("[Solo] Starting game against AI: %s (Passive: %s)" % [GameManager.opponent_character, GameManager.opponent_passive])
+		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
+		return
+		
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_start_notified.bind(http))
@@ -265,6 +354,8 @@ func _on_start_pressed():
 func _on_start_notified(_result, _code, _headers, _body, http: HTTPRequest):
 	if is_instance_valid(http):
 		http.queue_free()
+	GameManager.opponent_character = _opp_character
+	GameManager.opponent_passive = _opp_passive
 	get_tree().change_scene_to_file("res://scenes/game/game.tscn")
 
 func _on_back_pressed():

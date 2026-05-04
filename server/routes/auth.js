@@ -18,6 +18,7 @@ const upload = multer({ storage: storage });
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/logout', authController.logout);
 router.post('/update', authController.updateProfile);
 router.post('/upload-pfp', upload.single('pfp'), authController.uploadPfp);
 
