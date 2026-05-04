@@ -37,13 +37,8 @@ const login = (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     
-    // Block login if already active on another device
-    const online = isUserOnline(user.id);
-    console.log(`Login attempt for ${username}. isOnline: ${online}`);
-    if (online) {
-        console.log(`Blocking login for ${username} - already active`);
-        return res.status(403).json({ message: 'Account is already active on another device. Please wait until it is closed.' });
-    }
+    // Update session_token to allow re-login from same or new device
+    // (This automatically handles "ghost" sessions if the game crashed)
     
     const session_token = crypto.randomUUID();
     db.run('UPDATE users SET session_token = ? WHERE id = ?', [session_token, user.id], (updateErr) => {

@@ -10,13 +10,7 @@ const SKILLS = [
 	{"id": "whiplash",   "name": "Whiplash (2M)"},
 	{"id": "soulbreak",  "name": "Soulbreak (3M)"},
 ]
-const PASSIVES = [
-	{"id": "reversal", "name": "Reversal"},
-	{"id": "jumble",   "name": "Jumble"},
-	{"id": "phantom",  "name": "Phantom"},
-	{"id": "stutter",  "name": "Stutter"},
-	{"id": "erosion",  "name": "Erosion"},
-]
+
 
 @onready var room_code_label  = $RoomCode
 @onready var status_label     = $StatusLabel
@@ -244,14 +238,14 @@ func _setup_ui():
 		btn.pressed.connect(_on_skill_selected.bind(skill["id"]))
 		_skill_buttons.append(btn)
 		
-	for i in range(PASSIVES.size()):
+	for i in range(GameManager.PASSIVES.size()):
 		if i < _manual_passive_buttons.size():
 			var btn = _manual_passive_buttons[i]
-			btn.text = PASSIVES[i]["name"]
+			btn.text = GameManager.PASSIVES[i]["name"]
 			# Disconnect any old connections if _setup_ui is called multiple times
 			if btn.pressed.is_connected(_on_passive_selected):
 				btn.pressed.disconnect(_on_passive_selected)
-			btn.pressed.connect(_on_passive_selected.bind(PASSIVES[i]["id"]))
+			btn.pressed.connect(_on_passive_selected.bind(GameManager.PASSIVES[i]["id"]))
 			_passive_buttons.append(btn)
 		
 	_refresh_ui()
@@ -278,7 +272,7 @@ func _refresh_ui():
 		var id = SKILLS[i]["id"]
 		_skill_buttons[i].modulate = selected_skill_color if SkillsManager.selected_skills.has(id) else Color.WHITE
 	for i in _passive_buttons.size():
-		var id = PASSIVES[i]["id"]
+		var id = GameManager.PASSIVES[i]["id"]
 		_passive_buttons[i].modulate = selected_passive_color if SkillsManager.selected_passive == id else Color.WHITE
 	
 	# Update own tag
@@ -303,7 +297,8 @@ func _check_start_ready():
 		opp_ready = true
 	else:
 		opp_ready = guest_joined and _opp_character != "" and _opp_skills.size() >= 2 and _opp_passive != ""
-	start_button.disabled = not (my_ready and opp_ready)
+	if is_instance_valid(start_button):
+		start_button.disabled = not (my_ready and opp_ready)
 
 	if not guest_joined:
 		status_label.text = "Waiting for opponent..."
@@ -320,7 +315,7 @@ func _on_start_pressed():
 	if GameManager.is_solo:
 		# Auto-generate an opponent for solo mode
 		GameManager.opponent_character = CHARACTERS[randi() % CHARACTERS.size()]
-		GameManager.opponent_passive = PASSIVES[randi() % PASSIVES.size()]["id"]
+		GameManager.opponent_passive = GameManager.PASSIVES[randi() % GameManager.PASSIVES.size()]["id"]
 		print("[Solo] Starting game against AI: %s (Passive: %s)" % [GameManager.opponent_character, GameManager.opponent_passive])
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
 		return

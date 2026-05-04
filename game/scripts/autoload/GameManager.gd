@@ -13,6 +13,14 @@ var is_online: bool = true
 var _connection_error_overlay: CanvasLayer = null
 const CONNECTION_LOST_SCENE = preload("res://scenes/ui/connection_lost_overlay.tscn")
 
+const PASSIVES = [
+	{"id": "reversal", "name": "Reversal"},
+	{"id": "jumble",   "name": "Jumble"},
+	{"id": "phantom",  "name": "Phantom"},
+	{"id": "stutter",  "name": "Stutter"},
+	{"id": "erosion",  "name": "Erosion"},
+]
+
 var current_score: int = 0
 var is_game_active: bool = false
 
