@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://bjfnu3p1xbb84"]
+[gd_scene format=3 uid="uid://bqanhwc0hs40v"]
 
 [ext_resource type="SpriteFrames" uid="uid://dqc3fkig61vf7" path="res://assets/spriteframes/leora.tres" id="1_ucweq"]
 
@@ -7,5 +7,5 @@
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1063536577]
 scale = Vector2(2, 2)
 sprite_frames = ExtResource("1_ucweq")
-animation = &"idle"
+animation = &"death"
 autoplay = "idle"

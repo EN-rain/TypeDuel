@@ -79,6 +79,7 @@ var _server_round_id: int = 0
 var _server_time_offset_ms: float = 0.0
 var _best_time_sync_rtt_ms: float = INF
 var _predicted_typing_started_at_ms: float = 0.0
+var _last_room_seq: int = -1
 
 var _host_skill_phase_requested: bool = false
 var _host_typing_phase_requested: bool = false
@@ -113,6 +114,16 @@ func _ready():
 		
 	load_sentences()
 	start_skill_phase()
+
+func _role_tag() -> String:
+	if GameManager.is_solo:
+		return "SOLO"
+	return "HOST" if GameManager.is_host else "GUEST"
+
+func _log(msg: String) -> void:
+	# Prefix logs so multi-client testing is readable.
+	var sid = GameManager.session_id
+	print("[%s][%s] %s" % [sid, _role_tag(), msg])
 
 func _on_entity_died(entity: String):
 	# Only trigger game over if we are not already resolving/ended
@@ -165,7 +176,7 @@ func start_skill_phase(announce_phase: bool = false):
 			btn2.text = "%s (%dM)" % [s2.capitalize(), SkillsManager.SKILL_COSTS.get(s2, 0)]
 			btn2.disabled = not SkillsManager.can_pick_skill(s2)
 			
-	print("[Phase] SKILL SELECT — Mana: %d | Skills: %s" % [SkillsManager.player_mana, str(SkillsManager.selected_skills)])
+	_log("[Phase] SKILL SELECT | mana=%d | skills=%s" % [SkillsManager.player_mana, str(SkillsManager.selected_skills)])
 	skill_select.show()
 	countdown_label.show()
 	typing_label.hide()
@@ -211,7 +222,7 @@ func start_typing_phase(announce_phase: bool = false):
 		for i in range(SkillsManager.phantom_stack):
 			_queued_mutations.append({ "type": "phantom" })
 			
-	print("[Round] Starting TYPING Phase. Target: ", target_sentence)
+	_log("[Round] Starting TYPING Phase | target_len=%d | round_id=%d" % [target_sentence.length(), _server_round_id])
 	sentence_start_time = Time.get_ticks_msec()
 	is_typing = true
 	
@@ -480,6 +491,11 @@ func _on_poll_progress_done(_result, _code, _headers, body, http, sent_local_ms:
 	var recv_local_ms: float = Time.get_unix_time_from_system() * 1000.0
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if json:
+		var seq = int(json.get("seq", -1))
+		if seq >= 0 and _last_room_seq >= 0 and seq < _last_room_seq:
+			return # ignore stale/out-of-order poll responses
+		if seq >= 0:
+			_last_room_seq = seq
 		_apply_room_phase(json, sent_local_ms, recv_local_ms)
 		if current_state != GameState.TYPING:
 			return
@@ -507,11 +523,11 @@ func _on_poll_progress_done(_result, _code, _headers, body, http, sent_local_ms:
 		if not GameManager.is_solo and opp_prog >= 0.99 and not enemy_finished:
 			enemy_finished = true
 			if i_finished:
-				print("[Round] Enemy finished! We already finished. Round complete.")
+				_log("[Round] Enemy finished (progress>=0.99) AFTER we finished")
 				# Both finished
 			else:
 				# Enemy finished before us — start snap for us
-				print("[Round] Enemy finished first — snap timer started for us")
+				_log("[Round] Enemy finished first — snap timer started for us")
 				snap_active = true
 
 func _apply_room_phase(room: Dictionary, sent_local_ms: float = -1.0, recv_local_ms: float = -1.0) -> void:
@@ -531,6 +547,10 @@ func _apply_room_phase(room: Dictionary, sent_local_ms: float = -1.0, recv_local
 			_server_time_offset_ms = new_offset_ms
 		else:
 			_server_time_offset_ms = lerp(_server_time_offset_ms, new_offset_ms, 0.25)
+		# Lightweight sync visibility for debugging multi-client timer drift.
+		if sent_local_ms >= 0.0 and recv_local_ms >= sent_local_ms and int(Time.get_ticks_msec()) % 3000 < 30:
+			var rtt_ms_dbg: float = recv_local_ms - sent_local_ms
+			_log("[TimeSync] rtt_ms=%.0f best_rtt_ms=%.0f offset_ms=%.0f" % [rtt_ms_dbg, _best_time_sync_rtt_ms, _server_time_offset_ms])
 
 	_server_phase = str(room.get("phase", _server_phase))
 	_server_phase_started_at_ms = float(room.get("phase_started_at", _server_phase_started_at_ms))
@@ -543,8 +563,10 @@ func _apply_room_phase(room: Dictionary, sent_local_ms: float = -1.0, recv_local
 
 	# Follow host phase changes.
 	if _server_phase == "typing" and current_state == GameState.SKILL_SELECT:
+		_log("[Net] Phase->typing (server) | round_id=%d" % _server_round_id)
 		start_typing_phase(false)
 	elif _server_phase == "skill_select" and current_state != GameState.SKILL_SELECT:
+		_log("[Net] Phase->skill_select (server) | round_id=%d" % _server_round_id)
 		start_skill_phase(false)
 
 func _host_set_phase(phase: String, round_id: int) -> void:
@@ -736,7 +758,7 @@ func _on_i_finished():
 	if enemy_finished:
 		# Enemy already finished before us — we're the loser
 		snap_active = false
-		print("[Round] We finished SECOND (enemy was faster) — DEBUFF resolution")
+		_log("[Round] We finished SECOND (enemy faster) — DEBUFF resolution")
 		_resolve_and_advance("debuff")
 	else:
 		# We finished first!
@@ -754,7 +776,7 @@ func _on_i_finished():
 			else:
 				snap_timer = round_timer
 			snap_active = true
-			print("[Round] We finished FIRST — snap timer: %.1f s" % snap_timer)
+			_log("[Round] We finished FIRST — snap timer: %.1f s" % snap_timer)
 			countdown_label.show()
 
 func _resolve_and_advance(finish_mode: String):

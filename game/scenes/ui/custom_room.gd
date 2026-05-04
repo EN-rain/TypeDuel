@@ -50,6 +50,7 @@ var _opp_passive: String      = ""
 var _matchmaking_deadline_unix_ms: float = 0.0
 var _matchmaking_forfeit_handled: bool = false
 var _matchmaking_start_sent: bool = false
+var _last_room_seq: int = -1
 
 # Dynamically built button arrays
 var _char_buttons: Array      = []
@@ -226,6 +227,11 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		return
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if not json: return
+	var seq = int(json.get("seq", -1))
+	if seq >= 0 and _last_room_seq >= 0 and seq < _last_room_seq:
+		return # ignore stale/out-of-order poll responses
+	if seq >= 0:
+		_last_room_seq = seq
 
 	if json.get("status") == "started":
 		# Write opponent character to GameManager BEFORE changing scene

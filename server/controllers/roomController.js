@@ -27,6 +27,7 @@ const createRoom = (req, res) => {
     }
     rooms[code] = {
         code,
+        seq:            0,
         host_id:        user_id,
         host_name:      display_name || 'Player',
         host_character: null,
@@ -78,6 +79,7 @@ const joinRoom = (req, res) => {
     room.guest_character = null;
     room.guest_skills  = [];
     room.guest_passive = "";
+    room.seq = (room.seq || 0) + 1;
     return res.json({ ok: true, room });
 };
 
@@ -122,6 +124,7 @@ const matchmake = (req, res) => {
     }
     rooms[code] = {
         code,
+        seq:             0,
         host_id:         user_id,
         host_name:       display_name || 'Player',
         host_character:  null,
@@ -173,6 +176,7 @@ const updateSelections = (req, res) => {
     } else {
         return res.status(403).json({ message: 'Not in this room' });
     }
+    room.seq = (room.seq || 0) + 1;
     return res.json({ ok: true });
 };
 
@@ -197,6 +201,7 @@ const startRoomGame = (req, res) => {
     room.guest_typos = 0;
     room.host_mutations = [];
     room.guest_mutations = [];
+    room.seq = (room.seq || 0) + 1;
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
@@ -234,6 +239,7 @@ const updatePhase = (req, res) => {
         room.guest_mutations = [];
     }
 
+    room.seq = (room.seq || 0) + 1;
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
@@ -259,6 +265,7 @@ const updateProgress = (req, res) => {
         room.first_finish_at = Date.now();
         room.first_finish_by = (room.host_id == user_id) ? 'host' : 'guest';
     }
+    room.seq = (room.seq || 0) + 1;
     return res.json({ ok: true });
 };
 
