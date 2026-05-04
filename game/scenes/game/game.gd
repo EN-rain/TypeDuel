@@ -75,6 +75,8 @@ var _server_phase_started_at_ms: float = 0.0
 var _server_typing_started_at_ms: float = 0.0
 var _server_first_finish_at_ms: float = 0.0
 var _server_first_finish_by: String = ""
+var _local_first_finish_at_ms: float = 0.0
+var _local_first_finish_by: String = ""
 var _server_round_id: int = 0
 var _server_time_offset_ms: float = 0.0
 var _best_time_sync_rtt_ms: float = INF
@@ -262,6 +264,8 @@ func start_typing_phase(announce_phase: bool = false):
 	current_state = GameState.TYPING
 	skill_select.hide()
 	_host_typing_phase_requested = announce_phase and GameManager.is_host
+	_local_first_finish_at_ms = 0.0
+	_local_first_finish_by = ""
 	
 	skill_timer = 0.0
 	is_typing = false
@@ -456,12 +460,19 @@ func _process(delta):
 			# Server-authoritative snap window once someone finishes.
 			# Keep updating snap_timer for BOTH players (including the one who finished first),
 			# otherwise the countdown freezes at 10.0 when i_finished == true.
-			if _server_first_finish_at_ms > 0.0:
-				var snap_deadline = min(round_deadline, _server_first_finish_at_ms + 10000.0)
+			var effective_first_finish_at_ms: float = _server_first_finish_at_ms
+			if effective_first_finish_at_ms <= 0.0 and _local_first_finish_at_ms > 0.0:
+				effective_first_finish_at_ms = _local_first_finish_at_ms
+
+			if effective_first_finish_at_ms > 0.0:
+				var snap_deadline = min(round_deadline, effective_first_finish_at_ms + 10000.0)
 				snap_timer = max(0.0, (snap_deadline - now_ms) / 1000.0)
 				snap_active = true
 
-				var am_first = (_server_first_finish_by == "host" and GameManager.is_host) or (_server_first_finish_by == "guest" and not GameManager.is_host)
+				var finish_by: String = _server_first_finish_by
+				if finish_by == "" and _local_first_finish_by != "":
+					finish_by = _local_first_finish_by
+				var am_first = (finish_by == "host" and GameManager.is_host) or (finish_by == "guest" and not GameManager.is_host)
 				if not am_first:
 					enemy_finished = true
 			elif snap_active:
@@ -472,7 +483,7 @@ func _process(delta):
 				var now_ticks: int = int(Time.get_ticks_msec())
 				if now_ticks - _last_snap_fallback_log_ms > 2000:
 					_last_snap_fallback_log_ms = now_ticks
-					_log("[Snap] Fallback ticking (awaiting server first_finish_at)")
+					_log("[Snap] Fallback ticking (awaiting first_finish_at)")
 		else:
 			if snap_active:
 				snap_timer -= delta
@@ -481,7 +492,7 @@ func _process(delta):
 
 		if snap_active:
 			# Per-client snap trace for debugging: prints "10..9..8.."
-			var s_left := int(ceil(snap_timer))
+			var s_left: int = int(ceil(snap_timer))
 			if not _snap_trace_active:
 				_snap_trace_active = true
 				_snap_trace_last_s = s_left
@@ -489,7 +500,7 @@ func _process(delta):
 				_snap_trace_start_s = s_left
 			if s_left != _snap_trace_last_s:
 				_snap_trace_last_s = s_left
-				var elapsed_s := max(0, _snap_trace_start_s - s_left + 1)
+				var elapsed_s: int = max(0, _snap_trace_start_s - s_left)
 				_snap_trace_line += ("%d.." % elapsed_s)
 				_log("[SnapTrace] " + _snap_trace_line)
 			if countdown_label:
@@ -890,6 +901,9 @@ func _on_i_finished():
 			else:
 				snap_timer = round_timer
 			snap_active = true
+			if _local_first_finish_at_ms <= 0.0:
+				_local_first_finish_at_ms = _get_synced_server_time_ms()
+				_local_first_finish_by = "host" if GameManager.is_host else "guest"
 			# Immediately publish a "finished" update so the server can set first_finish_at even if
 			# the periodic sync loop is delayed.
 			_sync_progress_to_server()
