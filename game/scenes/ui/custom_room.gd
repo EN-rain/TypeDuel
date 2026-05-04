@@ -156,6 +156,7 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 			
 			var g_char = json.get("guest_character")
 			_opp_character = str(g_char) if g_char != null else ""
+			GameManager.opponent_character = _opp_character
 			
 			if _opp_character != "":
 				player2_tag.text = "Ready: " + _opp_character
@@ -170,6 +171,7 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		
 		var h_char = json.get("host_character")
 		_opp_character = str(h_char) if h_char != null else ""
+		GameManager.opponent_character = _opp_character
 		
 		if _opp_character != "":
 			player1_tag.text = "Ready: " + _opp_character

@@ -21,6 +21,20 @@ var typos_in_current_word: int = 0
 var p1
 var p2
 
+# Character name → SpriteFrames resource path
+const CHARACTER_SPRITES = {
+	"Riven": "res://assets/spriteframes/riven.tres",
+	"Zephon": "res://assets/spriteframes/zephone.tres",
+	"Liora": "res://assets/spriteframes/leora.tres",
+}
+
+# Character name → idle animation name
+const CHARACTER_IDLE_ANIM = {
+	"Riven": "idle",
+	"Zephon": "zephon-idle",
+	"Liora": "idle",
+}
+
 @onready var typing_label = $HUD/TypingText
 @onready var skill_select = $HUD/SkillSelect
 @onready var countdown_label = $HUD/CountdownText
@@ -98,25 +112,49 @@ func start_typing_phase():
 	typing_label.show()
 
 func _spawn_players():
-	var p1_scene = load("res://scenes/entities/riven/riven_sprite.tscn")
-	if p1_scene:
-		p1 = p1_scene.instantiate()
-		if has_node("TileMap/P1"):
-			$TileMap/P1.add_child(p1)
-			p1.position = Vector2.ZERO
-		else:
-			p1.position = Vector2(300, 300)
-			add_child(p1)
-		
-	var p2_scene = load("res://scenes/entities/player2.tscn")
-	if p2_scene:
-		p2 = p2_scene.instantiate()
-		if has_node("TileMap/P2"):
-			$TileMap/P2.add_child(p2)
-			p2.position = Vector2.ZERO
-		else:
-			p2.position = Vector2(850, 300)
-			add_child(p2)
+	# Hide the pre-placed Player nodes (they're static placeholders in the .tscn)
+	if has_node("Player"):
+		$Player.hide()
+	if has_node("Player2"):
+		$Player2.hide()
+	
+	var own_char = GameManager.selected_character
+	var opp_char = GameManager.opponent_character
+	
+	# Spawn own player (p1) at P1 marker (left side, faces right)
+	p1 = _create_character_sprite(own_char, false)
+	if has_node("TileMap/P1"):
+		$TileMap/P1.add_child(p1)
+		p1.position = Vector2.ZERO
+	else:
+		p1.position = Vector2(300, 300)
+		add_child(p1)
+	
+	# Spawn opponent (p2) at P2 marker (right side, faces left)
+	p2 = _create_character_sprite(opp_char, true)
+	if has_node("TileMap/P2"):
+		$TileMap/P2.add_child(p2)
+		p2.position = Vector2.ZERO
+	else:
+		p2.position = Vector2(850, 300)
+		add_child(p2)
+
+func _create_character_sprite(char_name: String, flip: bool) -> Node2D:
+	var node = Node2D.new()
+	var sprite = AnimatedSprite2D.new()
+	sprite.name = "AnimatedSprite2D"
+	sprite.scale = Vector2(2, 2)
+	
+	var sf_path = CHARACTER_SPRITES.get(char_name, "res://assets/spriteframes/riven.tres")
+	sprite.sprite_frames = load(sf_path)
+	sprite.flip_h = flip
+	
+	var idle_anim = CHARACTER_IDLE_ANIM.get(char_name, "idle")
+	sprite.animation = idle_anim
+	sprite.play(idle_anim)
+	
+	node.add_child(sprite)
+	return node
 
 func load_sentences():
 	var path = "c:/Users/LENOVO/Documents/type-duel/server/data/sentences.json"
