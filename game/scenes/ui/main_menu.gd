@@ -40,6 +40,8 @@ var matchmaking_start_time = 0.0
 var matchmaking_code = ""
 var poll_timer = 0.0
 var _heartbeat_timer: float = 0.0
+var current_friends_data = []
+var showing_requests = false
 
 func _ready():
 	var name_to_show = GameManager.user_data.display_name
@@ -60,6 +62,7 @@ func _ready():
 	
 	# friends_button.pressed connection is now in the .tscn
 	friends_panel.get_node("%AddBtn").pressed.connect(_on_add_friend_pressed)
+	friends_panel.get_node("%ReqBtn").pressed.connect(_on_req_btn_pressed)
 	friends_dimmer.pressed.connect(_collapse_friends)
 	
 	$HistoryButton.pressed.connect(_on_history_pressed)
@@ -345,24 +348,60 @@ func _on_friends_list_received(_result, code, _headers, body, http):
 	
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if json is Array:
-		# Sort: Online > Pending > Offline
-		json.sort_custom(func(a, b):
-			var a_score = 0
-			if a.is_online: a_score = 2
-			elif a.status == "pending": a_score = 1
-			
-			var b_score = 0
-			if b.is_online: b_score = 2
-			elif b.status == "pending": b_score = 1
-			
-			return a_score > b_score
-		)
+		current_friends_data = json
 		
-		for child in friends_list.get_children():
-			child.queue_free()
-			
-		for f in json:
-			_create_friend_entry(f)
+		var pending_incoming_count = 0
+		for f in current_friends_data:
+			if f.status == "pending" and f.get("is_incoming_request", 0) == 1:
+				pending_incoming_count += 1
+				
+		var label = friends_button.get_node_or_null("Label")
+		if label:
+			if pending_incoming_count > 0:
+				label.text = str(pending_incoming_count)
+				label.show()
+			else:
+				label.hide()
+				
+		_render_friends_list()
+
+func _on_req_btn_pressed():
+	showing_requests = !showing_requests
+	var btn = friends_panel.get_node("%ReqBtn")
+	if showing_requests:
+		btn.modulate = Color(0, 1, 0)
+	else:
+		btn.modulate = Color(1, 1, 1)
+	_render_friends_list()
+
+func _render_friends_list():
+	var to_show = []
+	for f in current_friends_data:
+		if showing_requests:
+			if f.status == "pending" and f.get("is_incoming_request", 0) == 1:
+				to_show.append(f)
+		else:
+			if f.status == "accepted":
+				to_show.append(f)
+				
+	# Sort: Online > Pending > Offline
+	to_show.sort_custom(func(a, b):
+		var a_score = 0
+		if a.is_online: a_score = 2
+		elif a.status == "pending": a_score = 1
+		
+		var b_score = 0
+		if b.is_online: b_score = 2
+		elif b.status == "pending": b_score = 1
+		
+		return a_score > b_score
+	)
+	
+	for child in friends_list.get_children():
+		child.queue_free()
+		
+	for f in to_show:
+		_create_friend_entry(f)
 
 func _create_friend_entry(data: Dictionary):
 	var entry = friend_entry_scene.instantiate()
