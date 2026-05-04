@@ -6,8 +6,11 @@ extends Node
 const SERVER_URL = "http://127.0.0.1:3000"
 
 signal game_started
-
 signal game_ended(results: Dictionary)
+signal connection_status_changed(online: bool)
+
+var is_online: bool = true
+var _connection_error_overlay: CanvasLayer = null
 
 var current_score: int = 0
 var is_game_active: bool = false
@@ -38,6 +41,80 @@ func _ready():
 	session_id = str(randi()) + "_" + str(Time.get_ticks_msec())
 	# Let us handle the quit event manually so we can send logout first
 	get_tree().set_auto_accept_quit(false)
+	
+	_create_connection_overlay()
+	_start_connection_watchdog()
+
+func _start_connection_watchdog():
+	while true:
+		await get_tree().create_timer(3.0).timeout
+		_check_connection()
+
+func _check_connection():
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_connection_check_completed.bind(http))
+	
+	# Set a short timeout for the connection check
+	http.timeout = 2.0
+	var err = http.request(SERVER_URL + "/api/health")
+	if err != OK:
+		_on_connection_check_completed(HTTPRequest.RESULT_CANT_CONNECT, 0, [], PackedByteArray(), http)
+
+func _on_connection_check_completed(result, response_code, _headers, _body, http_node):
+	if is_instance_valid(http_node):
+		http_node.queue_free()
+		
+	var currently_online = (result == HTTPRequest.RESULT_SUCCESS and response_code == 200)
+	if currently_online != is_online:
+		is_online = currently_online
+		connection_status_changed.emit(is_online)
+		_toggle_connection_overlay(!is_online)
+
+func _create_connection_overlay():
+	_connection_error_overlay = CanvasLayer.new()
+	_connection_error_overlay.layer = 128 # Above everything
+	add_child(_connection_error_overlay)
+	
+	var control = Control.new()
+	control.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_connection_error_overlay.add_child(control)
+	
+	# Dimmer background
+	var color_rect = ColorRect.new()
+	color_rect.color = Color(0, 0, 0, 0.7)
+	color_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	control.add_child(color_rect)
+	
+	var panel = PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(300, 150)
+	control.add_child(panel)
+	
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	panel.add_child(vbox)
+	
+	var title = Label.new()
+	title.text = "CONNECTION LOST"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", Color.RED)
+	vbox.add_child(title)
+	
+	var desc = Label.new()
+	desc.text = "Please check your internet connection.\nThe game requires an online connection to play."
+	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(desc)
+	
+	_connection_error_overlay.hide()
+
+func _toggle_connection_overlay(visible: bool):
+	if _connection_error_overlay:
+		_connection_error_overlay.visible = visible
+		if visible:
+			print("[Network] Connection lost! Showing popup.")
+		else:
+			print("[Network] Connection restored! Hiding popup.")
 
 func start_game() -> void:
 	is_game_active = true

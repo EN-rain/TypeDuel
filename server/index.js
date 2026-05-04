@@ -34,6 +34,7 @@ app.use('/api/game', gameRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/friends', friendsRoutes);
+app.get('/api/health', (req, res) => res.sendStatus(200));
 
 
 // Database Initialization

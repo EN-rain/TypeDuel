@@ -48,7 +48,12 @@ var _last_mutation_index: int = 0
 var _queued_mutations: Array = []
 var _perfect_words_streak: int = 0
 
-func _ready():
+var is_paused: bool = false
+var debug_panel: Panel
+var pause_start_time: int = 0
+
+	_setup_debug_panel()
+	
 	HPManager.init_game()
 	SkillsManager.reset_match()
 	_spawn_players()
@@ -153,25 +158,56 @@ func start_typing_phase():
 	print("[Round] Starting TYPING Phase. Target: ", target_sentence)
 
 func _spawn_players():
+	# Determine side based on a synced random value
+	var host_is_left = (randi() % 2 == 0)
+	var am_i_left = true
+	if not GameManager.is_solo:
+		am_i_left = (GameManager.is_host == host_is_left)
+		
+	var my_side_node = "TileMap/P1" if am_i_left else "TileMap/P2"
+	var enemy_side_node = "TileMap/P2" if am_i_left else "TileMap/P1"
+	var my_pos = Vector2(300, 300) if am_i_left else Vector2(850, 300)
+	var enemy_pos = Vector2(850, 300) if am_i_left else Vector2(300, 300)
+
 	var p1_scene = load("res://scenes/entities/riven/riven_sprite.tscn")
 	if p1_scene:
 		p1 = p1_scene.instantiate()
-		if has_node("TileMap/P1"):
-			$TileMap/P1.add_child(p1)
+		if has_node(my_side_node):
+			get_node(my_side_node).add_child(p1)
 			p1.position = Vector2.ZERO
 		else:
-			p1.position = Vector2(300, 300)
+			p1.position = my_pos
 			add_child(p1)
 		
 	var p2_scene = load("res://scenes/entities/player2.tscn")
 	if p2_scene:
 		p2 = p2_scene.instantiate()
-		if has_node("TileMap/P2"):
-			$TileMap/P2.add_child(p2)
+		if has_node(enemy_side_node):
+			get_node(enemy_side_node).add_child(p2)
 			p2.position = Vector2.ZERO
 		else:
-			p2.position = Vector2(850, 300)
+			p2.position = enemy_pos
 			add_child(p2)
+			
+	# If we are on the right side, swap the UI progress bars
+	if not am_i_left and own_progress_bar and enemy_progress_bar:
+		var own_prog = own_progress_bar
+		var enemy_prog = enemy_progress_bar
+		
+		var own_anchors = [own_prog.anchor_left, own_prog.anchor_right]
+		var own_offsets = [own_prog.offset_left, own_prog.offset_right]
+		var enemy_anchors = [enemy_prog.anchor_left, enemy_prog.anchor_right]
+		var enemy_offsets = [enemy_prog.offset_left, enemy_prog.offset_right]
+		
+		own_prog.anchor_left = enemy_anchors[0]
+		own_prog.anchor_right = enemy_anchors[1]
+		own_prog.offset_left = enemy_offsets[0]
+		own_prog.offset_right = enemy_offsets[1]
+		
+		enemy_prog.anchor_left = own_anchors[0]
+		enemy_prog.anchor_right = own_anchors[1]
+		enemy_prog.offset_left = own_offsets[0]
+		enemy_prog.offset_right = own_offsets[1]
 
 func load_sentences():
 	var path = "c:/Users/LENOVO/Documents/type-duel/server/data/sentences.json"
@@ -203,6 +239,8 @@ func pick_random_sentence():
 	update_typing_ui()
 
 func _process(delta):
+	if is_paused: return
+	
 	if current_state == GameState.SKILL_SELECT:
 		skill_timer -= delta
 		if countdown_label:
@@ -414,6 +452,12 @@ func update_typing_ui():
 	typing_label.text = bbcode
 
 func _unhandled_input(event):
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		_toggle_debug_menu()
+		return
+		
+	if is_paused: return
+	
 	if current_state != GameState.TYPING: return
 	
 	if event is InputEventKey and event.pressed:
@@ -637,3 +681,76 @@ func _save_match_history(won: bool):
 	
 	var headers = ["Content-Type: application/json"]
 	req.request(SERVER + "/api/game/history", headers, HTTPClient.METHOD_POST, JSON.stringify(data))
+
+func _setup_debug_panel():
+	debug_panel = Panel.new()
+	debug_panel.set_anchors_preset(Control.PRESET_CENTER)
+	debug_panel.custom_minimum_size = Vector2(400, 300)
+	debug_panel.hide()
+	$HUD.add_child(debug_panel)
+	
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 20
+	vbox.offset_top = 20
+	vbox.offset_right = -20
+	vbox.offset_bottom = -20
+	debug_panel.add_child(vbox)
+	
+	var title = Label.new()
+	title.text = "DEBUG MENU (Paused)"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+	
+	var btn_finish = Button.new()
+	btn_finish.text = "Auto Finish Sentence"
+	btn_finish.pressed.connect(func():
+		if current_state == GameState.TYPING:
+			current_index = target_sentence.length()
+			typos_in_current_word = 0
+			_on_i_finished()
+			_toggle_debug_menu()
+	)
+	vbox.add_child(btn_finish)
+	
+	var btn_stutter = Button.new()
+	btn_stutter.text = "Inject Stutter Passive"
+	btn_stutter.pressed.connect(func():
+		SkillsManager.selected_passive = "stutter"
+		SkillsManager.opponent_win_streak = 1 # Force condition
+		print("[Debug] Stutter Passive Injected. Will trigger on next round.")
+	)
+	vbox.add_child(btn_stutter)
+
+	var btn_jumble = Button.new()
+	btn_jumble.text = "Inject Jumble Passive"
+	btn_jumble.pressed.connect(func():
+		SkillsManager.selected_passive = "jumble"
+		SkillsManager.player_mana = 10 # Force condition
+		print("[Debug] Jumble Passive Injected. Need 7+ Mana.")
+	)
+	vbox.add_child(btn_jumble)
+	
+	var btn_erosion = Button.new()
+	btn_erosion.text = "Inject Erosion Passive"
+	btn_erosion.pressed.connect(func():
+		SkillsManager.selected_passive = "erosion"
+		print("[Debug] Erosion Passive Injected.")
+	)
+	vbox.add_child(btn_erosion)
+
+	var btn_close = Button.new()
+	btn_close.text = "Close / Resume"
+	btn_close.pressed.connect(_toggle_debug_menu)
+	vbox.add_child(btn_close)
+
+func _toggle_debug_menu():
+	is_paused = !is_paused
+	if is_paused:
+		debug_panel.show()
+		pause_start_time = Time.get_ticks_msec()
+	else:
+		debug_panel.hide()
+		if pause_start_time > 0:
+			sentence_start_time += (Time.get_ticks_msec() - pause_start_time)
+			pause_start_time = 0
