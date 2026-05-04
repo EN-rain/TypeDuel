@@ -1,0 +1,22 @@
+# Godot
+.godot/
+*.translation
+*.import/
+export_presets.cfg
+*.mono/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+
+# Database
+server/database/*.sqlite
+server/database/*.sqlite-journal
+server/uploads/
+
+# OS
+.DS_Store
+Thumbs.db
