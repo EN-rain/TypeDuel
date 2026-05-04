@@ -31,6 +31,28 @@ var typos_in_current_word: int = 0
 
 var p1
 var p2
+var _victory_shown: bool = false
+
+const _MIN_SKILL_COST: int = 2
+
+func _can_pick_any_skill() -> bool:
+	for s in SkillsManager.selected_skills:
+		if SkillsManager.can_pick_skill(s):
+			return true
+	return false
+
+func _should_host_fast_forward_skill_select() -> bool:
+	# Only host decides phase changes.
+	if GameManager.is_solo or GameManager.current_room == "" or not GameManager.is_host:
+		return false
+	# If the opponent has < min possible cost, they cannot pick anything.
+	var opp_cannot_pick := SkillsManager.opponent_mana < _MIN_SKILL_COST
+	var me_cannot_pick := not _can_pick_any_skill()
+	var me_picked := chosen_skill_id != ""
+	# Fast-forward rules:
+	# - If both cannot pick, don't wait 10s.
+	# - If I already picked and opponent cannot pick, don't wait 10s.
+	return (me_cannot_pick and opp_cannot_pick) or (me_picked and opp_cannot_pick)
 
 # Character name → SpriteFrames resource path
 const CHARACTER_SPRITES = {
@@ -45,6 +67,96 @@ const CHARACTER_IDLE_ANIM = {
 	"Zephon": "zephon-idle",
 	"Liora": "idle",
 }
+
+const CHARACTER_HURT_ANIM = {
+	"Riven": "hurt",
+	"Zephon": "zephone-hurt",
+	"Liora": "hurt",
+}
+
+const CHARACTER_DEATH_ANIM = {
+	"Riven": "death",
+	"Zephon": "zephone-death",
+	"Liora": "death",
+}
+
+# Skill id -> animation base name.
+const SKILL_ANIM_NAME = {
+	"quickslash": "quickslash",
+	"soulbreak": "soulbreak",
+	"whiplash": "whipsplash",
+}
+
+func _get_sprite(node: Node) -> AnimatedSprite2D:
+	if node == null:
+		return null
+	if node.has_node("AnimatedSprite2D"):
+		return node.get_node("AnimatedSprite2D") as AnimatedSprite2D
+	return null
+
+func _safe_play_anim(node: Node, anim: String) -> void:
+	var sprite: AnimatedSprite2D = _get_sprite(node)
+	if sprite == null or sprite.sprite_frames == null:
+		return
+	if anim == "" or not sprite.sprite_frames.has_animation(anim):
+		return
+	sprite.play(anim)
+
+func _fade_out_in(node: Node, out_s: float = 0.12, in_s: float = 0.12, hold_s: float = 0.03) -> void:
+	var sprite: AnimatedSprite2D = _get_sprite(node)
+	if sprite == null:
+		return
+	# Avoid stacking tweens on rapid resolves.
+	if sprite.has_meta("fade_tween"):
+		var prev = sprite.get_meta("fade_tween")
+		if prev != null and prev is Tween:
+			(prev as Tween).kill()
+
+	sprite.modulate.a = 1.0
+	var tween: Tween = create_tween()
+	sprite.set_meta("fade_tween", tween)
+	tween.tween_property(sprite, "modulate:a", 0.0, out_s).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.tween_interval(hold_s)
+	tween.tween_property(sprite, "modulate:a", 1.0, in_s).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+func _restore_idle_after(node: Node, char_name: String, seconds: float) -> void:
+	var sprite: AnimatedSprite2D = _get_sprite(node)
+	if sprite == null:
+		return
+	var idle_anim: String = str(CHARACTER_IDLE_ANIM.get(char_name, "idle"))
+	await get_tree().create_timer(seconds).timeout
+	if is_instance_valid(sprite) and sprite.sprite_frames and sprite.sprite_frames.has_animation(idle_anim):
+		sprite.play(idle_anim)
+
+func _attack_anim_for(char_name: String, skill_id: String) -> String:
+	var base: String = str(SKILL_ANIM_NAME.get(skill_id, ""))
+	if base == "":
+		base = "quickslash"
+	# Zephon spriteframes use a prefix (zephone-quickslash etc).
+	if char_name == "Zephon":
+		return "zephone-" + base
+	return base
+
+func _play_combat_anims(skill_id: String, dealt_damage: float) -> void:
+	# Only animate attacks when we actually deal damage.
+	if dealt_damage <= 0:
+		return
+	var own_char: String = GameManager.selected_character
+	var opp_char: String = GameManager.opponent_character
+
+	var attack_anim: String = _attack_anim_for(own_char, skill_id)
+	_safe_play_anim(p1, attack_anim)
+	_fade_out_in(p1)
+	_restore_idle_after(p1, own_char, 0.6)
+
+	var death_anim: String = str(CHARACTER_DEATH_ANIM.get(opp_char, "death"))
+	var hurt_anim: String = str(CHARACTER_HURT_ANIM.get(opp_char, "hurt"))
+	if HPManager.opponent_hp <= 0:
+		_safe_play_anim(p2, death_anim)
+	else:
+		_safe_play_anim(p2, hurt_anim)
+		_fade_out_in(p2)
+	_restore_idle_after(p2, opp_char, 0.6)
 
 @onready var typing_label = $HUD/TypingText
 @onready var skill_select = $HUD/SkillSelect
@@ -81,6 +193,7 @@ var _server_round_id: int = 0
 var _server_time_offset_ms: float = 0.0
 var _best_time_sync_rtt_ms: float = INF
 var _predicted_typing_started_at_ms: float = 0.0
+var _typing_go_at_ms: float = 0.0
 var _last_snap_fallback_log_ms: int = 0
 var _last_resolved_round_id: int = 0
 var _snap_trace_active: bool = false
@@ -195,20 +308,53 @@ func _toggle_debug_overlay() -> void:
 		_debug_panel.visible = _debug_visible
 
 func _on_entity_died(entity: String):
+	if _victory_shown:
+		return
 	# Only trigger game over if we are not already resolving/ended
 	if current_state == GameState.RESOLVING:
 		# Let the current resolution finish naturally,
 		# but kill the awaited timer and force end immediately
 		pass
 	if current_state == GameState.TYPING or current_state == GameState.SKILL_SELECT or current_state == GameState.RESOLVING:
+		_victory_shown = true
 		current_state = GameState.RESOLVING  # block further input
+
+		# Play death animation before showing victory.
+		var my_char: String = GameManager.selected_character
+		var opp_char: String = GameManager.opponent_character
+		if entity == "player":
+			var death_anim: String = str(CHARACTER_DEATH_ANIM.get(my_char, "death"))
+			_safe_play_anim(p1, death_anim)
+		else:
+			var death_anim: String = str(CHARACTER_DEATH_ANIM.get(opp_char, "death"))
+			_safe_play_anim(p2, death_anim)
+		await get_tree().create_timer(0.6).timeout
 		
 		var victory_scene = load("res://scenes/ui/victory_screen.tscn").instantiate()
+		# Pause everything behind the victory panel.
+		get_tree().paused = true
+		victory_scene.process_mode = Node.PROCESS_MODE_ALWAYS
 		$HUD.add_child(victory_scene)
 		
 		var won = (entity == "opponent")
 		_save_match_history(won)
 		victory_scene.set_result(won)
+
+func _swap_controls(a: Control, b: Control) -> void:
+	if a == null or b == null:
+		return
+	var a_anchors = [a.anchor_left, a.anchor_right]
+	var a_offsets = [a.offset_left, a.offset_right]
+	var b_anchors = [b.anchor_left, b.anchor_right]
+	var b_offsets = [b.offset_left, b.offset_right]
+	a.anchor_left = b_anchors[0]
+	a.anchor_right = b_anchors[1]
+	a.offset_left = b_offsets[0]
+	a.offset_right = b_offsets[1]
+	b.anchor_left = a_anchors[0]
+	b.anchor_right = a_anchors[1]
+	b.offset_left = a_offsets[0]
+	b.offset_right = a_offsets[1]
 
 func start_skill_phase(announce_phase: bool = false):
 	current_state = GameState.SKILL_SELECT
@@ -270,6 +416,10 @@ func start_typing_phase(announce_phase: bool = false):
 	_host_typing_phase_requested = announce_phase and GameManager.is_host
 	_local_first_finish_at_ms = 0.0
 	_local_first_finish_by = ""
+	if has_meta("passive_highlight_word"):
+		remove_meta("passive_highlight_word")
+	if has_meta("passive_highlight_type"):
+		remove_meta("passive_highlight_type")
 	
 	skill_timer = 0.0
 	is_typing = false
@@ -288,7 +438,7 @@ func start_typing_phase(announce_phase: bool = false):
 	
 	typing_label.show()
 	countdown_label.show()
-	countdown_label.text = "60"
+	countdown_label.text = "Get Ready: 3"
 	update_typing_ui()
 	
 	set_meta("jumble_triggered_this_round", false)
@@ -301,8 +451,13 @@ func start_typing_phase(announce_phase: bool = false):
 			_queued_mutations.append({ "type": "phantom" })
 			
 	_log("[Round] Starting TYPING Phase | target_len=%d | round_id=%d" % [target_sentence.length(), _server_round_id])
-	sentence_start_time = Time.get_ticks_msec()
-	is_typing = true
+	# Do not start typing immediately; we run a short ready countdown before the round timer starts.
+	is_typing = false
+	sentence_start_time = 0.0
+	if not GameManager.is_solo and GameManager.current_room != "" and _server_typing_started_at_ms > 0.0:
+		_typing_go_at_ms = _server_typing_started_at_ms
+	else:
+		_typing_go_at_ms = float(Time.get_ticks_msec()) + 3000.0
 	
 	if announce_phase and not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
 		_host_typing_phase_requested = true
@@ -348,23 +503,9 @@ func _spawn_players():
 			
 	# If we are on the right side, swap the UI progress bars
 	if not am_i_left and own_progress_bar and enemy_progress_bar:
-		var own_prog = own_progress_bar
-		var enemy_prog = enemy_progress_bar
-		
-		var own_anchors = [own_prog.anchor_left, own_prog.anchor_right]
-		var own_offsets = [own_prog.offset_left, own_prog.offset_right]
-		var enemy_anchors = [enemy_prog.anchor_left, enemy_prog.anchor_right]
-		var enemy_offsets = [enemy_prog.offset_left, enemy_prog.offset_right]
-		
-		own_prog.anchor_left = enemy_anchors[0]
-		own_prog.anchor_right = enemy_anchors[1]
-		own_prog.offset_left = enemy_offsets[0]
-		own_prog.offset_right = enemy_offsets[1]
-		
-		enemy_prog.anchor_left = own_anchors[0]
-		enemy_prog.anchor_right = own_anchors[1]
-		enemy_prog.offset_left = own_offsets[0]
-		enemy_prog.offset_right = own_offsets[1]
+		_swap_controls(own_progress_bar, enemy_progress_bar)
+		_swap_controls(hp_bar_own, hp_bar_opp)
+		_swap_controls(mana_bar_own, mana_bar_opp)
 
 func _create_character_sprite(char_name: String, flip: bool) -> Node2D:
 	var player_scene = load("res://scenes/entities/player.tscn")
@@ -448,8 +589,30 @@ func _process(delta):
 					_host_set_phase("typing", max(1, _server_round_id))
 			else:
 				start_typing_phase()
+		else:
+			# Online: if nobody can pick (or host picked and opponent can't), host can fast-forward to typing.
+			if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host and _server_phase == "skill_select" and not _host_typing_phase_requested:
+				if _should_host_fast_forward_skill_select():
+					_host_typing_phase_requested = true
+					_host_set_phase("typing", max(1, _server_round_id))
 			
 	elif current_state == GameState.TYPING:
+		# Ready countdown (3s) before typing starts.
+		if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "typing" and _server_typing_started_at_ms > 0.0:
+			var now_ms_ready = _get_synced_server_time_ms()
+			if now_ms_ready < _server_typing_started_at_ms:
+				var sec_left = int(ceil((_server_typing_started_at_ms - now_ms_ready) / 1000.0))
+				if countdown_label:
+					countdown_label.text = "Get Ready: %d" % max(0, sec_left)
+				return
+		elif GameManager.is_solo or GameManager.current_room == "":
+			var now_ticks_ready = float(Time.get_ticks_msec())
+			if _typing_go_at_ms > 0.0 and now_ticks_ready < _typing_go_at_ms:
+				var sec_left = int(ceil((_typing_go_at_ms - now_ticks_ready) / 1000.0))
+				if countdown_label:
+					countdown_label.text = "Get Ready: %d" % max(0, sec_left)
+				return
+
 		# ── Main 60s round timer ──────────────────────
 		# Server-authoritative timing when online.
 		# NOTE: If we locally enter snap mode but the server hasn't yet recorded `first_finish_at`
@@ -678,6 +841,8 @@ func _apply_room_phase(room: Dictionary, sent_local_ms: float = -1.0, recv_local
 	_server_phase = str(room.get("phase", _server_phase))
 	_server_phase_started_at_ms = float(room.get("phase_started_at", _server_phase_started_at_ms))
 	_server_typing_started_at_ms = float(room.get("typing_started_at", _server_typing_started_at_ms))
+	if _server_phase == "typing" and _server_typing_started_at_ms > 0.0:
+		_typing_go_at_ms = _server_typing_started_at_ms
 	_server_first_finish_at_ms = float(room.get("first_finish_at", _server_first_finish_at_ms))
 	_server_first_finish_by = "" if room.get("first_finish_by", null) == null else str(room.get("first_finish_by"))
 	_server_round_id = int(room.get("round_id", _server_round_id))
@@ -758,6 +923,7 @@ func _host_sync_hp() -> void:
 func _apply_mutation(mut: Dictionary):
 	var type = mut.get("type", "")
 	print("[Mutation] Receiving mutation: ", type)
+	_show_passive_popup(type)
 	
 	if type == "stutter_effect2":
 		var prev_space = target_sentence.rfind(" ", current_index - 2)
@@ -809,9 +975,31 @@ func _apply_mutation(mut: Dictionary):
 		var w_idx = randi() % words.size()
 		words[w_idx] = words[w_idx] + " " + words[w_idx]
 		set_meta("stutter_effect2_pending", true)
+		set_meta("passive_highlight_word", words[w_idx].split(" ")[0])
+		set_meta("passive_highlight_type", "stutter")
 
 	target_sentence = target_sentence.substr(0, current_index + first_space + 1) + " ".join(words)
 	update_typing_ui()
+
+func _show_passive_popup(passive_type: String) -> void:
+	if GameManager.is_solo:
+		return
+	# Mutations received are caused by the opponent, so show above the opponent sprite.
+	var target_node := p2
+	if target_node == null:
+		return
+	var label := Label.new()
+	label.text = passive_type.capitalize() + " activated"
+	label.modulate = Color(1, 1, 1, 1)
+	add_child(label)
+	label.global_position = target_node.global_position + Vector2(0, -80)
+	var tween: Tween = create_tween()
+	tween.tween_property(label, "global_position:y", label.global_position.y - 30, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.6)
+	tween.finished.connect(func():
+		if is_instance_valid(label):
+			label.queue_free()
+	)
 
 func update_typing_ui():
 	if accuracy_warning:
@@ -822,6 +1010,11 @@ func update_typing_ui():
 	var cur_hex = "#" + current_char_color.to_html(false)
 	var up_hex = "#" + upcoming_color.to_html(false)
 		
+	var highlight_word: String = ""
+	if has_meta("passive_highlight_word"):
+		highlight_word = str(get_meta("passive_highlight_word"))
+	var highlight_hex = "#ffcc00"
+
 	var bbcode = "[center]"
 	for i in range(current_index):
 		var color = c_hex if typed_statuses[i] else w_hex
@@ -830,7 +1023,11 @@ func update_typing_ui():
 	if current_index < target_sentence.length():
 		bbcode += "[color=" + cur_hex + "][u]" + target_sentence[current_index] + "[/u][/color]"
 		if current_index + 1 < target_sentence.length():
-			bbcode += "[color=" + up_hex + "]" + target_sentence.substr(current_index + 1) + "[/color]"
+			var upcoming = target_sentence.substr(current_index + 1)
+			# Passive highlight: for stutter, color the duplicated word to show it triggered.
+			if highlight_word != "":
+				upcoming = upcoming.replace(" " + highlight_word + " ", " [color=" + highlight_hex + "]" + highlight_word + "[/color] ")
+			bbcode += "[color=" + up_hex + "]" + upcoming + "[/color]"
 			
 	bbcode += "[/center]"
 	typing_label.text = bbcode
@@ -846,6 +1043,13 @@ func _unhandled_input(event):
 			return
 
 	if current_state != GameState.TYPING: return
+	# During the ready countdown, ignore input so nobody can start early.
+	if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "typing" and _server_typing_started_at_ms > 0.0:
+		if _get_synced_server_time_ms() < _server_typing_started_at_ms:
+			return
+	elif (GameManager.is_solo or GameManager.current_room == "") and _typing_go_at_ms > 0.0:
+		if float(Time.get_ticks_msec()) < _typing_go_at_ms:
+			return
 	
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_BACKSPACE:
@@ -886,12 +1090,13 @@ func _unhandled_input(event):
 					typos_in_current_word = 0
 					
 					# Handle stutter effect 2
-					if get_meta("stutter_effect2_pending", false):
+					if has_meta("stutter_effect2_pending") and bool(get_meta("stutter_effect2_pending")):
 						set_meta("stutter_effect2_pending", false)
 						_apply_mutation({ "type": "stutter_effect2" })
 						
 					# Jumble check
-					if SkillsManager.selected_passive == "jumble" and SkillsManager.player_mana >= 7 and not get_meta("jumble_triggered_this_round", false):
+					var jumble_done := has_meta("jumble_triggered_this_round") and bool(get_meta("jumble_triggered_this_round"))
+					if SkillsManager.selected_passive == "jumble" and SkillsManager.player_mana >= 7 and not jumble_done:
 						set_meta("jumble_triggered_this_round", true)
 						_queued_mutations.append({ "type": "jumble" })
 				
@@ -981,7 +1186,7 @@ func _resolve_and_advance(finish_mode: String):
 	
 	var result = SkillsManager.resolve_round(
 		float(wpm), accuracy, typos_count,
-		get_meta("opp_typos", 0),
+		(int(get_meta("opp_typos")) if has_meta("opp_typos") else 0),
 		finish_mode,
 		chosen_skill_id,
 		HPManager.opponent_hp, HPManager.player_hp
@@ -997,6 +1202,9 @@ func _resolve_and_advance(finish_mode: String):
 		HPManager.heal("opponent", result.opp_hp_delta)
 	if result.player_damage > 0:
 		HPManager.take_damage("opponent", result.player_damage)
+	
+	# Skill-based attack animation (uses AnimatedSprite2D frames if present).
+	_play_combat_anims(chosen_skill_id, result.player_damage)
 
 	# Online: host syncs authoritative HP after every resolution so the other client can't diverge.
 	if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
@@ -1064,6 +1272,11 @@ func _on_skill_pressed(skill_index: int):
 			chosen_skill_id    = skill
 			print("[Skill] Selected: %s (cost %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0)])
 			skill_select.hide()  # Only hide if the pick succeeded
+			# Online: if opponent can't possibly pick (no mana), host can skip the remaining timer.
+			if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host and _server_phase == "skill_select" and not _host_typing_phase_requested:
+				if _should_host_fast_forward_skill_select():
+					_host_typing_phase_requested = true
+					_host_set_phase("typing", max(1, _server_round_id))
 		else:
 			print("[Skill] Not enough Mana for %s (need %d, have %d)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0), SkillsManager.player_mana])
 			# Don't hide — let player pick a different skill
