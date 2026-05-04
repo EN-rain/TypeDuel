@@ -199,15 +199,14 @@ func _sync_progress_to_server():
 		"progress": prog,
 		"typos": typos_count
 	})
-	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/progress",
-		["Content-Type: application/json"], HTTPClient.METHOD_PATCH, body)
+	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/progress", GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, body)
 
 func _poll_opponent_progress():
 	if GameManager.current_room == "": return
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_poll_progress_done.bind(http))
-	http.request(SERVER + "/api/rooms/" + GameManager.current_room)
+	http.request(SERVER + "/api/rooms/" + GameManager.current_room, GameManager.get_auth_headers())
 
 func _on_poll_progress_done(_result, _code, _headers, body, http):
 	http.queue_free()

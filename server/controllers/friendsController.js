@@ -45,7 +45,8 @@ exports.removeFriend = (req, res) => {
 };
 
 exports.getFriends = (req, res) => {
-    const { user_id } = req.params;
+    const user_id = parseInt(req.params.user_id, 10);
+    if (isNaN(user_id)) return res.status(400).json({ message: "Invalid user_id" });
     const query = `
         SELECT 
             f.id as relation_id, 
@@ -58,17 +59,23 @@ exports.getFriends = (req, res) => {
                 WHEN u.last_active > datetime('now', '-1 minute') THEN 1 
                 ELSE 0 
             END as is_online,
-            CASE
-                WHEN f.friend_id = ? THEN 1
-                ELSE 0
-            END as is_incoming_request
+            CASE WHEN f.friend_id = ? THEN 1 ELSE 0 END as is_incoming_request,
+            (SELECT COUNT(*) 
+             FROM chat_messages cm 
+             WHERE cm.room_id = 'dm_' || MIN(?, u.id) || '_' || MAX(?, u.id)
+               AND cm.user_id = u.id 
+               AND cm.is_read = 0) as unread_count,
+            CASE WHEN EXISTS (
+                SELECT 1
+                FROM chat_messages cm2
+                WHERE cm2.room_id = 'dm_' || MIN(?, u.id) || '_' || MAX(?, u.id)
+            ) THEN 1 ELSE 0 END as has_chat
         FROM friends f
         JOIN users u ON (f.user_id = u.id OR f.friend_id = u.id)
         WHERE (f.user_id = ? OR f.friend_id = ?) AND u.id != ?
     `;
-    db.all(query, [user_id, user_id, user_id, user_id], (err, rows) => {
+    db.all(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id], (err, rows) => {
         if (err) return res.status(500).json({ message: "Database error" });
         res.status(200).json(rows);
     });
 };
-

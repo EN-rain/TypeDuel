@@ -32,4 +32,15 @@ db.serialize(() => {
             if (!err) console.log("Backfilled display_name for existing users.");
         });
     });
+
+    db.all("PRAGMA table_info(chat_messages)", (err, rows) => {
+        if (err) { console.error(err); return; }
+
+        if (!hasColumn(rows, 'is_read')) {
+            db.run("ALTER TABLE chat_messages ADD COLUMN is_read BOOLEAN DEFAULT 0", (err) => {
+                if (err) console.error("Migration error:", err.message);
+                else console.log("Applied: ALTER TABLE chat_messages ADD COLUMN is_read BOOLEAN DEFAULT 0");
+            });
+        }
+    });
 });

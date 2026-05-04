@@ -40,3 +40,19 @@ exports.getMessages = (req, res) => {
         res.status(200).json(rows);
     });
 };
+
+exports.markRead = (req, res) => {
+    const { room_id, reader_user_id } = req.body;
+    if (!room_id || !reader_user_id) {
+        return res.status(400).json({ message: 'Missing fields' });
+    }
+    // Mark all messages in the room NOT sent by this user as read
+    db.run(
+        `UPDATE chat_messages SET is_read = 1 WHERE room_id = ? AND user_id != ? AND is_read = 0`,
+        [room_id, reader_user_id],
+        function(err) {
+            if (err) return res.status(500).json({ message: 'Database error' });
+            res.status(200).json({ updated: this.changes });
+        }
+    );
+};

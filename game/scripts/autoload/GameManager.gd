@@ -45,3 +45,8 @@ func end_game(results: Dictionary = {}) -> void:
 	is_game_active = false
 	game_ended.emit(results)
 	print("Game Ended with results: ", results)
+
+func get_auth_headers() -> PackedStringArray:
+	if user_data.token == "":
+		return ["Content-Type: application/json"]
+	return ["Authorization: Bearer " + user_data.token, "Content-Type: application/json"]

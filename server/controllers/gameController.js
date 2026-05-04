@@ -52,6 +52,10 @@ const heartbeat = (req, res) => {
 
 const setOnline = (userId) => onlinePlayers.set("user_" + String(userId), Date.now());
 const setOffline = (userId) => onlinePlayers.delete("user_" + String(userId));
+const isUserOnline = (userId) => {
+    const lastSeen = onlinePlayers.get("user_" + String(userId));
+    return lastSeen && (Date.now() - lastSeen < ONLINE_TIMEOUT_MS);
+};
 
 const saveMatchHistory = (req, res) => {
     const { user_id, username, match_type, wpm, accuracy, typos, won } = req.body;
@@ -114,4 +118,4 @@ const getMatchHistory = (req, res) => {
     });
 };
 
-module.exports = { getLeaderboard, getOnlineCount, heartbeat, setOnline, setOffline, saveMatchHistory, getMatchHistory };
+module.exports = { getLeaderboard, getOnlineCount, heartbeat, setOnline, setOffline, isUserOnline, saveMatchHistory, getMatchHistory };

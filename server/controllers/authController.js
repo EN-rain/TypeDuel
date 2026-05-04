@@ -1,6 +1,8 @@
 const db = require('../config/db');
 const jwt = require('jsonwebtoken');
-const { setOnline } = require('./gameController');
+const { isUserOnline, setOnline } = require('./gameController');
+
+const crypto = require('crypto');
 
 const register = (req, res) => {
   const { username, password, email } = req.body;
@@ -11,8 +13,9 @@ const register = (req, res) => {
     return res.status(400).json({ message: 'Username can only contain letters, numbers, and underscores' });
   }
 
-  const sql = 'INSERT INTO users (username, password, display_name, email) VALUES (?, ?, ?, ?)';
-  db.run(sql, [username, password, username, email], function(err) {
+  const session_token = crypto.randomUUID();
+  const sql = 'INSERT INTO users (username, password, display_name, email, session_token) VALUES (?, ?, ?, ?, ?)';
+  db.run(sql, [username, password, username, email, session_token], function(err) {
     if (err) {
       if (err.message && err.message.includes('UNIQUE constraint failed: users.username')) {
         return res.status(400).json({ message: 'Username is already taken. Please choose another one.' });
@@ -20,7 +23,7 @@ const register = (req, res) => {
       return res.status(400).json({ message: 'User already exists or invalid data' });
     }
     const userId = this.lastID;
-    const token = jwt.sign({ id: userId, username }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+    const token = jwt.sign({ id: userId, username, session_token }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
     setOnline(userId);
     res.status(201).json({ token, user: { id: userId, username, display_name: username, profile_icon: 'default' } });
   });
@@ -33,16 +36,25 @@ const login = (req, res) => {
     if (err || !user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-    const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
-    setOnline(user.id);
-    res.json({ 
-      token, 
-      user: { 
-        id: user.id, 
-        username: user.username, 
-        display_name: user.display_name || user.username,
-        profile_icon: user.profile_icon || 'default'
-      } 
+    
+    // Block login if already active on another device
+    if (isUserOnline(user.id)) {
+        return res.status(403).json({ message: 'Account is already active on another device. Please wait until it is closed.' });
+    }
+    
+    const session_token = crypto.randomUUID();
+    db.run('UPDATE users SET session_token = ? WHERE id = ?', [session_token, user.id], (updateErr) => {
+      const token = jwt.sign({ id: user.id, username: user.username, session_token }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+      setOnline(user.id);
+      res.json({ 
+        token, 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          display_name: user.display_name || user.username,
+          profile_icon: user.profile_icon || 'default'
+        } 
+      });
     });
   });
 };
