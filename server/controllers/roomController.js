@@ -223,7 +223,7 @@ const updatePhase = (req, res) => {
     room.phase = phase;
     room.phase_started_at = now;
 
-    if (typeof round_id === 'number') {
+    if (typeof round_id === 'number' && round_id > 0) {
         room.round_id = round_id;
     }
 

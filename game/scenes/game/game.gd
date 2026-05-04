@@ -84,12 +84,12 @@ var _last_room_seq: int = -1
 var _host_skill_phase_requested: bool = false
 var _host_typing_phase_requested: bool = false
 
-var is_paused: bool = false
-var debug_panel: Panel
-var pause_start_time: int = 0
+# Debug overlay (non-pausing; safe for online)
+var _debug_panel: Panel = null
+var _debug_visible: bool = false
+
 func _ready():
-	_setup_debug_panel()
-	
+	_setup_debug_overlay()
 	HPManager.init_game()
 	SkillsManager.reset_match()
 	if not GameManager.is_solo and GameManager.current_room != "":
@@ -124,6 +124,61 @@ func _log(msg: String) -> void:
 	# Prefix logs so multi-client testing is readable.
 	var sid = GameManager.session_id
 	print("[%s][%s] %s" % [sid, _role_tag(), msg])
+
+func _setup_debug_overlay() -> void:
+	_debug_panel = Panel.new()
+	_debug_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_debug_panel.custom_minimum_size = Vector2(420, 340)
+	_debug_panel.visible = false
+	_debug_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	$HUD.add_child(_debug_panel)
+
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 16
+	vbox.offset_top = 16
+	vbox.offset_right = -16
+	vbox.offset_bottom = -16
+	_debug_panel.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "DEBUG (F1)"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	var btn_finish = Button.new()
+	btn_finish.text = "Skip / Auto Finish Sentence"
+	btn_finish.pressed.connect(func():
+		if current_state == GameState.TYPING:
+			current_index = target_sentence.length()
+			typos_in_current_word = 0
+			_on_i_finished()
+	)
+	vbox.add_child(btn_finish)
+
+	var inject_title = Label.new()
+	inject_title.text = "Inject Passive"
+	vbox.add_child(inject_title)
+
+	for p_data in GameManager.PASSIVES:
+		var p_id = p_data["id"]
+		var btn = Button.new()
+		btn.text = p_data.get("name", p_id)
+		btn.pressed.connect(func():
+			SkillsManager.selected_passive = p_id
+			_log("[Debug] Passive injected: %s" % p_id)
+		)
+		vbox.add_child(btn)
+
+	var btn_close = Button.new()
+	btn_close.text = "Close"
+	btn_close.pressed.connect(_toggle_debug_overlay)
+	vbox.add_child(btn_close)
+
+func _toggle_debug_overlay() -> void:
+	_debug_visible = !_debug_visible
+	if is_instance_valid(_debug_panel):
+		_debug_panel.visible = _debug_visible
 
 func _on_entity_died(entity: String):
 	# Only trigger game over if we are not already resolving/ended
@@ -184,7 +239,7 @@ func start_skill_phase(announce_phase: bool = false):
 	# Online: host declares the new skill-select phase (authoritative timers + round id)
 	if announce_phase and not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
 		_host_skill_phase_requested = true
-		var next_round = (_server_round_id + 1) if _server_round_id > 0 else 1
+		var next_round = max(1, _server_round_id) + 1 if _server_round_id > 0 else 2
 		_server_round_id = next_round
 		_host_set_phase("skill_select", next_round)
 
@@ -228,7 +283,7 @@ func start_typing_phase(announce_phase: bool = false):
 	
 	if announce_phase and not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
 		_host_typing_phase_requested = true
-		_host_set_phase("typing", _server_round_id)
+		_host_set_phase("typing", max(1, _server_round_id))
 
 func _spawn_players():
 
@@ -342,8 +397,6 @@ func _get_synced_server_time_ms() -> float:
 	return Time.get_unix_time_from_system() * 1000.0 + _server_time_offset_ms
 
 func _process(delta):
-	if is_paused: return
-
 	# Always poll room state online so phase/timer transitions stay synced.
 	var now = Time.get_ticks_msec() / 1000.0
 	if not GameManager.is_solo and GameManager.current_room != "":
@@ -369,10 +422,9 @@ func _process(delta):
 						_server_typing_started_at_ms = _predicted_typing_started_at_ms
 						_server_phase = "typing"
 					start_typing_phase(true)
-				elif _predicted_typing_started_at_ms > 0.0 and _get_synced_server_time_ms() >= _predicted_typing_started_at_ms:
-					_server_typing_started_at_ms = _predicted_typing_started_at_ms
-					_server_phase = "typing"
-					start_typing_phase(false)
+				else:
+					# Non-host waits for server authoritative phase to avoid desync/flip-flopping.
+					pass
 			else:
 				start_typing_phase()
 			
@@ -575,11 +627,13 @@ func _host_set_phase(phase: String, round_id: int) -> void:
 
 	var http = HTTPRequest.new()
 	add_child(http)
-	var body = JSON.stringify({
+	var payload: Dictionary = {
 		"user_id": GameManager.user_data.id,
-		"phase": phase,
-		"round_id": round_id
-	})
+		"phase": phase
+	}
+	if round_id > 0:
+		payload["round_id"] = round_id
+	var body = JSON.stringify(payload)
 	http.request_completed.connect(func(_r, _c, _h, _b):
 		if is_instance_valid(http):
 			http.queue_free()
@@ -672,12 +726,15 @@ func update_typing_ui():
 	typing_label.text = bbcode
 
 func _unhandled_input(event):
-	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		_toggle_debug_menu()
-		return
-		
-	if is_paused: return
-	
+	# Debug overlay toggle: F1 always; ESC only in solo (avoid online desync expectations)
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_F1:
+			_toggle_debug_overlay()
+			return
+		if GameManager.is_solo and event.keycode == KEY_ESCAPE:
+			_toggle_debug_overlay()
+			return
+
 	if current_state != GameState.TYPING: return
 	
 	if event is InputEventKey and event.pressed:
@@ -904,62 +961,3 @@ func _save_match_history(won: bool):
 	
 	var headers = ["Content-Type: application/json"]
 	req.request(SERVER + "/api/game/history", headers, HTTPClient.METHOD_POST, JSON.stringify(data))
-
-func _setup_debug_panel():
-	debug_panel = Panel.new()
-	debug_panel.set_anchors_preset(Control.PRESET_CENTER)
-	debug_panel.custom_minimum_size = Vector2(400, 300)
-	debug_panel.hide()
-	$HUD.add_child(debug_panel)
-	
-	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 20
-	vbox.offset_top = 20
-	vbox.offset_right = -20
-	vbox.offset_bottom = -20
-	debug_panel.add_child(vbox)
-	
-	var title = Label.new()
-	title.text = "DEBUG MENU (Paused)"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-	
-	var btn_finish = Button.new()
-	btn_finish.text = "Auto Finish Sentence"
-	btn_finish.pressed.connect(func():
-		if current_state == GameState.TYPING:
-			current_index = target_sentence.length()
-			typos_in_current_word = 0
-			_on_i_finished()
-			_toggle_debug_menu()
-	)
-	vbox.add_child(btn_finish)
-	
-	# Dynamic Passive Injection
-	for p_data in GameManager.PASSIVES:
-		var p_id = p_data["id"]
-		var btn = Button.new()
-		btn.text = "Inject: %s" % p_id.capitalize()
-		btn.pressed.connect(func(): _on_debug_inject_passive(p_id))
-		vbox.add_child(btn)
-	
-	var btn_close = Button.new()
-	btn_close.text = "Close / Resume"
-	btn_close.pressed.connect(_toggle_debug_menu)
-	vbox.add_child(btn_close)
-
-func _on_debug_inject_passive(p_id: String):
-	SkillsManager.selected_passive = p_id
-	print("[Debug] Passive Injected: ", p_id)
-
-func _toggle_debug_menu():
-	is_paused = !is_paused
-	if is_paused:
-		debug_panel.show()
-		pause_start_time = Time.get_ticks_msec()
-	else:
-		debug_panel.hide()
-		if pause_start_time > 0:
-			sentence_start_time += (Time.get_ticks_msec() - pause_start_time)
-			pause_start_time = 0
