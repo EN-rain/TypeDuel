@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://cw6ya0kyka2o7"]
+
+[ext_resource type="Script" uid="uid://bycn2sw6cvv86" path="res://scenes/ui/chat_box.gd" id="1_script"]
+
+[node name="ChatBox" type="Control" unique_id=2065769119]
+custom_minimum_size = Vector2(300, 40)
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+offset_right = 300.0
+grow_vertical = 0
+script = ExtResource("1_script")
+
+[node name="FakeInput" type="LineEdit" parent="." unique_id=1733821694]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -24.0
+offset_right = 20.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 1
+placeholder_text = "No messages yet..."
+editable = false
+context_menu_enabled = false
+shortcut_keys_enabled = false
+middle_mouse_paste_enabled = false
+selecting_enabled = false
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+
+[node name="ChatPanel" type="Panel" parent="." unique_id=1299220153]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = -350.0
+offset_top = -608.0
+offset_bottom = 40.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ChatPanel" unique_id=1562125884]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TabContainer" type="HBoxContainer" parent="ChatPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="GlobalBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Global"
+
+[node name="FriendBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Friends"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ChatPanel/VBoxContainer" unique_id=1129583243]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="MessagesVBox" type="VBoxContainer" parent="ChatPanel/VBoxContainer/ScrollContainer" unique_id=1475129079]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="InputHBox" type="HBoxContainer" parent="ChatPanel/VBoxContainer" unique_id=725803065]
+layout_mode = 2
+
+[node name="RealInput" type="LineEdit" parent="ChatPanel/VBoxContainer/InputHBox" unique_id=225915263]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Type message..."
+
+[node name="SendButton" type="Button" parent="ChatPanel/VBoxContainer/InputHBox" unique_id=1634010114]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Send"

@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://bkqnn57tfo72j"]
+
+[node name="FriendsPanel" type="Panel" unique_id=603351127]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -250.0
+offset_right = 200.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=546762740]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="VBoxContainer" unique_id=1170850166]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Friends"
+horizontal_alignment = 1
+
+[node name="SearchHBox" type="HBoxContainer" parent="VBoxContainer" unique_id=184739693]
+layout_mode = 2
+
+[node name="SearchInput" type="LineEdit" parent="VBoxContainer/SearchHBox" unique_id=884297977]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter username to add..."
+
+[node name="AddBtn" type="Button" parent="VBoxContainer/SearchHBox" unique_id=8381194]
+unique_name_in_owner = true
+layout_mode = 2
+text = " Add "
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1949724439]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="FriendsList" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=1274225651]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CloseBtn" type="Button" parent="VBoxContainer" unique_id=1453629804]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Close"
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer" unique_id=601682349]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+autowrap_mode = 3

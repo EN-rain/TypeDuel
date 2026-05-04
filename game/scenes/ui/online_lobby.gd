@@ -26,7 +26,7 @@ func _process(delta: float):
 		status_label.text = "Searching for a match" + ".".repeat(_dot_count)
 	
 	# Update visible timer
-	var minutes = int(_total_search_time) / 60
+	var minutes = int(_total_search_time / 60.0)
 	var seconds = int(_total_search_time) % 60
 	timer_label.text = "Time: %d:%02d" % [minutes, seconds]
 

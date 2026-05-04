@@ -5,6 +5,9 @@ const db = require('./config/db');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/game');
 const roomRoutes = require('./routes/rooms');
+const chatRoutes = require('./routes/chat');
+const friendsRoutes = require('./routes/friends');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -21,10 +24,16 @@ app.use((req, res, next) => {
     next();
 });
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/friends', friendsRoutes);
+
 
 // Database Initialization
 const initDb = () => {

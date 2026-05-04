@@ -32,8 +32,15 @@ const heartbeat = (req, res) => {
     if (!user_id && !session_id) return res.status(400).json({ message: 'user_id or session_id required' });
     const key = session_id ? String(session_id) : String(user_id);
     onlinePlayers.set(key, Date.now());
+    
+    // Also update database for persistent status tracking
+    if (user_id) {
+        db.run("UPDATE users SET last_active = CURRENT_TIMESTAMP WHERE id = ?", [user_id]);
+    }
+    
     res.json({ ok: true });
 };
+
 
 const setOnline = (userId) => onlinePlayers.set(String(userId), Date.now());
 const setOffline = (userId) => onlinePlayers.delete(String(userId));

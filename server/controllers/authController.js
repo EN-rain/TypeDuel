@@ -19,7 +19,7 @@ const register = (req, res) => {
     const userId = this.lastID;
     const token = jwt.sign({ id: userId, username }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
     setOnline(userId);
-    res.status(201).json({ token, user: { id: userId, username, display_name: username } });
+    res.status(201).json({ token, user: { id: userId, username, display_name: username, profile_icon: 'default' } });
   });
 };
 
@@ -32,7 +32,15 @@ const login = (req, res) => {
     }
     const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
     setOnline(user.id);
-    res.json({ token, user: { id: user.id, username: user.username, display_name: user.display_name || user.username } });
+    res.json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        display_name: user.display_name || user.username,
+        profile_icon: user.profile_icon || 'default'
+      } 
+    });
   });
 };
 
@@ -60,4 +68,20 @@ const updateProfile = (req, res) => {
   });
 };
 
-module.exports = { register, login, updateProfile };
+const uploadPfp = (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ message: 'User ID required' });
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+  const profileIcon = req.file.filename;
+  const sql = 'UPDATE users SET profile_icon = ? WHERE id = ?';
+  
+  db.run(sql, [profileIcon, userId], function(err) {
+    if (err) {
+      return res.status(500).json({ message: 'Error updating profile picture' });
+    }
+    res.json({ message: 'Profile picture updated successfully', profile_icon: profileIcon });
+  });
+};
+
+module.exports = { register, login, updateProfile, uploadPfp };

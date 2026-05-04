@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://bwdxqk530p716"]
 
 [ext_resource type="Script" uid="uid://cdsv6vd7esyby" path="res://scenes/ui/custom_room.gd" id="1_custom_room_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
+
 
 [node name="CustomRoom" type="Control" unique_id=508700511]
 layout_mode = 3
@@ -207,6 +209,15 @@ custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 text = "Skill Name 3
 "
+
+[node name="ChatBox" parent="." instance=ExtResource("2_chat_box")]
+layout_mode = 1
+offset_left = 10.0
+offset_top = -50.0
+offset_right = 310.0
+offset_bottom = -10.0
+
+
 
 [connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]
 [connection signal="pressed" from="StartButton" to="." method="_on_start_pressed"]

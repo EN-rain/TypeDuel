@@ -1,0 +1,72 @@
+[gd_scene format=3]
+
+[node name="FriendEntry" type="HBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+offset_right = 350.0
+offset_bottom = 50.0
+theme_override_constants/separation = 12
+
+[node name="AvatarContainer" type="Control" parent="."]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="AvatarIcon" type="TextureRect" parent="AvatarContainer"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StatusDot" type="ColorRect" parent="AvatarContainer"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -10.0
+offset_top = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+color = Color(0.5, 0.5, 0.5, 1)
+
+[node name="InfoVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Username"
+vertical_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "Offline"
+
+[node name="ActionBtn" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "✔️"
+
+[node name="RemoveBtn" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "X"
+flat = true

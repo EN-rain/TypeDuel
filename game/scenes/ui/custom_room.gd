@@ -1,6 +1,7 @@
 extends Control
 
-const SERVER = "http://127.0.0.1:3000"
+
+
 const POLL_INTERVAL = 2.0
 
 const CHARACTERS = ["Riven", "Zephon", "Liora"]
@@ -80,6 +81,13 @@ func _ready():
 	room_code_label.gui_input.connect(_on_room_code_input)
 
 	_setup_ui()
+	_setup_chat()
+
+func _setup_chat():
+	if room_code == "" or not has_node("ChatBox"): return
+	$ChatBox.room_id = room_code
+
+
 
 func _process(delta: float):
 	_heartbeat_timer += delta
@@ -100,7 +108,7 @@ func _send_heartbeat():
 	add_child(http)
 	http.request_completed.connect(_on_heartbeat_done.bind(http))
 	var body = JSON.stringify({ "user_id": GameManager.user_data.id })
-	http.request(SERVER + "/api/game/heartbeat", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+	http.request(GameManager.SERVER_URL + "/api/game/heartbeat", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
 
 func _on_heartbeat_done(_result, _code, _headers, _body, http: HTTPRequest):
 	if is_instance_valid(http):
@@ -116,7 +124,7 @@ func _sync_selections():
 		"character": GameManager.selected_character,
 		"skills":    SkillsManager.selected_skills
 	})
-	http.request(SERVER + "/api/rooms/" + room_code + "/select",
+	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code + "/select",
 		["Content-Type: application/json"], HTTPClient.METHOD_PATCH, body)
 
 func _on_sync_done(_result, _code, _headers, _body, http: HTTPRequest):
@@ -128,7 +136,7 @@ func _poll_room():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_poll_done.bind(http))
-	http.request(SERVER + "/api/rooms/" + room_code)
+	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code)
 
 func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if is_instance_valid(http):
@@ -253,7 +261,7 @@ func _on_start_pressed():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_start_notified.bind(http))
-	http.request(SERVER + "/api/rooms/" + room_code + "/start", [], HTTPClient.METHOD_POST)
+	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code + "/start", [], HTTPClient.METHOD_POST)
 
 func _on_start_notified(_result, _code, _headers, _body, http: HTTPRequest):
 	if is_instance_valid(http):
@@ -274,7 +282,7 @@ func _delete_room():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
-	http.request(SERVER + "/api/rooms/" + room_code, [], HTTPClient.METHOD_DELETE)
+	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code, [], HTTPClient.METHOD_DELETE)
 
 func _create_room():
 	var http = HTTPRequest.new()
@@ -285,7 +293,7 @@ func _create_room():
 		"display_name": my_name,
 		"code":         room_code
 	})
-	http.request(SERVER + "/api/rooms/create", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+	http.request(GameManager.SERVER_URL + "/api/rooms/create", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
 
 func _on_room_created(_result, code, _headers, body, http: HTTPRequest):
 	if is_instance_valid(http):

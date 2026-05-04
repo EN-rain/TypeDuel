@@ -3,7 +3,10 @@ extends Node
 ## Global Game Manager Singleton
 ## Register this in Project Settings > Autoload as 'Game' or 'GameManager'
 
+const SERVER_URL = "http://127.0.0.1:3000"
+
 signal game_started
+
 signal game_ended(results: Dictionary)
 
 var current_score: int = 0
@@ -14,6 +17,7 @@ var user_data: Dictionary = {
 	"id": 0,
 	"username": "",
 	"display_name": "",
+	"profile_icon": "default",
 	"token": ""
 }
 

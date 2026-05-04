@@ -1,15 +1,38 @@
 extends Control
 
-const SERVER = "http://127.0.0.1:3000"
 
-@onready var greeting_label  = $Greeting
-@onready var online_count_label = $OnlineCount
-@onready var join_panel = $JoinPanel
-@onready var join_input = $JoinPanel/CodeInput
-@onready var join_error = $JoinPanel/ErrorLabel
-@onready var matchmaking_label = $MatchmakingLabel
-@onready var matchmaking_time_label = $MatchmakingTime
-@onready var play_online_btn = $PlayOnlineButton
+
+
+# ── Constants ────────────────────────────────────────────────────────────────
+const SCENE_CUSTOM_ROOM = "res://scenes/ui/custom_room.tscn"
+const SCENE_LEADERBOARD = "res://scenes/ui/leaderboard.tscn"
+const SCENE_SETTINGS    = "res://scenes/ui/settings.tscn"
+const SCENE_LOGIN       = "res://scenes/ui/login_scene.tscn"
+
+const TEXT_PLAY_ONLINE       = "Play Online"
+const TEXT_CANCEL_MATCHMAKE  = "Cancel Matchmaking"
+const TEXT_JOINING           = "Joining..."
+const TEXT_WAITING_OPPONENT  = "Waiting for opponent..."
+const TEXT_MATCHMAKE_FAILED  = "Matchmaking failed."
+const TEXT_SENDING_REQUEST   = "Sending request..."
+const TEXT_GREETING          = "Hi, %s!"
+const TEXT_PLAYER_ONLINE     = "● 1 player online"
+const TEXT_PLAYERS_ONLINE    = "● %d players online"
+
+# ── Nodes ────────────────────────────────────────────────────────────────────
+@onready var greeting_label         = %Greeting
+@onready var online_count_label      = %OnlineCount
+@onready var join_panel              = %JoinPanel
+@onready var join_input              = %CodeInput
+@onready var join_error              = %ErrorLabel
+@onready var matchmaking_label       = %MatchmakingLabel
+@onready var matchmaking_time_label  = %MatchmakingTime
+@onready var play_online_btn         = %PlayOnlineButton
+@onready var friends_button          = %FriendsButton
+@onready var friends_panel           = %FriendsPanel
+@onready var friends_list            = friends_panel.get_node("%FriendsList")
+@onready var friend_search_input     = friends_panel.get_node("%SearchInput")
+@onready var friend_status_label     = friends_panel.get_node("%StatusLabel")
 
 var is_matchmaking = false
 var matchmaking_start_time = 0.0
@@ -21,13 +44,25 @@ func _ready():
 	var name_to_show = GameManager.user_data.display_name
 	if name_to_show == "":
 		name_to_show = GameManager.user_data.username
-	greeting_label.text = "Hi, " + name_to_show + "!"
+	greeting_label.text = TEXT_GREETING % name_to_show
 	
 	_fetch_online_count()
 	_send_heartbeat()
 	
 	matchmaking_label.hide()
 	matchmaking_time_label.hide()
+	
+	# friends_button.pressed connection is now in the .tscn
+	friends_panel.get_node("%AddBtn").pressed.connect(_on_add_friend_pressed)
+	friends_panel.get_node("%CloseBtn").pressed.connect(func(): friends_panel.hide())
+	
+	_setup_chat()
+
+func _setup_chat():
+	if has_node("%ChatBox"):
+		%ChatBox.room_id = "global"
+
+
 
 func _process(delta):
 	_heartbeat_timer += delta
@@ -38,7 +73,7 @@ func _process(delta):
 	
 	if is_matchmaking:
 		var elapsed = Time.get_ticks_msec() / 1000.0 - matchmaking_start_time
-		var minutes = int(elapsed) / 60
+		var minutes = int(elapsed / 60.0)
 		var seconds = int(elapsed) % 60
 		matchmaking_time_label.text = "Time: %d:%02d" % [minutes, seconds]
 		
@@ -54,7 +89,7 @@ func _fetch_online_count():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_online_count_received.bind(http))
-	http.request(SERVER + "/api/game/online-count")
+	http.request(GameManager.SERVER_URL + "/api/game/online-count")
 
 func _on_online_count_received(_result, code, _headers, body, http: HTTPRequest):
 	if is_instance_valid(http):
@@ -64,9 +99,9 @@ func _on_online_count_received(_result, code, _headers, body, http: HTTPRequest)
 		if json and json.has("online"):
 			var c = json["online"]
 			if c == 1:
-				online_count_label.text = "● 1 player online"
+				online_count_label.text = TEXT_PLAYER_ONLINE
 			else:
-				online_count_label.text = "● %d players online" % c
+				online_count_label.text = TEXT_PLAYERS_ONLINE % c
 
 func _send_heartbeat():
 	if GameManager.user_data.id == 0:
@@ -75,7 +110,7 @@ func _send_heartbeat():
 	add_child(http)
 	http.request_completed.connect(_on_heartbeat_done.bind(http))
 	var body = JSON.stringify({ "user_id": GameManager.user_data.id, "session_id": GameManager.session_id })
-	http.request(SERVER + "/api/game/heartbeat", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+	http.request(GameManager.SERVER_URL + "/api/game/heartbeat", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
 
 func _on_heartbeat_done(_result, _code, _headers, _body, http: HTTPRequest):
 	if is_instance_valid(http):
@@ -88,14 +123,14 @@ func _on_solo_play_pressed():
 	GameManager.is_host = true
 	GameManager.is_solo = true
 	GameManager.current_room = ""
-	get_tree().change_scene_to_file("res://scenes/ui/custom_room.tscn")
+	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
 func _on_custom_room_pressed():
 	print("Custom Room pressed")
 	GameManager.is_host = true
 	GameManager.is_solo = false
 	GameManager.current_room = ""
-	get_tree().change_scene_to_file("res://scenes/ui/custom_room.tscn")
+	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
 func _on_join_pressed():
 	join_panel.visible = true
@@ -111,7 +146,7 @@ func _on_submit_join_pressed():
 		join_error.text = "Code must be 6 characters."
 		return
 	
-	join_error.text = "Joining..."
+	join_error.text = TEXT_JOINING
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_join_done.bind(http))
@@ -123,7 +158,7 @@ func _on_submit_join_pressed():
 		"display_name": my_name,
 		"code": code
 	})
-	http.request(SERVER + "/api/rooms/join", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+	http.request(GameManager.SERVER_URL + "/api/rooms/join", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
 
 func _on_join_done(_result, req_code, _headers, body, http):
 	if is_instance_valid(http):
@@ -136,7 +171,7 @@ func _on_join_done(_result, req_code, _headers, body, http):
 		GameManager.current_room = join_input.text.strip_edges().to_upper()
 		GameManager.is_host = false
 		GameManager.is_solo = false
-		get_tree().change_scene_to_file("res://scenes/ui/custom_room.tscn")
+		get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 	else:
 		if json and json.has("message"):
 			join_error.text = json["message"]
@@ -164,7 +199,7 @@ func _on_play_online_pressed():
 	matchmaking_start_time = Time.get_ticks_msec() / 1000.0
 	matchmaking_label.show()
 	matchmaking_time_label.show()
-	play_online_btn.text = "Cancel Matchmaking"
+	play_online_btn.text = TEXT_CANCEL_MATCHMAKE
 	
 	var http = HTTPRequest.new()
 	add_child(http)
@@ -176,7 +211,7 @@ func _on_play_online_pressed():
 		"user_id": GameManager.user_data.id,
 		"display_name": my_name
 	})
-	http.request(SERVER + "/api/rooms/matchmake", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+	http.request(GameManager.SERVER_URL + "/api/rooms/matchmake", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
 
 func _on_matchmake_done(_result, code, _headers, body, http):
 	if is_instance_valid(http):
@@ -190,21 +225,21 @@ func _on_matchmake_done(_result, code, _headers, body, http):
 			GameManager.current_room = json.room.code
 			GameManager.is_host = false
 			GameManager.is_solo = false
-			get_tree().change_scene_to_file("res://scenes/ui/custom_room.tscn")
+			get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 		else:
 			# Waiting for guest
 			matchmaking_code = json.code
-			matchmaking_label.text = "Waiting for opponent..."
+			matchmaking_label.text = TEXT_WAITING_OPPONENT
 	else:
 		is_matchmaking = false
-		matchmaking_label.text = "Matchmaking failed."
-		play_online_btn.text = "Play Online"
+		matchmaking_label.text = TEXT_MATCHMAKE_FAILED
+		play_online_btn.text = TEXT_PLAY_ONLINE
 
 func _check_matchmaking_status():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_poll_match_done.bind(http))
-	http.request(SERVER + "/api/rooms/" + matchmaking_code)
+	http.request(GameManager.SERVER_URL + "/api/rooms/" + matchmaking_code)
 
 func _on_poll_match_done(_result, code, _headers, body, http):
 	if is_instance_valid(http):
@@ -218,13 +253,13 @@ func _on_poll_match_done(_result, code, _headers, body, http):
 			GameManager.current_room = matchmaking_code
 			GameManager.is_host = true
 			GameManager.is_solo = false
-			get_tree().change_scene_to_file("res://scenes/ui/custom_room.tscn")
+			get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
 func _on_leaderboard_pressed():
-	get_tree().change_scene_to_file("res://scenes/ui/leaderboard.tscn")
+	get_tree().change_scene_to_file(SCENE_LEADERBOARD)
 
 func _on_settings_pressed():
-	get_tree().change_scene_to_file("res://scenes/ui/settings.tscn")
+	get_tree().change_scene_to_file(SCENE_SETTINGS)
 
 func _on_logout_pressed():
 	# Clear session
@@ -234,4 +269,160 @@ func _on_logout_pressed():
 		"display_name": "",
 		"token": ""
 	}
-	get_tree().change_scene_to_file("res://scenes/ui/login_scene.tscn")
+	get_tree().change_scene_to_file(SCENE_LOGIN)
+
+# ── Friends System ───────────────────────────────────────────────────────────
+
+var friend_entry_scene = preload("res://scenes/ui/friend_entry.tscn")
+var is_friends_expanded = false
+
+func _on_friends_pressed():
+	if is_friends_expanded:
+		_collapse_friends()
+	else:
+		_expand_friends()
+
+func _expand_friends():
+	is_friends_expanded = true
+	friends_panel.show()
+	friends_panel.position.x = get_viewport_rect().size.x
+	var tween = create_tween()
+	tween.tween_property(friends_panel, "position:x", get_viewport_rect().size.x - friends_panel.size.x, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_refresh_friends_list()
+
+func _collapse_friends():
+	is_friends_expanded = false
+	var tween = create_tween()
+	tween.tween_property(friends_panel, "position:x", get_viewport_rect().size.x, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.finished.connect(func(): friends_panel.hide())
+
+func _on_add_friend_pressed():
+	var username = friend_search_input.text.strip_edges()
+	if username == "": return
+	
+	friend_status_label.text = TEXT_SENDING_REQUEST
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_friend_request_done.bind(http))
+	var body = JSON.stringify({
+		"user_id": GameManager.user_data.id,
+		"friend_username": username
+	})
+	http.request(GameManager.SERVER_URL + "/api/friends/request", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+
+func _on_friend_request_done(_result, code, _headers, body, http):
+	http.queue_free()
+	var json = JSON.parse_string(body.get_string_from_utf8())
+	if code == 200:
+		friend_status_label.text = "Request sent to " + friend_search_input.text
+		friend_search_input.text = ""
+		_refresh_friends_list()
+	else:
+		friend_status_label.text = json.get("message", "Error adding friend")
+
+func _refresh_friends_list():
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_friends_list_received.bind(http))
+	http.request(GameManager.SERVER_URL + "/api/friends/" + str(GameManager.user_data.id))
+
+func _on_friends_list_received(_result, code, _headers, body, http):
+	http.queue_free()
+	if code != 200: return
+	
+	var json = JSON.parse_string(body.get_string_from_utf8())
+	if json is Array:
+		# Sort: Online > Pending > Offline
+		json.sort_custom(func(a, b):
+			var a_score = 0
+			if a.is_online: a_score = 2
+			elif a.status == "pending": a_score = 1
+			
+			var b_score = 0
+			if b.is_online: b_score = 2
+			elif b.status == "pending": b_score = 1
+			
+			return a_score > b_score
+		)
+		
+		for child in friends_list.get_children():
+			child.queue_free()
+			
+		for f in json:
+			_create_friend_entry(f)
+
+func _create_friend_entry(data: Dictionary):
+	var entry = friend_entry_scene.instantiate()
+	friends_list.add_child(entry)
+	
+	var name_label = entry.get_node("%NameLabel")
+	var status_label = entry.get_node("%StatusLabel")
+	var status_dot = entry.get_node("%StatusDot")
+	var avatar_icon = entry.get_node("%AvatarIcon")
+	var action_btn = entry.get_node("%ActionBtn")
+	var remove_btn = entry.get_node("%RemoveBtn")
+	
+	name_label.text = data.display_name if data.display_name else data.username
+	
+	# Set Profile Icon
+	if data.get("profile_icon") and data.profile_icon != "default":
+		var icon_name = data.profile_icon
+		var url = GameManager.SERVER_URL + "/uploads/" + icon_name
+		var loader = HTTPRequest.new()
+		add_child(loader)
+		loader.request_completed.connect(func(_result, response_code, _headers, body):
+			if response_code == 200:
+				var image = Image.new()
+				var error = image.load_png_from_buffer(body)
+				if error != OK:
+					error = image.load_jpg_from_buffer(body)
+				
+				if error == OK:
+					avatar_icon.texture = ImageTexture.create_from_image(image)
+			loader.queue_free()
+		)
+		loader.request(url)
+	else:
+		# Use a placeholder or nothing
+		avatar_icon.texture = null
+	
+	if data.status == "pending":
+		status_label.text = "Pending"
+		status_label.modulate = Color(1, 1, 0)
+		status_dot.color = Color(1, 1, 0)
+		action_btn.text = "✔️"
+		action_btn.pressed.connect(_on_accept_friend.bind(data.user_id))
+	else:
+		if data.is_online:
+			status_label.text = "Online"
+			status_label.modulate = Color(0, 1, 0)
+			status_dot.color = Color(0, 1, 0)
+		else:
+			status_label.text = "Offline"
+			status_label.modulate = Color(0.6, 0.6, 0.6)
+			status_dot.color = Color(0.4, 0.4, 0.4)
+		action_btn.hide()
+		
+	remove_btn.pressed.connect(_on_remove_friend.bind(data.user_id))
+
+
+
+func _on_accept_friend(friend_id: int):
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_r, _c, _h, _b, _ht): _ht.queue_free(); _refresh_friends_list()).bind(http)
+	var body = JSON.stringify({
+		"user_id": GameManager.user_data.id,
+		"friend_id": friend_id
+	})
+	http.request(GameManager.SERVER_URL + "/api/friends/accept", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+
+func _on_remove_friend(friend_id: int):
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_r, _c, _h, _b, _ht): _ht.queue_free(); _refresh_friends_list()).bind(http)
+	var body = JSON.stringify({
+		"user_id": GameManager.user_data.id,
+		"friend_id": friend_id
+	})
+	http.request(GameManager.SERVER_URL + "/api/friends/remove", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)

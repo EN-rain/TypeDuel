@@ -18,7 +18,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.1, 0.1, 0.12, 1)
+color = Color(0.2, 0.2, 0.2, 1)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -40,6 +40,19 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Settings"
 horizontal_alignment = 1
+
+[node name="PFPHolder" type="CenterContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="PFP" type="TextureRect" parent="VBoxContainer/PFPHolder"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ChangePFPButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Change Profile Picture"
 
 [node name="DisplayNameLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
@@ -65,7 +78,6 @@ text = "Save Changes"
 
 [node name="StatusLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 0, 1)
 horizontal_alignment = 1
 
 [node name="BackButton" type="Button" parent="VBoxContainer"]
@@ -73,7 +85,119 @@ custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 text = "Back to Menu"
 
-[node name="HTTPRequest" type="HTTPRequest" parent="."]
+[node name="UploadRequest" type="HTTPRequest" parent="."]
 
+[node name="CaptureViewport" type="SubViewport" parent="."]
+disable_3d = true
+transparent_bg = true
+size = Vector2i(256, 256)
+render_target_update_mode = 1
+
+[node name="CaptureSprite" type="Sprite2D" parent="CaptureViewport"]
+centered = false
+
+[node name="FileDialog" type="FileDialog" parent="."]
+title = "Open a File"
+initial_position = 2
+size = Vector2i(600, 400)
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.png", "*.jpg", "*.jpeg")
+
+[node name="PFPEditor" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.862745)
+
+[node name="VBox" type="VBoxContainer" parent="PFPEditor"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -250.0
+offset_right = 200.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="PFPEditor/VBox"]
+layout_mode = 2
+text = "Edit Profile Picture"
+horizontal_alignment = 1
+
+[node name="EditorContainer" type="Control" parent="PFPEditor/VBox"]
+clip_contents = true
+custom_minimum_size = Vector2(300, 300)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="PFPPreview" type="TextureRect" parent="PFPEditor/VBox/EditorContainer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -150.0
+offset_right = 150.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Mask" type="ReferenceRect" parent="PFPEditor/VBox/EditorContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+border_color = Color(1, 1, 1, 1)
+border_width = 2.0
+editor_description = "Visual guide for the crop area"
+
+[node name="ScaleSlider" type="HSlider" parent="PFPEditor/VBox"]
+layout_mode = 2
+min_value = 0.1
+max_value = 3.0
+step = 0.01
+value = 1.0
+
+[node name="Buttons" type="HBoxContainer" parent="PFPEditor/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="CancelEdit" type="Button" parent="PFPEditor/VBox/Buttons"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+text = "Cancel"
+
+[node name="ApplyEdit" type="Button" parent="PFPEditor/VBox/Buttons"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+text = "Upload"
+
+[connection signal="gui_input" from="PFPEditor/VBox/EditorContainer/PFPPreview" to="." method="_on_pfp_preview_gui_input"]
+[connection signal="value_changed" from="PFPEditor/VBox/ScaleSlider" to="." method="_on_scale_slider_value_changed"]
+[connection signal="pressed" from="PFPEditor/VBox/Buttons/CancelEdit" to="." method="_on_cancel_edit_pressed"]
+[connection signal="pressed" from="PFPEditor/VBox/Buttons/ApplyEdit" to="." method="_on_apply_edit_pressed"]
+
+[connection signal="pressed" from="VBoxContainer/ChangePFPButton" to="." method="_on_change_pfp_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="file_selected" from="FileDialog" to="." method="_on_file_dialog_file_selected"]

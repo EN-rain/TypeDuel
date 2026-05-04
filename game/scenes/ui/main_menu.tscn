@@ -1,6 +1,15 @@
 [gd_scene format=3 uid="uid://dyshtke5c6ysn"]
 
 [ext_resource type="Script" uid="uid://cy5gpbn70ymb4" path="res://scenes/ui/main_menu.gd" id="1_menu_script"]
+[ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
+[ext_resource type="PackedScene" uid="uid://bkqnn57tfo72j" path="res://scenes/ui/friends_panel.tscn" id="3_friends_panel"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.05, 0.05, 0.1, 0.85)
+border_width_left = 2
+border_color = Color(0.2, 0.4, 0.8, 0.5)
+corner_radius_top_left = 10
+corner_radius_bottom_left = 10
 
 [node name="MainMenu" type="Control" unique_id=126697270]
 layout_mode = 3
@@ -13,14 +22,15 @@ script = ExtResource("1_menu_script")
 metadata/_edit_lock_ = true
 
 [node name="Greeting" type="Label" parent="." unique_id=1598912125]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -306.0
-offset_top = 103.0
-offset_right = -6.0
-offset_bottom = 174.0
+offset_left = -150.0
+offset_top = 53.0
+offset_right = 150.0
+offset_bottom = 124.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 24
 text = "Hi, Player!
@@ -28,18 +38,21 @@ Wlcome to"
 horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="." unique_id=977881426]
-layout_mode = 0
-anchor_left = 0.2282986
-anchor_top = 0.25154322
-anchor_right = 0.4939236
-anchor_bottom = 0.38734567
-offset_top = -1.5258789e-05
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -153.0
+offset_top = 132.0
+offset_right = 153.0
+offset_bottom = 220.0
+grow_horizontal = 2
 theme_override_font_sizes/font_size = 64
 text = "Type Duel"
 horizontal_alignment = 1
-metadata/_edit_use_anchors_ = true
 
 [node name="OnlineCount" type="Label" parent="." unique_id=793664029]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -53,6 +66,7 @@ text = "● 0 players online"
 horizontal_alignment = 1
 
 [node name="PlayOnlineButton" type="Button" parent="." unique_id=1504719380]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 1
 anchors_preset = 3
@@ -69,6 +83,7 @@ grow_vertical = 0
 text = "Play Online"
 
 [node name="JoinButton" type="Button" parent="." unique_id=893456260]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 729.0
 offset_top = 554.0
@@ -78,6 +93,7 @@ text = "Join button
 "
 
 [node name="CreateRoomButton" type="Button" parent="." unique_id=895909165]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 723.0
 offset_top = 596.0
@@ -86,6 +102,7 @@ offset_bottom = 636.0
 text = "Create Room"
 
 [node name="LeaderboardButton" type="Button" parent="." unique_id=1083918896]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 0
 offset_left = 928.0
@@ -95,15 +112,20 @@ offset_bottom = 515.0
 text = "Leaderboard"
 
 [node name="SettingsButton" type="Button" parent="." unique_id=2029961460]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
-layout_mode = 0
-offset_left = 936.0
-offset_top = 406.0
-offset_right = 1136.0
-offset_bottom = 456.0
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -217.0
+offset_right = -17.0
+offset_bottom = 50.0
+grow_horizontal = 0
 text = "Settings"
 
 [node name="LogoutButton" type="Button" parent="." unique_id=727218776]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 1
 offset_right = 200.0
@@ -111,6 +133,7 @@ offset_bottom = 50.0
 text = "Logout"
 
 [node name="JoinPanel" type="Panel" parent="." unique_id=647598721]
+unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = 8
@@ -136,6 +159,7 @@ text = "Join Custom Room"
 horizontal_alignment = 1
 
 [node name="CodeInput" type="LineEdit" parent="JoinPanel" unique_id=1391599962]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -152,6 +176,7 @@ placeholder_text = "Enter 6-char code"
 max_length = 6
 
 [node name="CancelBtn" type="Button" parent="JoinPanel" unique_id=2040571587]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 80.0
 offset_top = 135.0
@@ -160,6 +185,7 @@ offset_bottom = 175.0
 text = "Cancel"
 
 [node name="SubmitBtn" type="Button" parent="JoinPanel" unique_id=162144470]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 220.0
 offset_top = 135.0
@@ -168,6 +194,7 @@ offset_bottom = 175.0
 text = "Join"
 
 [node name="ErrorLabel" type="Label" parent="JoinPanel" unique_id=1812166332]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -182,6 +209,7 @@ theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 
 [node name="MatchmakingLabel" type="Label" parent="." unique_id=2000000001]
+unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = 5
@@ -197,6 +225,7 @@ text = "Searching for match..."
 horizontal_alignment = 1
 
 [node name="MatchmakingTime" type="Label" parent="." unique_id=2000000002]
+unique_name_in_owner = true
 visible = false
 layout_mode = 1
 anchors_preset = 5
@@ -211,6 +240,43 @@ theme_override_font_sizes/font_size = 18
 text = "Time: 0:00"
 horizontal_alignment = 1
 
+[node name="FriendsPanel" parent="." unique_id=1960269588 instance=ExtResource("3_friends_panel")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="ChatBox" parent="." unique_id=975926982 instance=ExtResource("2_chat_box")]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 10.0
+offset_top = -50.0
+offset_right = 310.0
+offset_bottom = -10.0
+
+[node name="FriendsButton" type="Button" parent="." unique_id=987842182]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -271.0
+offset_top = 1.0
+offset_right = -235.0
+offset_bottom = 32.0
+grow_horizontal = 0
+text = "Friends"
+
 [connection signal="pressed" from="PlayOnlineButton" to="." method="_on_play_online_pressed"]
 [connection signal="pressed" from="JoinButton" to="." method="_on_join_pressed"]
 [connection signal="pressed" from="CreateRoomButton" to="." method="_on_custom_room_pressed"]
@@ -219,3 +285,4 @@ horizontal_alignment = 1
 [connection signal="pressed" from="LogoutButton" to="." method="_on_logout_pressed"]
 [connection signal="pressed" from="JoinPanel/CancelBtn" to="." method="_on_cancel_join_pressed"]
 [connection signal="pressed" from="JoinPanel/SubmitBtn" to="." method="_on_submit_join_pressed"]
+[connection signal="pressed" from="FriendsButton" to="." method="_on_friends_pressed"]

@@ -4,8 +4,11 @@ CREATE TABLE IF NOT EXISTS users (
   password TEXT NOT NULL,
   display_name TEXT,
   email TEXT UNIQUE,
+  profile_icon TEXT DEFAULT "default",
+  last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
 
 CREATE TABLE IF NOT EXISTS leaderboard (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,4 +19,24 @@ CREATE TABLE IF NOT EXISTS leaderboard (
   accuracy REAL,
   date DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  username TEXT,
+  room_id TEXT, -- 'global' for global chat
+  message TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users (id)
+);
+CREATE TABLE IF NOT EXISTS friends (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  friend_id INTEGER,
+  status TEXT DEFAULT 'pending', -- 'pending', 'accepted'
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users (id),
+  FOREIGN KEY (friend_id) REFERENCES users (id),
+  UNIQUE(user_id, friend_id)
 );
