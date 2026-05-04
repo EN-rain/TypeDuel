@@ -30,7 +30,7 @@ func load_current_pfp():
 	var url = GameManager.SERVER_URL + "/uploads/" + icon
 	var loader = HTTPRequest.new()
 	add_child(loader)
-	loader.request_completed.connect(func(result, response_code, headers, body):
+	loader.request_completed.connect(func(_result, response_code, _headers, body):
 		if response_code == 200:
 			var image = Image.new()
 			var error = image.load_png_from_buffer(body)
@@ -53,11 +53,11 @@ func _on_file_dialog_file_selected(path):
 	var img = Image.load_from_file(path)
 	if img:
 		# Center-crop the image to a square before resizing and uploading
-		var size = img.get_size()
-		var min_dim = min(size.x, size.y)
+		var img_size = img.get_size()
+		var min_dim = min(img_size.x, img_size.y)
 		var crop_rect = Rect2i(
-			(size.x - min_dim) / 2,
-			(size.y - min_dim) / 2,
+			(img_size.x - min_dim) / 2,
+			(img_size.y - min_dim) / 2,
 			min_dim,
 			min_dim
 		)
@@ -98,11 +98,11 @@ func _upload_buffer(buffer: PackedByteArray):
 	upload_request.request_raw(UPLOAD_URL, headers, HTTPClient.METHOD_POST, body)
 	status_label.text = "Uploading picture..."
 
-func upload_pfp(file_path: String):
+func upload_pfp(_file_path: String):
 	# This is now replaced by the editor flow
 	pass
 
-func _on_upload_completed(result, response_code, headers, body):
+func _on_upload_completed(_result, response_code, _headers, body):
 	var response = JSON.parse_string(body.get_string_from_utf8())
 	if response_code == 200:
 		status_label.text = "Picture updated!"
@@ -130,7 +130,7 @@ func _on_save_button_pressed():
 	save_button.disabled = true
 	status_label.text = "Updating..."
 
-func _on_request_completed(result, response_code, headers, body):
+func _on_request_completed(_result, response_code, _headers, body):
 	save_button.disabled = false
 	var response = JSON.parse_string(body.get_string_from_utf8())
 	

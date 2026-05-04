@@ -188,8 +188,8 @@ func _on_messages_received(_result, code, _headers, body, http: HTTPRequest, roo
 					
 				message_histories[room_name].append(msg)
 				
-				var is_showing_this_room = (current_tab == "global" and room_name == "global") or (current_tab == "local" and room_name == "local") or (current_tab == "friends" and room_name == current_dm_room)
-				if is_showing_this_room:
+				var is_already_showing_this_room = (current_tab == "global" and room_name == "global") or (current_tab == "local" and room_name == "local") or (current_tab == "friends" and room_name == current_dm_room)
+				if is_already_showing_this_room:
 					_add_message_to_vbox(msg)
 					needs_scroll = true
 			

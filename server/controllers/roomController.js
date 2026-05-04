@@ -164,6 +164,7 @@ const startRoomGame = (req, res) => {
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
     room.status = 'started';
+    room.started_at = Date.now();
     return res.json({ ok: true });
 };
 

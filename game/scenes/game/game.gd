@@ -4,6 +4,7 @@ var sentences = []
 var target_sentence = ""
 var current_index = 0
 var typed_statuses = []
+var current_round = 0
 
 var sentence_start_time = 0.0
 var is_typing = false
@@ -77,11 +78,12 @@ func _ready():
 	
 	HPManager.init_game()
 	SkillsManager.reset_match()
-	_spawn_players()
 	if not GameManager.is_solo and GameManager.current_room != "":
 		seed(GameManager.current_room.hash())
 	else:
 		randomize()
+		
+	_spawn_players()
 	
 	skill_select.hide()
 	countdown_label.hide()
@@ -117,7 +119,16 @@ func _on_entity_died(entity: String):
 
 func start_skill_phase():
 	current_state = GameState.SKILL_SELECT
-	skill_timer = 10.0
+	
+	# Synchronize timer with server start time
+	var elapsed_since_start = 0.0
+	if GameManager.match_start_time > 0:
+		var now_ms = Time.get_unix_time_from_system() * 1000.0
+		elapsed_since_start = (now_ms - GameManager.match_start_time) / 1000.0
+	
+	skill_timer = max(0.1, 10.0 - elapsed_since_start)
+	print("[Sync] Elapsed since start: %.2fs | Adjusted skill_timer: %.2fs" % [elapsed_since_start, skill_timer])
+	
 	chosen_skill_index = -1
 	chosen_skill_id    = ""  # No skill chosen yet
 	i_finished    = false
@@ -269,6 +280,12 @@ func load_sentences():
 		sentences.append("Type this sentence to practice your skills.")
 
 func pick_random_sentence():
+	current_round += 1
+	# Re-seed every round using the room hash and round number.
+	# This prevents RNG drift if one player triggers a mutation and the other doesn't.
+	if not GameManager.is_solo and GameManager.current_room != "":
+		seed(GameManager.current_room.hash() + current_round)
+	
 	if sentences.size() > 0:
 		target_sentence = sentences[randi() % sentences.size()]
 	current_index = 0

@@ -84,13 +84,13 @@ func resolve_round(
 		wpm:          float,
 		accuracy:     float,
 		typos:        int,
-		opp_typos:    int,
+		_opp_typos:    int,
 		finish_mode:  String,
 		chosen_skill: String,
-		opp_hp:       float,
-		player_hp:    float) -> Dictionary:
+		_opp_hp:       float,
+		_player_hp:    float) -> Dictionary:
 
-	var log: Array[String] = []
+	var combat_log: Array[String] = []
 	var player_damage:   float = 0.0
 	var player_hp_delta: float = 0.0
 	var opp_hp_delta:    float = 0.0
@@ -103,8 +103,8 @@ func resolve_round(
 	var won:        bool = finish_mode in ["buff", "full_power", "tie"]
 	var full_power: bool = (finish_mode == "full_power")
 
-	log.append("=== ROUND RESOLVE [%s] ===" % finish_mode.to_upper())
-	log.append("WPM:%.0f mod:+%.2f | Acc:%.1f%% mod:+%.2f | Typos:%d penalty:%.0f | Base DMG:%.0f"
+	combat_log.append("=== ROUND RESOLVE [%s] ===" % finish_mode.to_upper())
+	combat_log.append("WPM:%.0f mod:+%.2f | Acc:%.1f%% mod:+%.2f | Typos:%d penalty:%.0f | Base DMG:%.0f"
 		% [wpm, wpm_mod, accuracy, acc_mod, typos, typo_penalty, char_base])
 
 	# ── Timeout: nobody finished (60s) ────────────────
@@ -113,24 +113,24 @@ func resolve_round(
 		if chosen_skill != "":
 			var refund: int = int(SKILL_COSTS.get(chosen_skill, 0))
 			player_mana = min(10, player_mana + refund)
-			log.append("[Timeout] 60s expired! Mana refunded +%d → %d" % [refund, player_mana])
-		log.append("[Timeout] -5HP. No damage dealt.")
-		return _result(0.0, -5.0, 0.0, log)
+			combat_log.append("[Timeout] 60s expired! Mana refunded +%d → %d" % [refund, player_mana])
+		combat_log.append("[Timeout] -5HP. No damage dealt.")
+		return _result(0.0, -5.0, 0.0, combat_log)
 
 	# ── DNF: Failed to finish within opponent's 10s snap ──
 	if finish_mode == "dnf":
 		if chosen_skill != "":
 			var refund: int = int(SKILL_COSTS.get(chosen_skill, 0))
 			player_mana = min(10, player_mana + refund)
-			log.append("[DNF] Missed 10s snap! Mana refunded +%d → %d" % [refund, player_mana])
-		log.append("[DNF] You did not finish. 0 DMG.")
-		return _result(0.0, 0.0, 0.0, log)
+			combat_log.append("[DNF] Missed 10s snap! Mana refunded +%d → %d" % [refund, player_mana])
+		combat_log.append("[DNF] You did not finish. 0 DMG.")
+		return _result(0.0, 0.0, 0.0, combat_log)
 
 	# ── Spend Mana (only if a skill was picked) ───────
 	if chosen_skill != "":
 		var cost: int = int(SKILL_COSTS.get(chosen_skill, 0))
 		player_mana = max(0, player_mana - cost)
-		log.append("[Mana] Spent %d on '%s' → %d remaining" % [cost, chosen_skill, player_mana])
+		combat_log.append("[Mana] Spent %d on '%s' → %d remaining" % [cost, chosen_skill, player_mana])
 
 	# ── Debuff case: refund Mana if opponent didn't finish ─
 	# P2 who did NOT finish → Mana refunded (handled by caller marking finish_mode="debuff"
@@ -140,17 +140,17 @@ func resolve_round(
 	if chosen_skill == "":
 		if won:
 			player_damage = maxf(0.0, ceil(char_base * (1.0 + wpm_mod) - typo_penalty))
-			log.append("[No Skill] Won → base only: %.0f DMG" % player_damage)
+			combat_log.append("[No Skill] Won → base only: %.0f DMG" % player_damage)
 		else:
-			log.append("[No Skill] Lost → 0 DMG (full opponent DMG + full debuffs hit you)")
+			combat_log.append("[No Skill] Lost → 0 DMG (full opponent DMG + full debuffs hit you)")
 	else:
 		match chosen_skill:
 			"quickslash":
-				player_damage = _quickslash(wpm_mod, typo_penalty, won, full_power, char_base, log)
+				player_damage = _quickslash(wpm_mod, typo_penalty, won, full_power, char_base, combat_log)
 			"whiplash":
-				player_damage = _whiplash(acc_mod, typo_penalty, won, full_power, char_base, log)
+				player_damage = _whiplash(acc_mod, typo_penalty, won, full_power, char_base, combat_log)
 			"soulbreak":
-				player_damage = _soulbreak(wpm_mod, typo_penalty, won, full_power, char_base, log)
+				player_damage = _soulbreak(wpm_mod, typo_penalty, won, full_power, char_base, combat_log)
 		player_damage = maxf(0.0, player_damage)
 
 	# ── Win-streak tracking ───────────────────────────
@@ -160,96 +160,97 @@ func resolve_round(
 	else:
 		opponent_win_streak += 1
 		player_win_streak    = 0
-	log.append("[Streak] You: %d | Opponent: %d" % [player_win_streak, opponent_win_streak])
+	combat_log.append("[Streak] You: %d | Opponent: %d" % [player_win_streak, opponent_win_streak])
 
 	# ── Character Innate Abilities ────────────────────────────
 	match HPManager.player_innate:
 
-		"Bloodlust":  # Riven — -2HP self when dealing damage; skip at 2-win streak, then reset
+		"Bloodlust":  # Riven — -3HP self when dealing damage; skip if exactly 2-win streak, then reset
 			if player_damage > 0.0:
 				if player_win_streak == 2:
+					# Hit the 2-win milestone: pause self-damage this round, reset streak
 					player_win_streak = 0
-					log.append("[Innate Ability: Bloodlust] 2-win streak! Self-damage skipped. Streak reset.")
+					combat_log.append("[Innate Ability: Bloodlust] 2-win streak! Self-damage skipped. Streak reset.")
 				else:
-					player_hp_delta -= 2.0
-					log.append("[Innate Ability: Bloodlust] Dealt DMG → -2HP self-damage (streak: %d)" % player_win_streak)
+					player_hp_delta -= 3.0
+					combat_log.append("[Innate Ability: Bloodlust] Dealt DMG → -3HP self-damage (streak: %d)" % player_win_streak)
 
-		"Grace":  # Liora — +3HP heal if accuracy > 97%; capped at 15HP total
-			if accuracy > 97.0 and liora_heal_total < 15.0:
+		"Grace":  # Liora — +3HP heal if accuracy > 95%; capped at 15HP total
+			if accuracy > 95.0 and liora_heal_total < 15.0:
 				var heal := minf(3.0, 15.0 - liora_heal_total)
 				player_hp_delta += heal
 				liora_heal_total += heal
-				log.append("[Innate Ability: Grace] Acc > 97%% → +%.0fHP (total: %.0f/15)" % [heal, liora_heal_total])
+				combat_log.append("[Innate Ability: Grace] Acc > 95%% → +%.0fHP (total: %.0f/15)" % [heal, liora_heal_total])
 
 		"Overdrive":  # Zephon — +5 bonus damage when mana >= 9
 			if player_mana >= 9 and player_damage > 0.0:
 				player_damage += 5.0
-				log.append("[Innate Ability: Overdrive] High Mana (%d)! +5 bonus DMG → %.0f total" % [player_mana, player_damage])
+				combat_log.append("[Innate Ability: Overdrive] High Mana (%d)! +5 bonus DMG → %.0f total" % [player_mana, player_damage])
 
-	log.append("RESULT → DMG:%.0f | SelfHP:%+.0f | OppHP:%+.0f" % [player_damage, player_hp_delta, opp_hp_delta])
-	return _result(player_damage, player_hp_delta, opp_hp_delta, log)
+	combat_log.append("RESULT → DMG:%.0f | SelfHP:%+.0f | OppHP:%+.0f" % [player_damage, player_hp_delta, opp_hp_delta])
+	return _result(player_damage, player_hp_delta, opp_hp_delta, combat_log)
 
 # ─────────────────────────────────────────────
 #  Skill Formulas
 # ─────────────────────────────────────────────
 
 ## ⚡ Quickslash (2 Mana) — WPM-based
-func _quickslash(wpm_mod: float, typo_penalty: float, won: bool, full_power: bool, base: float, log: Array) -> float:
+func _quickslash(wpm_mod: float, typo_penalty: float, won: bool, full_power: bool, base: float, combat_log: Array) -> float:
 	var dmg := maxf(0.0, ceil(base * (1.0 + wpm_mod) - typo_penalty))
 
 	if won:
 		if player_win_streak >= 1:
 			dmg = ceil(dmg * 1.2)
-			log.append("[Quickslash] Win + streak → ×1.20 = %.0f" % dmg)
+			combat_log.append("[Quickslash] Win + streak → ×1.20 = %.0f" % dmg)
 		else:
 			dmg = ceil(dmg * 1.1)
-			log.append("[Quickslash] Win → ×1.10 = %.0f" % dmg)
+			combat_log.append("[Quickslash] Win → ×1.10 = %.0f" % dmg)
 		if full_power:
 			dmg = ceil(dmg * 1.2)  # 2× lose debuff magnitude (lose was -10%, so full_power is +20% extra)
-			log.append("[Quickslash] FULL POWER (opp didn't finish) → ×1.20 extra = %.0f" % dmg)
+			combat_log.append("[Quickslash] FULL POWER (opp didn't finish) → ×1.20 extra = %.0f" % dmg)
 	else:
 		if opponent_win_streak >= 1:
 			dmg = 0.0
-			log.append("[Quickslash] Lose on opp streak → 0 DMG")
+			combat_log.append("[Quickslash] Lose on opp streak → 0 DMG")
 		else:
 			dmg = ceil(dmg * 0.9)
-			log.append("[Quickslash] Lose → ×0.90 = %.0f" % dmg)
+			combat_log.append("[Quickslash] Lose → ×0.90 = %.0f" % dmg)
 
 	return dmg
 
 ## 🌪️ Whiplash (2 Mana) — Accuracy-based
-func _whiplash(acc_mod: float, typo_penalty: float, won: bool, full_power: bool, base: float, log: Array) -> float:
+func _whiplash(acc_mod: float, typo_penalty: float, won: bool, full_power: bool, base: float, combat_log: Array) -> float:
 	var dmg := maxf(0.0, ceil(base * (1.0 + acc_mod) - typo_penalty))
 
 	if won:
 		# Opponent streak punish (once only — tracked externally if needed)
 		if opponent_win_streak >= 1 and not full_power:
 			dmg = ceil(dmg * 2.0)
-			log.append("[Whiplash] Win + opp streak → ×2.0 = %.0f" % dmg)
+			combat_log.append("[Whiplash] Win + opp streak → ×2.0 = %.0f" % dmg)
 		else:
 			dmg = ceil(dmg * 1.15)
-			log.append("[Whiplash] Win → ×1.15 = %.0f" % dmg)
+			combat_log.append("[Whiplash] Win → ×1.15 = %.0f" % dmg)
 		# Opponent loses 1 Mana
 		opponent_mana = max(0, opponent_mana - 1)
-		log.append("[Whiplash] Opponent lost 1 Mana → %d" % opponent_mana)
+		combat_log.append("[Whiplash] Opponent lost 1 Mana → %d" % opponent_mana)
 		if full_power:
 			opponent_mana = max(0, opponent_mana - 1)  # 2× magnitude
-			log.append("[Whiplash] FULL POWER → opp lost 1 extra Mana → %d" % opponent_mana)
+			combat_log.append("[Whiplash] FULL POWER → opp lost 1 extra Mana → %d" % opponent_mana)
 	else:
 		dmg = ceil(dmg * 0.85)
-		log.append("[Whiplash] Lose → ×0.85 = %.0f" % dmg)
+		combat_log.append("[Whiplash] Lose → ×0.85 = %.0f" % dmg)
 		player_mana = max(0, player_mana - 1)
-		log.append("[Whiplash] You lost 1 Mana → %d" % player_mana)
+		combat_log.append("[Whiplash] You lost 1 Mana → %d" % player_mana)
 
 	return dmg
 
 ## 🔮 Soulbreak (3 Mana) — WPM-based
-func _soulbreak(wpm_mod: float, typo_penalty: float, won: bool, full_power: bool, base: float, log: Array) -> float:
+func _soulbreak(wpm_mod: float, typo_penalty: float, won: bool, full_power: bool, base: float, combat_log: Array) -> float:
 	var dmg := maxf(0.0, ceil(base * (1.0 + wpm_mod) - typo_penalty))
 
 	if player_mana >= 8:
 		dmg = ceil(dmg * 1.15)
-		log.append("[Soulbreak] 8+ Mana bonus → ×1.15 = %.0f" % dmg)
+		combat_log.append("[Soulbreak] 8+ Mana bonus → ×1.15 = %.0f" % dmg)
 
 	if won:
 		var steal := 2
@@ -257,11 +258,11 @@ func _soulbreak(wpm_mod: float, typo_penalty: float, won: bool, full_power: bool
 			steal = 4  # 2× magnitude
 		opponent_mana = max(0, opponent_mana - steal)
 		player_mana   = min(10, player_mana   + steal)
-		log.append("[Soulbreak] Win → stole %d Mana. You:%d Opp:%d" % [steal, player_mana, opponent_mana])
+		combat_log.append("[Soulbreak] Win → stole %d Mana. You:%d Opp:%d" % [steal, player_mana, opponent_mana])
 	else:
 		opponent_mana = min(10, opponent_mana + 2)
 		player_mana   = max(0,  player_mana   - 2)
-		log.append("[Soulbreak] Lose → gave 2 Mana. You:%d Opp:%d" % [player_mana, opponent_mana])
+		combat_log.append("[Soulbreak] Lose → gave 2 Mana. You:%d Opp:%d" % [player_mana, opponent_mana])
 
 	return dmg
 
@@ -269,5 +270,5 @@ func _soulbreak(wpm_mod: float, typo_penalty: float, won: bool, full_power: bool
 #  Utility
 # ─────────────────────────────────────────────
 
-func _result(dmg: float, php: float, ohp: float, log: Array) -> Dictionary:
-	return { "player_damage": dmg, "player_hp_delta": php, "opp_hp_delta": ohp, "log": log }
+func _result(dmg: float, php: float, ohp: float, combat_log: Array) -> Dictionary:
+	return { "player_damage": dmg, "player_hp_delta": php, "opp_hp_delta": ohp, "log": combat_log }

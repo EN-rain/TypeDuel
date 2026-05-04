@@ -39,7 +39,6 @@ var my_user_id: int     = 0
 var my_name: String     = ""
 var poll_timer: float   = 0.0
 var guest_joined: bool  = false
-var _active_http: Array = []
 var _heartbeat_timer: float = 0.0
 
 # Opponent's last known selections (populated from poll)
@@ -77,6 +76,7 @@ func _ready():
 			_poll_room()
 		else:
 			room_code = _generate_code()
+			GameManager.current_room = room_code
 			room_code_label.text = room_code
 			_create_room()
 
@@ -164,7 +164,8 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		# Write opponent character to GameManager BEFORE changing scene
 		GameManager.opponent_character = _opp_character
 		GameManager.opponent_passive = _opp_passive
-		print("[Lobby] Starting game | Me: %s (%s) | Opp: %s (%s)" % [GameManager.selected_character, SkillsManager.selected_passive, GameManager.opponent_character, GameManager.opponent_passive])
+		GameManager.match_start_time = float(json.get("started_at", 0))
+		print("[Lobby] Starting game | Me: %s (%s) | Opp: %s (%s) | StartTime: %f" % [GameManager.selected_character, SkillsManager.selected_passive, GameManager.opponent_character, GameManager.opponent_passive, GameManager.match_start_time])
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
 		return
 
@@ -359,7 +360,7 @@ func _create_room():
 	})
 	http.request(GameManager.SERVER_URL + "/api/rooms/create", GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
 
-func _on_room_created(_result, code, _headers, body, http: HTTPRequest):
+func _on_room_created(_result, code, _headers, _body, http: HTTPRequest):
 	if is_instance_valid(http):
 		http.queue_free()
 	if code != 200:

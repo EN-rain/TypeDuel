@@ -42,6 +42,7 @@ var viewing_history_id: int = 0
 var selected_character: String = ""
 var opponent_character: String = ""
 var opponent_passive: String = ""
+var match_start_time: float = 0.0
 
 # Unique session ID to count multiple windows of the same user separately
 var session_id: String = ""

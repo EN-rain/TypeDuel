@@ -41,7 +41,6 @@ var matchmaking_start_time = 0.0
 var matchmaking_code = ""
 var poll_timer = 0.0
 var _heartbeat_timer: float = 0.0
-var _friends_poll_timer: float = 0.0
 var _friends_badge_timer: float = 0.0
 var current_friends_data = []
 var showing_requests = false
@@ -623,7 +622,7 @@ func _on_friend_entry_gui_input(event: InputEvent, data: Dictionary):
 
 func _on_friend_context_menu_id_pressed(id: int):
 	var target_user_id = _friend_context_menu.get_meta("target_user_id")
-	var target_username = _friend_context_menu.get_meta("target_username")
+	var _target_username = _friend_context_menu.get_meta("target_username")
 	
 	if id == 0: # History
 		GameManager.viewing_history_id = target_user_id

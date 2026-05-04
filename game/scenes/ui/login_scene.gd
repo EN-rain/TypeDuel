@@ -53,7 +53,7 @@ func _on_confirm_pressed():
 	confirm_button.disabled = true
 	error_label.text = "..."
 
-func _on_request_completed(result, response_code, headers, body):
+func _on_request_completed(_result, response_code, _headers, body):
 	confirm_button.disabled = false
 	var body_string = body.get_string_from_utf8()
 	var response = JSON.parse_string(body_string)
