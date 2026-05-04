@@ -81,12 +81,17 @@ const joinRoom = (req, res) => {
     return res.json({ ok: true, room });
 };
 
+const roomSnapshot = (room) => ({
+    ...room,
+    server_now: Date.now()
+});
+
 // GET /api/rooms/:code
 const getRoomStatus = (req, res) => {
     const code = req.params.code.toUpperCase();
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
-    return res.json(room);
+    return res.json(roomSnapshot(room));
 };
 
 // DELETE /api/rooms/:code  (host closes the room)
@@ -192,7 +197,7 @@ const startRoomGame = (req, res) => {
     room.guest_typos = 0;
     room.host_mutations = [];
     room.guest_mutations = [];
-    return res.json({ ok: true });
+    return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
 // PATCH /api/rooms/:code/phase
@@ -229,7 +234,7 @@ const updatePhase = (req, res) => {
         room.guest_mutations = [];
     }
 
-    return res.json({ ok: true, room });
+    return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
 // PATCH /api/rooms/:code/progress

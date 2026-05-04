@@ -46,6 +46,11 @@ var _opp_character: String    = ""
 var _opp_skills: Array        = []
 var _opp_passive: String      = ""
 
+# Matchmaking: auto-start / forfeit rules
+var _matchmaking_deadline_unix_ms: float = 0.0
+var _matchmaking_forfeit_handled: bool = false
+var _matchmaking_start_sent: bool = false
+
 # Dynamically built button arrays
 var _char_buttons: Array      = []
 var _skill_buttons: Array     = []
@@ -89,6 +94,9 @@ func _ready():
 		room_code_label.hide()
 		if has_node("RoomCodeLabel"):
 			$RoomCodeLabel.hide()
+		if is_instance_valid(start_button):
+			start_button.hide()
+			start_button.disabled = true
 
 	# Click to copy
 	room_code_label.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -110,10 +118,65 @@ func _process(delta: float):
 		_heartbeat_timer = 0.0
 		_send_heartbeat()
 
+	_process_matchmaking_rules()
+
 	poll_timer += delta
 	if poll_timer >= POLL_INTERVAL:
 		poll_timer = 0.0
 		_poll_room()
+
+func _process_matchmaking_rules():
+	if not GameManager.is_matchmaking: return
+	if _matchmaking_forfeit_handled: return
+	if not guest_joined: return
+	if room_code == "": return
+
+	var now_unix_ms: float = Time.get_unix_time_from_system() * 1000.0
+	if _matchmaking_deadline_unix_ms <= 0.0:
+		_matchmaking_deadline_unix_ms = now_unix_ms + 15000.0
+
+	var my_ready = _is_me_ready()
+	var opp_ready = _is_opp_ready()
+	if my_ready and opp_ready:
+		if GameManager.is_host and not _matchmaking_start_sent:
+			_matchmaking_start_sent = true
+			_on_start_pressed()
+		return
+
+	var remaining_sec = max(0, int(ceil((_matchmaking_deadline_unix_ms - now_unix_ms) / 1000.0)))
+	if remaining_sec <= 0:
+		_handle_matchmaking_forfeit(my_ready)
+		return
+
+	# Update status with countdown without fighting other status updates.
+	if my_ready and not opp_ready:
+		status_label.text = "Waiting opponent (%ds)..." % remaining_sec
+	elif not my_ready:
+		status_label.text = "Choose character/skills (%ds)..." % remaining_sec
+
+func _is_me_ready() -> bool:
+	return GameManager.selected_character != "" and SkillsManager.selected_skills.size() >= 2 and SkillsManager.selected_passive != ""
+
+func _is_opp_ready() -> bool:
+	if GameManager.is_solo: return true
+	return guest_joined and _opp_character != "" and _opp_skills.size() >= 2 and _opp_passive != ""
+
+func _handle_matchmaking_forfeit(i_was_ready: bool):
+	_matchmaking_forfeit_handled = true
+
+	# Close the room so the other client will see 404 and leave too.
+	_delete_room()
+	GameManager.current_room = ""
+
+	var now_unix_ms: float = Time.get_unix_time_from_system() * 1000.0
+	if not i_was_ready:
+		GameManager.matchmaking_penalty_until_unix_ms = now_unix_ms + 10000.0
+		GameManager.auto_queue_matchmaking = false
+	else:
+		GameManager.auto_queue_matchmaking = true
+
+	GameManager.is_matchmaking = false
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
 # ── Network ──────────────────────────────────────────────────────────────────
 
@@ -156,7 +219,11 @@ func _poll_room():
 func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if is_instance_valid(http):
 		http.queue_free()
-	if code != 200: return
+	if code != 200:
+		# Matchmaking forfeits/room closes show up as 404; return to menu.
+		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled:
+			_handle_matchmaking_forfeit(_is_me_ready())
+		return
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if not json: return
 
@@ -292,14 +359,14 @@ func _refresh_ui():
 
 func _check_start_ready():
 	if not GameManager.is_host: return
-	var my_ready  = GameManager.selected_character != "" and SkillsManager.selected_skills.size() >= 2 and SkillsManager.selected_passive != ""
-	var opp_ready = false
-	if GameManager.is_solo:
-		opp_ready = true
-	else:
-		opp_ready = guest_joined and _opp_character != "" and _opp_skills.size() >= 2 and _opp_passive != ""
+	var my_ready = _is_me_ready()
+	var opp_ready = _is_opp_ready()
 	if is_instance_valid(start_button):
-		start_button.disabled = not (my_ready and opp_ready)
+		if GameManager.is_matchmaking:
+			start_button.hide()
+			start_button.disabled = true
+		else:
+			start_button.disabled = not (my_ready and opp_ready)
 
 	if not guest_joined:
 		status_label.text = "Waiting for opponent..."
@@ -308,7 +375,13 @@ func _check_start_ready():
 	elif not opp_ready:
 		status_label.text = "Waiting for opponent to choose..."
 	else:
-		status_label.text = "Both ready! You can start."
+		if GameManager.is_matchmaking:
+			status_label.text = "Both ready! Starting..."
+			if GameManager.is_host and not _matchmaking_start_sent:
+				_matchmaking_start_sent = true
+				_on_start_pressed()
+		else:
+			status_label.text = "Both ready! You can start."
 
 # ── Navigation ───────────────────────────────────────────────────────────────
 

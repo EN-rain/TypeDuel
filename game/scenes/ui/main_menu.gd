@@ -59,6 +59,12 @@ func _ready():
 	
 	matchmaking_label.hide()
 	matchmaking_time_label.hide()
+
+	# Auto-requeue after matchmaking forfeit (only if not penalized).
+	if GameManager.auto_queue_matchmaking:
+		GameManager.auto_queue_matchmaking = false
+		if not GameManager.is_matchmaking_penalized():
+			call_deferred("_on_play_online_pressed")
 	
 	# Fade in
 	modulate.a = 0.0
@@ -101,6 +107,17 @@ func _process(delta):
 		_fetch_online_count()
 	
 
+
+	# Matchmaking penalty gate (10s cooldown on missed selections).
+	if not is_matchmaking:
+		if GameManager.is_matchmaking_penalized():
+			if is_instance_valid(play_online_btn):
+				play_online_btn.disabled = true
+				play_online_btn.text = "Penalty: %ds" % GameManager.get_matchmaking_penalty_remaining_sec()
+		else:
+			if is_instance_valid(play_online_btn):
+				play_online_btn.disabled = false
+				play_online_btn.text = TEXT_PLAY_ONLINE
 
 	if is_matchmaking:
 		var elapsed = Time.get_ticks_msec() / 1000.0 - matchmaking_start_time
@@ -220,6 +237,12 @@ func _on_join_done(_result, req_code, _headers, body, http):
 			join_error.text = "Failed to join room."
 
 func _on_play_online_pressed():
+	if not is_matchmaking and GameManager.is_matchmaking_penalized():
+		matchmaking_label.text = "Penalty active. Wait %ds." % GameManager.get_matchmaking_penalty_remaining_sec()
+		matchmaking_label.show()
+		matchmaking_time_label.hide()
+		return
+
 	if is_matchmaking:
 		# Cancel matchmaking
 		is_matchmaking = false

@@ -38,11 +38,20 @@ var current_room: String = ""
 var is_host: bool = true
 var is_solo: bool = false
 var is_matchmaking: bool = false
+var auto_queue_matchmaking: bool = false
+var matchmaking_penalty_until_unix_ms: float = 0.0
 var viewing_history_id: int = 0
 var selected_character: String = ""
 var opponent_character: String = ""
 var opponent_passive: String = ""
 var match_start_time: float = 0.0
+
+func is_matchmaking_penalized() -> bool:
+	return (Time.get_unix_time_from_system() * 1000.0) < matchmaking_penalty_until_unix_ms
+
+func get_matchmaking_penalty_remaining_sec() -> int:
+	var remaining_ms = matchmaking_penalty_until_unix_ms - (Time.get_unix_time_from_system() * 1000.0)
+	return max(0, int(ceil(remaining_ms / 1000.0)))
 
 # Unique session ID to count multiple windows of the same user separately
 var session_id: String = ""
