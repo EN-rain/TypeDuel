@@ -140,10 +140,9 @@ func _spawn_players():
 		add_child(p2)
 
 func _create_character_sprite(char_name: String, flip: bool) -> Node2D:
-	var node = Node2D.new()
-	var sprite = AnimatedSprite2D.new()
-	sprite.name = "AnimatedSprite2D"
-	sprite.scale = Vector2(2, 2)
+	var player_scene = load("res://scenes/entities/player.tscn")
+	var node = player_scene.instantiate()
+	var sprite = node.get_node("AnimatedSprite2D")
 	
 	var sf_path = CHARACTER_SPRITES.get(char_name, "res://assets/spriteframes/riven.tres")
 	sprite.sprite_frames = load(sf_path)
@@ -153,7 +152,6 @@ func _create_character_sprite(char_name: String, flip: bool) -> Node2D:
 	sprite.animation = idle_anim
 	sprite.play(idle_anim)
 	
-	node.add_child(sprite)
 	return node
 
 func load_sentences():

@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://bjfnu3p1xbb84"]
 
-[ext_resource type="SpriteFrames" uid="uid://dmfjwy3sta5qw" path="res://assets/spriteframes/riven.tres" id="1_ucweq"]
+[ext_resource type="SpriteFrames" uid="uid://dqc3fkig61vf7" path="res://assets/spriteframes/leora.tres" id="1_ucweq"]
 
 [node name="Player" type="Node2D" unique_id=1953234846]
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1063536577]
 scale = Vector2(2, 2)
 sprite_frames = ExtResource("1_ucweq")
-animation = &"quickslash"
-autoplay = "quickslash"
+animation = &"idle"
+autoplay = "idle"
