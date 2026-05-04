@@ -59,6 +59,23 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log('Connected to SQLite database');
     initDb();
+
+    // Purge chat messages older than 12 hours
+    const purgeOldMessages = () => {
+        db.run(
+            `DELETE FROM chat_messages WHERE created_at < datetime('now', '-12 hours')`,
+            function(err) {
+                if (err) {
+                    console.error('Chat purge error:', err.message);
+                } else if (this.changes > 0) {
+                    console.log(`Purged ${this.changes} old chat message(s).`);
+                }
+            }
+        );
+    };
+
+    purgeOldMessages(); // Run once on startup
+    setInterval(purgeOldMessages, 60 * 60 * 1000); // Then every hour
 });
 
 // Global Error Handler

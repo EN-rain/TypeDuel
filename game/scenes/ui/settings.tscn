@@ -1,8 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://settings_scene"]
+[gd_scene format=3 uid="uid://bsts6cp4wqcmj"]
 
-[ext_resource type="Script" path="res://scenes/ui/settings.gd" id="1_settings_script"]
+[ext_resource type="Script" uid="uid://cm08hoggnme0a" path="res://scenes/ui/settings.gd" id="1_settings_script"]
+[ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="2_7pacj"]
 
-[node name="Settings" type="Control"]
+[node name="Settings" type="Control" unique_id=1832984600]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_settings_script")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=2000821137]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,83 +21,83 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.2, 0.2, 0.2, 1)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="BackButton" type="Button" parent="." unique_id=849240718]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 1
+offset_right = 300.0
+offset_bottom = 50.0
+text = "Back to Menu"
+
+[node name="PFP" type="TextureRect" parent="." unique_id=645872083]
+clip_contents = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6197917
+anchor_top = 0.25925925
+anchor_right = 0.7934028
+anchor_bottom = 0.56790125
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+texture = ExtResource("2_7pacj")
+expand_mode = 1
+stretch_mode = 6
+metadata/_edit_use_anchors_ = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=26434344]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -200.0
-offset_right = 150.0
-offset_bottom = 200.0
+offset_left = -443.0
+offset_top = -222.0
+offset_right = -143.0
+offset_bottom = 175.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="Title" type="Label" parent="VBoxContainer"]
+[node name="Title" type="Label" parent="VBoxContainer" unique_id=2117485580]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Settings"
 horizontal_alignment = 1
 
-[node name="PFPHolder" type="CenterContainer" parent="VBoxContainer"]
-layout_mode = 2
-
-[node name="PFP" type="TextureRect" parent="VBoxContainer/PFPHolder"]
-custom_minimum_size = Vector2(100, 100)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ChangePFPButton" type="Button" parent="VBoxContainer"]
+[node name="ChangePFPButton" type="Button" parent="VBoxContainer" unique_id=1638788306]
 layout_mode = 2
 text = "Change Profile Picture"
 
-[node name="DisplayNameLabel" type="Label" parent="VBoxContainer"]
+[node name="DisplayNameLabel" type="Label" parent="VBoxContainer" unique_id=1477476892]
 layout_mode = 2
 text = "In-game Name:"
 
-[node name="DisplayNameInput" type="LineEdit" parent="VBoxContainer"]
+[node name="DisplayNameInput" type="LineEdit" parent="VBoxContainer" unique_id=1310931705]
 layout_mode = 2
 placeholder_text = "Enter in-game name"
 
-[node name="PasswordLabel" type="Label" parent="VBoxContainer"]
+[node name="PasswordLabel" type="Label" parent="VBoxContainer" unique_id=885569531]
 layout_mode = 2
 text = "Change Password:"
 
-[node name="PasswordInput" type="LineEdit" parent="VBoxContainer"]
+[node name="PasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=1072349181]
 layout_mode = 2
 placeholder_text = "New password"
 secret = true
 
-[node name="SaveButton" type="Button" parent="VBoxContainer"]
+[node name="SaveButton" type="Button" parent="VBoxContainer" unique_id=1321472439]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 text = "Save Changes"
 
-[node name="StatusLabel" type="Label" parent="VBoxContainer"]
+[node name="StatusLabel" type="Label" parent="VBoxContainer" unique_id=1819294478]
 layout_mode = 2
 horizontal_alignment = 1
 
-[node name="BackButton" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-text = "Back to Menu"
+[node name="HTTPRequest" type="HTTPRequest" parent="." unique_id=1940745539]
 
-[node name="UploadRequest" type="HTTPRequest" parent="."]
-
-[node name="CaptureViewport" type="SubViewport" parent="."]
-disable_3d = true
-transparent_bg = true
-size = Vector2i(256, 256)
-render_target_update_mode = 1
-
-[node name="CaptureSprite" type="Sprite2D" parent="CaptureViewport"]
-centered = false
-
-[node name="FileDialog" type="FileDialog" parent="."]
+[node name="FileDialog" type="FileDialog" parent="." unique_id=1203934336]
 title = "Open a File"
 initial_position = 2
 size = Vector2i(600, 400)
@@ -104,100 +105,11 @@ ok_button_text = "Open"
 file_mode = 0
 access = 2
 filters = PackedStringArray("*.png", "*.jpg", "*.jpeg")
+use_native_dialog = true
 
-[node name="PFPEditor" type="ColorRect" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.862745)
+[node name="UploadRequest" type="HTTPRequest" parent="." unique_id=203356162]
 
-[node name="VBox" type="VBoxContainer" parent="PFPEditor"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -250.0
-offset_right = 200.0
-offset_bottom = 250.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 20
-
-[node name="Label" type="Label" parent="PFPEditor/VBox"]
-layout_mode = 2
-text = "Edit Profile Picture"
-horizontal_alignment = 1
-
-[node name="EditorContainer" type="Control" parent="PFPEditor/VBox"]
-clip_contents = true
-custom_minimum_size = Vector2(300, 300)
-layout_mode = 2
-size_flags_horizontal = 4
-
-[node name="PFPPreview" type="TextureRect" parent="PFPEditor/VBox/EditorContainer"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -150.0
-offset_right = 150.0
-offset_bottom = 150.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 0
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Mask" type="ReferenceRect" parent="PFPEditor/VBox/EditorContainer"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-border_color = Color(1, 1, 1, 1)
-border_width = 2.0
-editor_description = "Visual guide for the crop area"
-
-[node name="ScaleSlider" type="HSlider" parent="PFPEditor/VBox"]
-layout_mode = 2
-min_value = 0.1
-max_value = 3.0
-step = 0.01
-value = 1.0
-
-[node name="Buttons" type="HBoxContainer" parent="PFPEditor/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 20
-alignment = 1
-
-[node name="CancelEdit" type="Button" parent="PFPEditor/VBox/Buttons"]
-custom_minimum_size = Vector2(100, 40)
-layout_mode = 2
-text = "Cancel"
-
-[node name="ApplyEdit" type="Button" parent="PFPEditor/VBox/Buttons"]
-custom_minimum_size = Vector2(100, 40)
-layout_mode = 2
-text = "Upload"
-
-[connection signal="gui_input" from="PFPEditor/VBox/EditorContainer/PFPPreview" to="." method="_on_pfp_preview_gui_input"]
-[connection signal="value_changed" from="PFPEditor/VBox/ScaleSlider" to="." method="_on_scale_slider_value_changed"]
-[connection signal="pressed" from="PFPEditor/VBox/Buttons/CancelEdit" to="." method="_on_cancel_edit_pressed"]
-[connection signal="pressed" from="PFPEditor/VBox/Buttons/ApplyEdit" to="." method="_on_apply_edit_pressed"]
-
+[connection signal="pressed" from="BackButton" to="." method="_on_back_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ChangePFPButton" to="." method="_on_change_pfp_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/SaveButton" to="." method="_on_save_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
 [connection signal="file_selected" from="FileDialog" to="." method="_on_file_dialog_file_selected"]

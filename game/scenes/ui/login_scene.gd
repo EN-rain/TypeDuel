@@ -9,7 +9,9 @@ extends Control
 @onready var error_label = $VBoxContainer/ErrorLabel
 @onready var http_request = $HTTPRequest
 
-const BASE_URL = "http://34.126.180.170:3000/api/auth"
+var BASE_URL: String:
+	get: return GameManager.SERVER_URL + "/api/auth"
+
 var is_login_mode = true
 
 func _ready():
@@ -63,6 +65,7 @@ func _on_request_completed(result, response_code, headers, body):
 			GameManager.user_data.id = response.user.id
 			GameManager.user_data.username = response.user.username
 			GameManager.user_data.display_name = response.user.display_name
+			GameManager.user_data.profile_icon = response.user.get("profile_icon", "default")
 			GameManager.user_data.token = response.token
 			
 			# Transition to Main Menu

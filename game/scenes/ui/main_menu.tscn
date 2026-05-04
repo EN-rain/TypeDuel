@@ -4,13 +4,6 @@
 [ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
 [ext_resource type="PackedScene" uid="uid://bkqnn57tfo72j" path="res://scenes/ui/friends_panel.tscn" id="3_friends_panel"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
-bg_color = Color(0.05, 0.05, 0.1, 0.85)
-border_width_left = 2
-border_color = Color(0.2, 0.4, 0.8, 0.5)
-corner_radius_top_left = 10
-corner_radius_bottom_left = 10
-
 [node name="MainMenu" type="Control" unique_id=126697270]
 layout_mode = 3
 anchors_preset = 15
@@ -240,8 +233,19 @@ theme_override_font_sizes/font_size = 18
 text = "Time: 0:00"
 horizontal_alignment = 1
 
-[node name="FriendsPanel" parent="." unique_id=1960269588 instance=ExtResource("3_friends_panel")]
+[node name="FriendsDimmer" type="Button" parent="." unique_id=2000000003]
 unique_name_in_owner = true
+visible = false
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+
+[node name="FriendsPanel" parent="." unique_id=1960269588 instance=ExtResource("3_friends_panel")]
 visible = false
 layout_mode = 1
 anchors_preset = 11
@@ -254,7 +258,6 @@ offset_top = 0.0
 offset_right = 0.0
 offset_bottom = 0.0
 grow_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 
 [node name="ChatBox" parent="." unique_id=975926982 instance=ExtResource("2_chat_box")]
 unique_name_in_owner = true
@@ -276,6 +279,25 @@ offset_right = -235.0
 offset_bottom = 32.0
 grow_horizontal = 0
 text = "Friends"
+
+[node name="Label" type="Label" parent="FriendsButton" unique_id=557679567]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 0
+offset_left = -22.0
+offset_top = 4.0
+offset_right = 28.0
+offset_bottom = 54.0
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HistoryButton" type="Button" parent="." unique_id=87916517]
+layout_mode = 0
+offset_left = 749.0
+offset_top = 1.0
+offset_right = 813.0
+offset_bottom = 32.0
+text = "History"
 
 [connection signal="pressed" from="PlayOnlineButton" to="." method="_on_play_online_pressed"]
 [connection signal="pressed" from="JoinButton" to="." method="_on_join_pressed"]

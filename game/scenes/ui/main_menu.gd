@@ -29,6 +29,7 @@ const TEXT_PLAYERS_ONLINE    = "● %d players online"
 @onready var matchmaking_time_label  = %MatchmakingTime
 @onready var play_online_btn         = %PlayOnlineButton
 @onready var friends_button          = %FriendsButton
+@onready var friends_dimmer          = %FriendsDimmer
 @onready var friends_panel           = %FriendsPanel
 @onready var friends_list            = friends_panel.get_node("%FriendsList")
 @onready var friend_search_input     = friends_panel.get_node("%SearchInput")
@@ -52,9 +53,16 @@ func _ready():
 	matchmaking_label.hide()
 	matchmaking_time_label.hide()
 	
+	friends_panel.z_index = 100
+	friends_panel.top_level = true
+	friends_dimmer.z_index = 99
+	friends_dimmer.top_level = true
+	
 	# friends_button.pressed connection is now in the .tscn
 	friends_panel.get_node("%AddBtn").pressed.connect(_on_add_friend_pressed)
-	friends_panel.get_node("%CloseBtn").pressed.connect(func(): friends_panel.hide())
+	friends_dimmer.pressed.connect(_collapse_friends)
+	
+	$HistoryButton.pressed.connect(_on_history_pressed)
 	
 	_setup_chat()
 
@@ -282,18 +290,23 @@ func _on_friends_pressed():
 	else:
 		_expand_friends()
 
+func _on_history_pressed():
+	get_tree().change_scene_to_file("res://scenes/ui/history.tscn")
+
 func _expand_friends():
 	is_friends_expanded = true
+	friends_dimmer.show()
 	friends_panel.show()
 	friends_panel.position.x = get_viewport_rect().size.x
 	var tween = create_tween()
-	tween.tween_property(friends_panel, "position:x", get_viewport_rect().size.x - friends_panel.size.x, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(friends_panel, "position:x", get_viewport_rect().size.x - friends_panel.size.x, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_refresh_friends_list()
 
 func _collapse_friends():
 	is_friends_expanded = false
+	friends_dimmer.hide()
 	var tween = create_tween()
-	tween.tween_property(friends_panel, "position:x", get_viewport_rect().size.x, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.tween_property(friends_panel, "position:x", get_viewport_rect().size.x, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	tween.finished.connect(func(): friends_panel.hide())
 
 func _on_add_friend_pressed():
@@ -402,8 +415,54 @@ func _create_friend_entry(data: Dictionary):
 			status_label.modulate = Color(0.6, 0.6, 0.6)
 			status_dot.color = Color(0.4, 0.4, 0.4)
 		action_btn.hide()
-		
 	remove_btn.pressed.connect(_on_remove_friend.bind(data.user_id))
+	
+	entry.mouse_filter = Control.MOUSE_FILTER_PASS
+	entry.gui_input.connect(_on_friend_entry_gui_input.bind(data))
+	
+	avatar_icon.mouse_filter = Control.MOUSE_FILTER_PASS
+	avatar_icon.gui_input.connect(_on_friend_entry_gui_input.bind(data))
+	
+	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	name_label.gui_input.connect(_on_friend_entry_gui_input.bind(data))
+
+var _friend_context_menu: PopupMenu
+
+func _on_friend_entry_gui_input(event: InputEvent, data: Dictionary):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		if _friend_context_menu == null:
+			_friend_context_menu = PopupMenu.new()
+			add_child(_friend_context_menu)
+			_friend_context_menu.id_pressed.connect(_on_friend_context_menu_id_pressed)
+		
+		_friend_context_menu.clear()
+		# Only allow history and message if they are accepted friends
+		if data.status == "accepted":
+			_friend_context_menu.add_item("History", 0)
+			_friend_context_menu.add_item("Message", 1)
+		_friend_context_menu.add_item("Remove", 2)
+		
+		_friend_context_menu.set_meta("target_user_id", data.user_id)
+		_friend_context_menu.set_meta("target_username", data.username)
+		_friend_context_menu.position = get_viewport().get_mouse_position()
+		_friend_context_menu.popup()
+
+func _on_friend_context_menu_id_pressed(id: int):
+	var target_user_id = _friend_context_menu.get_meta("target_user_id")
+	var target_username = _friend_context_menu.get_meta("target_username")
+	
+	if id == 0: # History
+		GameManager.viewing_history_id = target_user_id
+		get_tree().change_scene_to_file("res://scenes/ui/history.tscn")
+	elif id == 1: # Message
+		if has_node("%ChatBox"):
+			var chat = get_node("%ChatBox")
+			chat._switch_tab("friends")
+			chat._expand_panel()
+			chat.real_input.text = "@" + target_username + " "
+			chat.real_input.caret_column = chat.real_input.text.length()
+	elif id == 2: # Remove
+		_on_remove_friend(target_user_id)
 
 
 

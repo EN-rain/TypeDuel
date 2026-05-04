@@ -25,6 +25,7 @@ var user_data: Dictionary = {
 var current_room: String = ""
 var is_host: bool = true
 var is_solo: bool = false
+var viewing_history_id: int = 0
 var selected_character: String = ""
 var opponent_character: String = ""
 

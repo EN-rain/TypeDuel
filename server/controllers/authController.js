@@ -14,6 +14,9 @@ const register = (req, res) => {
   const sql = 'INSERT INTO users (username, password, display_name, email) VALUES (?, ?, ?, ?)';
   db.run(sql, [username, password, username, email], function(err) {
     if (err) {
+      if (err.message && err.message.includes('UNIQUE constraint failed: users.username')) {
+        return res.status(400).json({ message: 'Username is already taken. Please choose another one.' });
+      }
       return res.status(400).json({ message: 'User already exists or invalid data' });
     }
     const userId = this.lastID;

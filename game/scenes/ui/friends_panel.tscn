@@ -57,10 +57,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CloseBtn" type="Button" parent="VBoxContainer" unique_id=1453629804]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Close"
 
 [node name="StatusLabel" type="Label" parent="VBoxContainer" unique_id=601682349]
 unique_name_in_owner = true

@@ -21,6 +21,9 @@ var is_expanded: bool = false
 
 var pfp_cache: Dictionary = {}
 
+var pfp_popup: PopupMenu
+var current_target_username: String = ""
+
 func _ready():
 	# Start with panel off-screen to the left
 	chat_panel.position.x = -chat_panel.size.x - 20
@@ -135,6 +138,8 @@ func _add_message_to_vbox(msg: Dictionary):
 	pfp.custom_minimum_size = Vector2(24, 24)
 	pfp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pfp.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pfp.mouse_filter = Control.MOUSE_FILTER_PASS
+	pfp.gui_input.connect(_on_pfp_gui_input.bind(msg.username))
 	row.add_child(pfp)
 	
 	_load_pfp_into(msg.get("profile_icon", "default"), pfp)
@@ -146,6 +151,40 @@ func _add_message_to_vbox(msg: Dictionary):
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.text = "[b]%s:[/b] %s" % [msg.username, msg.message]
 	row.add_child(label)
+
+func _on_pfp_gui_input(event: InputEvent, username: String):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		if username == GameManager.user_data.username or username == GameManager.user_data.display_name:
+			return # Don't popup on own pfp
+		
+		if not is_instance_valid(pfp_popup):
+			pfp_popup = PopupMenu.new()
+			add_child(pfp_popup)
+			pfp_popup.add_item("Add Friend", 0)
+			pfp_popup.add_item("Message", 1)
+			pfp_popup.id_pressed.connect(_on_pfp_popup_id_pressed)
+		
+		current_target_username = username
+		pfp_popup.position = get_global_mouse_position()
+		pfp_popup.popup()
+
+func _on_pfp_popup_id_pressed(id: int):
+	if id == 0:
+		# Add Friend
+		var http = HTTPRequest.new()
+		add_child(http)
+		http.request_completed.connect(func(_r, _c, _h, _b): http.queue_free())
+		var body = JSON.stringify({
+			"user_id": GameManager.user_data.id,
+			"friend_username": current_target_username
+		})
+		http.request(GameManager.SERVER_URL + "/api/friends/request", ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+	elif id == 1:
+		# Message
+		_switch_tab("friends")
+		_expand_panel()
+		real_input.text = "@" + current_target_username + " "
+		real_input.caret_column = real_input.text.length()
 
 func _load_pfp_into(icon_name: String, rect: TextureRect):
 	if icon_name == "default" or icon_name == "":

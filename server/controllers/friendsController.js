@@ -1,4 +1,4 @@
-const db = require('../database/db');
+const db = require('../config/db');
 
 exports.sendRequest = (req, res) => {
     const { user_id, friend_username } = req.body;
@@ -57,12 +57,16 @@ exports.getFriends = (req, res) => {
             CASE 
                 WHEN u.last_active > datetime('now', '-1 minute') THEN 1 
                 ELSE 0 
-            END as is_online
+            END as is_online,
+            CASE
+                WHEN f.friend_id = ? THEN 1
+                ELSE 0
+            END as is_incoming_request
         FROM friends f
         JOIN users u ON (f.user_id = u.id OR f.friend_id = u.id)
         WHERE (f.user_id = ? OR f.friend_id = ?) AND u.id != ?
     `;
-    db.all(query, [user_id, user_id, user_id], (err, rows) => {
+    db.all(query, [user_id, user_id, user_id, user_id], (err, rows) => {
         if (err) return res.status(500).json({ message: "Database error" });
         res.status(200).json(rows);
     });

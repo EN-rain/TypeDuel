@@ -40,3 +40,16 @@ CREATE TABLE IF NOT EXISTS friends (
   FOREIGN KEY (friend_id) REFERENCES users (id),
   UNIQUE(user_id, friend_id)
 );
+
+CREATE TABLE IF NOT EXISTS match_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  username TEXT,
+  match_type TEXT, -- 'online' or 'custom'
+  wpm REAL,
+  accuracy REAL,
+  typos INTEGER,
+  won BOOLEAN,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users (id)
+);

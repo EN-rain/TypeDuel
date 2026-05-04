@@ -3,7 +3,8 @@ extends Control
 @onready var list = $VBoxContainer/ScrollContainer/List
 @onready var http_request = $HTTPRequest
 
-const BASE_URL = "http://34.126.180.170:3000/api/game/leaderboard"
+var BASE_URL: String:
+	get: return GameManager.SERVER_URL + "/api/game/leaderboard"
 
 func _ready():
 	http_request.request_completed.connect(_on_request_completed)

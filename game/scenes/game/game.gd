@@ -29,7 +29,8 @@ var p2
 @onready var own_progress_bar  = $HUD/OwnProgress
 @onready var enemy_progress_bar = $HUD/EnemyProgress
 
-const SERVER = "http://127.0.0.1:3000"
+var SERVER: String:
+	get: return GameManager.SERVER_URL
 var last_progress_sync: float = 0.0
 var last_poll_time: float     = 0.0
 
@@ -68,6 +69,7 @@ func _on_entity_died(entity: String):
 		
 		# If opponent died, we win. If player died, we lose.
 		var won = (entity == "opponent")
+		_save_match_history(won)
 		victory_scene.set_result(won)
 
 func start_skill_phase():
@@ -372,3 +374,30 @@ func _on_skill_pressed(skill_index: int):
 		chosen_skill_id = SkillsManager.selected_skills[skill_index - 1]
 		print("Selected skill: ", chosen_skill_id)
 	skill_select.hide()
+
+func _save_match_history(won: bool):
+	var wpm = 0.0
+	var accuracy = 0.0
+	# we just use some simple stats for now, or total average if possible.
+	if total_keystrokes > 0:
+		accuracy = (float(total_keystrokes - typos_count) / float(total_keystrokes)) * 100.0
+	
+	var time_elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
+	if time_elapsed_min > 0:
+		wpm = (total_keystrokes / 5.0) / time_elapsed_min
+
+	var req = HTTPRequest.new()
+	add_child(req)
+	
+	var data = {
+		"user_id": GameManager.user_data.id,
+		"username": GameManager.user_data.username,
+		"match_type": "online" if not GameManager.is_solo else "custom",
+		"wpm": wpm,
+		"accuracy": accuracy,
+		"typos": typos_count,
+		"won": won
+	}
+	
+	var headers = ["Content-Type: application/json"]
+	req.request(SERVER + "/api/game/history", headers, HTTPClient.METHOD_POST, JSON.stringify(data))
