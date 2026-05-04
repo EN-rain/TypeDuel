@@ -120,6 +120,10 @@ const matchmake = (req, res) => {
         guest_character: null,
         guest_skills:    [],
         guest_passive:   "",
+        host_progress:   0.0,
+        guest_progress:  0.0,
+        host_typos:      0,
+        guest_typos:     0,
         host_mutations:  [],
         guest_mutations: [],
         created_at:      Date.now()

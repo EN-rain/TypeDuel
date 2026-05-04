@@ -52,7 +52,6 @@ func reset_match() -> void:
 	player_win_streak   = 0
 	opponent_win_streak = 0
 	liora_heal_total    = 0.0
-	selected_skills     = []
 	phantom_stack       = 0
 
 ## Called after every accurately-typed word during the typing phase.

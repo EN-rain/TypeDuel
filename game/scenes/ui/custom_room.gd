@@ -27,7 +27,14 @@ const PASSIVES = [
 @onready var player1_tag      = $Player1Tag
 @onready var char_container   = $Characters/VBoxContainer
 @onready var skill_container  = $Skill/VBoxContainer
-var passive_container: VBoxContainer
+
+@onready var _manual_passive_buttons = [
+	$Passive/HBoxContainer/VBoxContainer1/Passive1,
+	$Passive/HBoxContainer/VBoxContainer1/Passive2,
+	$Passive/HBoxContainer/VBoxContainer2/Passive3,
+	$Passive/HBoxContainer/VBoxContainer2/Passive4,
+	$Passive/HBoxContainer/VBoxContainer3/Passive5
+]
 
 @export var selected_char_color: Color = Color.GREEN
 @export var selected_skill_color: Color = Color.CYAN
@@ -93,40 +100,11 @@ func _ready():
 	room_code_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	room_code_label.gui_input.connect(_on_room_code_input)
 
-	_setup_passive_container()
 	_setup_ui()
 	_setup_chat()
 
-func _setup_passive_container():
-	# Dynamically inject the passive container into the UI
-	var p_ctrl = Control.new()
-	p_ctrl.anchors_preset = Control.PRESET_CENTER_BOTTOM
-	p_ctrl.offset_top = -180
-	add_child(p_ctrl)
-	
-	passive_container = VBoxContainer.new()
-	passive_container.anchors_preset = Control.PRESET_CENTER_BOTTOM
-	passive_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	passive_container.grow_vertical = Control.GROW_DIRECTION_BOTH
-	passive_container.add_theme_constant_override("separation", 15)
-	p_ctrl.add_child(passive_container)
-	
-	# Add a title
-	var lbl = Label.new()
-	lbl.text = "Passive Skill"
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	passive_container.add_child(lbl)
-	
-	# Create an HBox for the passive buttons to sit horizontally
-	var hbox = HBoxContainer.new()
-	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 10)
-	passive_container.add_child(hbox)
-	
-	# Redirect passive_container to hbox so the setup loop places buttons there
-	passive_container = hbox
-
 func _setup_chat():
+
 	if room_code == "" or not has_node("ChatBox"): return
 	$ChatBox.room_id = room_code
 
@@ -243,9 +221,6 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 func _setup_ui():
 	for c in char_container.get_children(): c.queue_free()
 	for c in skill_container.get_children(): c.queue_free()
-	# Empty out passive buttons (skip label)
-	for c in passive_container.get_children():
-		if c is Button: c.queue_free()
 	
 	_char_buttons.clear()
 	_skill_buttons.clear()
@@ -267,13 +242,15 @@ func _setup_ui():
 		btn.pressed.connect(_on_skill_selected.bind(skill["id"]))
 		_skill_buttons.append(btn)
 		
-	for psv in PASSIVES:
-		var btn = Button.new()
-		btn.text = psv["name"]
-		btn.custom_minimum_size = Vector2(100, 40)
-		passive_container.add_child(btn)
-		btn.pressed.connect(_on_passive_selected.bind(psv["id"]))
-		_passive_buttons.append(btn)
+	for i in range(PASSIVES.size()):
+		if i < _manual_passive_buttons.size():
+			var btn = _manual_passive_buttons[i]
+			btn.text = PASSIVES[i]["name"]
+			# Disconnect any old connections if _setup_ui is called multiple times
+			if btn.pressed.is_connected(_on_passive_selected):
+				btn.pressed.disconnect(_on_passive_selected)
+			btn.pressed.connect(_on_passive_selected.bind(PASSIVES[i]["id"]))
+			_passive_buttons.append(btn)
 		
 	_refresh_ui()
 

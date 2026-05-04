@@ -1,8 +1,7 @@
 [gd_scene format=3 uid="uid://bwdxqk530p716"]
 
 [ext_resource type="Script" uid="uid://cdsv6vd7esyby" path="res://scenes/ui/custom_room.gd" id="1_custom_room_script"]
-[ext_resource type="PackedScene" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
-
+[ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
 
 [node name="CustomRoom" type="Control" unique_id=508700511]
 layout_mode = 3
@@ -210,14 +209,58 @@ layout_mode = 2
 text = "Skill Name 3
 "
 
-[node name="ChatBox" parent="." instance=ExtResource("2_chat_box")]
+[node name="ChatBox" parent="." unique_id=1946247923 instance=ExtResource("2_chat_box")]
 layout_mode = 1
 offset_left = 10.0
 offset_top = -50.0
 offset_right = 310.0
 offset_bottom = -10.0
 
+[node name="Passive" type="Control" parent="." unique_id=1756940328]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -307.0
+offset_top = -198.0
+grow_horizontal = 0
+grow_vertical = 0
 
+[node name="HBoxContainer" type="HBoxContainer" parent="Passive" unique_id=1077965648]
+layout_mode = 0
+offset_right = 56.0
+offset_bottom = 40.0
+
+[node name="VBoxContainer1" type="VBoxContainer" parent="Passive/HBoxContainer" unique_id=124835383]
+layout_mode = 2
+
+[node name="Passive1" type="Button" parent="Passive/HBoxContainer/VBoxContainer1" unique_id=1461166331]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+
+[node name="Passive2" type="Button" parent="Passive/HBoxContainer/VBoxContainer1" unique_id=508508689]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="Passive/HBoxContainer" unique_id=1325369147]
+layout_mode = 2
+
+[node name="Passive3" type="Button" parent="Passive/HBoxContainer/VBoxContainer2" unique_id=24480314]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+
+[node name="Passive4" type="Button" parent="Passive/HBoxContainer/VBoxContainer2" unique_id=948473311]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+
+[node name="VBoxContainer3" type="VBoxContainer" parent="Passive/HBoxContainer" unique_id=153562454]
+layout_mode = 2
+
+[node name="Passive5" type="Button" parent="Passive/HBoxContainer/VBoxContainer3" unique_id=1070387332]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
 
 [connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]
 [connection signal="pressed" from="StartButton" to="." method="_on_start_pressed"]

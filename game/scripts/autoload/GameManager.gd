@@ -11,6 +11,7 @@ signal connection_status_changed(online: bool)
 
 var is_online: bool = true
 var _connection_error_overlay: CanvasLayer = null
+const CONNECTION_LOST_SCENE = preload("res://scenes/ui/connection_lost_overlay.tscn")
 
 var current_score: int = 0
 var is_game_active: bool = false
@@ -76,35 +77,8 @@ func _create_connection_overlay():
 	_connection_error_overlay.layer = 128 # Above everything
 	add_child(_connection_error_overlay)
 	
-	var control = Control.new()
-	control.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_connection_error_overlay.add_child(control)
-	
-	# Dimmer background
-	var color_rect = ColorRect.new()
-	color_rect.color = Color(0, 0, 0, 0.7)
-	color_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	control.add_child(color_rect)
-	
-	var panel = PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.custom_minimum_size = Vector2(300, 150)
-	control.add_child(panel)
-	
-	var vbox = VBoxContainer.new()
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	panel.add_child(vbox)
-	
-	var title = Label.new()
-	title.text = "CONNECTION LOST"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", Color.RED)
-	vbox.add_child(title)
-	
-	var desc = Label.new()
-	desc.text = "Please check your internet connection.\nThe game requires an online connection to play."
-	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(desc)
+	var overlay_instance = CONNECTION_LOST_SCENE.instantiate()
+	_connection_error_overlay.add_child(overlay_instance)
 	
 	_connection_error_overlay.hide()
 

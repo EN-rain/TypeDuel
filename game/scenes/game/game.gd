@@ -39,10 +39,17 @@ var p2
 @onready var own_progress_bar  = $HUD/OwnProgress
 @onready var enemy_progress_bar = $HUD/EnemyProgress
 
+@onready var hp_bar_own = $HUD/Stats/OwnHp
+@onready var hp_bar_opp = $HUD/Stats/EnemyHp
+@onready var mana_bar_own = $HUD/Stats/OwnMana
+@onready var mana_bar_opp = $HUD/Stats/EnemyMana
+
 var SERVER: String:
 	get: return GameManager.SERVER_URL
 var last_progress_sync: float = 0.0
 var last_poll_time: float     = 0.0
+var sync_interval: float = 0.3
+var poll_interval: float = 0.5
 
 var _last_mutation_index: int = 0
 var _queued_mutations: Array = []
@@ -51,7 +58,7 @@ var _perfect_words_streak: int = 0
 var is_paused: bool = false
 var debug_panel: Panel
 var pause_start_time: int = 0
-
+func _ready():
 	_setup_debug_panel()
 	
 	HPManager.init_game()
@@ -287,14 +294,27 @@ func _process(delta):
 	enemy_progress_bar.max_value = HPManager.opponent_max_hp
 	enemy_progress_bar.value    = HPManager.opponent_hp
 	
+	if hp_bar_own:
+		hp_bar_own.max_value = HPManager.player_max_hp
+		hp_bar_own.value = HPManager.player_hp
+	if hp_bar_opp:
+		hp_bar_opp.max_value = HPManager.opponent_max_hp
+		hp_bar_opp.value = HPManager.opponent_hp
+	if mana_bar_own:
+		mana_bar_own.max_value = 10
+		mana_bar_own.value = SkillsManager.player_mana
+	if mana_bar_opp:
+		mana_bar_opp.max_value = 10
+		mana_bar_opp.value = SkillsManager.opponent_mana
+	
 	# ── Networking sync ────────────────────────────
 	var now = Time.get_ticks_msec() / 1000.0
 	if current_state == GameState.TYPING:
-		if now - last_progress_sync > 0.3:
+		if now - last_progress_sync > sync_interval:
 			last_progress_sync = now
 			_sync_progress_to_server()
 		
-		if now - last_poll_time > 1.0:
+		if now - last_poll_time > poll_interval:
 			last_poll_time = now
 			_poll_opponent_progress()
 
@@ -349,14 +369,12 @@ func _on_poll_progress_done(_result, _code, _headers, body, http):
 		set_meta("opp_typos", opp_typos)
 		enemy_typing_progress = opp_prog * 100.0
 		
-		# Online: enemy finished
-		if not GameManager.is_solo and enemy_typing_progress >= 100.0 and not enemy_finished:
+		# Online: enemy finished (check >= 0.99 to be safe with floats)
+		if not GameManager.is_solo and opp_prog >= 0.99 and not enemy_finished:
 			enemy_finished = true
 			if i_finished:
-				# We finished first, enemy just caught up within snap window
-				snap_active = false
-				print("[Round] Enemy finished within snap window — BUFF resolution")
-				_resolve_and_advance("buff")
+				print("[Round] Enemy finished! We already finished. Round complete.")
+				# Both finished
 			else:
 				# Enemy finished before us — start snap for us
 				print("[Round] Enemy finished first — snap timer started for us")
@@ -713,36 +731,21 @@ func _setup_debug_panel():
 	)
 	vbox.add_child(btn_finish)
 	
-	var btn_stutter = Button.new()
-	btn_stutter.text = "Inject Stutter Passive"
-	btn_stutter.pressed.connect(func():
-		SkillsManager.selected_passive = "stutter"
-		SkillsManager.opponent_win_streak = 1 # Force condition
-		print("[Debug] Stutter Passive Injected. Will trigger on next round.")
-	)
-	vbox.add_child(btn_stutter)
-
-	var btn_jumble = Button.new()
-	btn_jumble.text = "Inject Jumble Passive"
-	btn_jumble.pressed.connect(func():
-		SkillsManager.selected_passive = "jumble"
-		SkillsManager.player_mana = 10 # Force condition
-		print("[Debug] Jumble Passive Injected. Need 7+ Mana.")
-	)
-	vbox.add_child(btn_jumble)
+	# Dynamic Passive Injection
+	for p_id in GameManager.PASSIVES:
+		var btn = Button.new()
+		btn.text = "Inject: %s" % p_id.capitalize()
+		btn.pressed.connect(func(): _on_debug_inject_passive(p_id))
+		vbox.add_child(btn)
 	
-	var btn_erosion = Button.new()
-	btn_erosion.text = "Inject Erosion Passive"
-	btn_erosion.pressed.connect(func():
-		SkillsManager.selected_passive = "erosion"
-		print("[Debug] Erosion Passive Injected.")
-	)
-	vbox.add_child(btn_erosion)
-
 	var btn_close = Button.new()
 	btn_close.text = "Close / Resume"
 	btn_close.pressed.connect(_toggle_debug_menu)
 	vbox.add_child(btn_close)
+
+func _on_debug_inject_passive(p_id: String):
+	SkillsManager.selected_passive = p_id
+	print("[Debug] Passive Injected: ", p_id)
 
 func _toggle_debug_menu():
 	is_paused = !is_paused

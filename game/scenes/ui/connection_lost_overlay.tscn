@@ -1,0 +1,64 @@
+[gd_scene format=3 uid="uid://d0b7fbkho1oio"]
+
+[node name="ConnectionLostOverlay" type="Control" unique_id=1139722457]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BackgroundDim" type="ColorRect" parent="." unique_id=1298139143]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.705882)
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=953557821]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer" unique_id=1680747494]
+custom_minimum_size = Vector2(350, 180)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer" unique_id=1950413360]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer" unique_id=856844102]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1757563483]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.231373, 0.231373, 1)
+theme_override_font_sizes/font_size = 24
+text = "CONNECTION LOST"
+horizontal_alignment = 1
+
+[node name="Description" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=864861793]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Please check your internet connection.
+The game requires an online connection to play."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="RetryButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=276319191]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Retry Connection"

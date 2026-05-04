@@ -2,59 +2,11 @@
 
 [sub_resource type="Animation" id="Animation_x734n"]
 length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("BackBot1:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(577, -261)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("BackBot2:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(744.00006, 421)]
-}
 
 [sub_resource type="Animation" id="Animation_472hf"]
 resource_name = "intro"
 length = 2.0
 loop_mode = 2
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("BackBot1:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 1, 2),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector2(0, -584), Vector2(577, -261), Vector2(-574, 387)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("BackBot2:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 1, 2),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector2(1323, 745), Vector2(744.00006, 421), Vector2(1896, -227)]
-}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_x734n"]
 _data = {
@@ -70,19 +22,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BackBot1" type="Polygon2D" parent="." unique_id=326017322]
-position = Vector2(577, -261)
-scale = Vector2(4.9262295, 1.1988187)
-color = Color(0.32080123, 0.20812854, 0.45399082, 1)
-polygon = PackedVector2Array(-117.12811, 216.88017, 116.72214, 217.71432, -117.12811, 758.24646)
-uv = PackedVector2Array(-114.58417, 225.10625, 119.26607, 225.94041, 119.46907, -314.59167)
-
-[node name="BackBot2" type="Polygon2D" parent="." unique_id=1551626008]
-position = Vector2(744.00006, 421)
-scale = Vector2(4.9262295, 1.1988187)
-color = Color(0.426266, 0.26610583, 0.48364395, 1)
-polygon = PackedVector2Array(-151.02829, 189.35306, 82.82196, 189.35306, 82.61897, -350.34488)
-uv = PackedVector2Array(-3, -9, -3, -9, 1, 0, 140, 156, 216, 34)
-
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=240114090]
 libraries/ = SubResource("AnimationLibrary_x734n")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1804544828]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
