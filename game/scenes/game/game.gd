@@ -768,7 +768,8 @@ func _setup_debug_panel():
 	vbox.add_child(btn_finish)
 	
 	# Dynamic Passive Injection
-	for p_id in GameManager.PASSIVES:
+	for p_data in GameManager.PASSIVES:
+		var p_id = p_data["id"]
 		var btn = Button.new()
 		btn.text = "Inject: %s" % p_id.capitalize()
 		btn.pressed.connect(func(): _on_debug_inject_passive(p_id))
