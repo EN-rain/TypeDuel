@@ -8,6 +8,7 @@ router.post('/join',             authMiddleware, roomController.joinRoom);
 router.post('/matchmake',        authMiddleware, roomController.matchmake);
 router.get('/',                  authMiddleware, roomController.listRooms);
 router.patch('/:code/select',    authMiddleware, roomController.updateSelections);
+router.patch('/:code/phase',     authMiddleware, roomController.updatePhase);
 router.patch('/:code/progress',  authMiddleware, roomController.updateProgress);
 router.post('/:code/start',      authMiddleware, roomController.startRoomGame);
 router.get('/:code',             authMiddleware, roomController.getRoomStatus);

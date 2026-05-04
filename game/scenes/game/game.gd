@@ -70,6 +70,16 @@ var _last_mutation_index: int = 0
 var _queued_mutations: Array = []
 var _perfect_words_streak: int = 0
 
+var _server_phase: String = ""
+var _server_phase_started_at_ms: float = 0.0
+var _server_typing_started_at_ms: float = 0.0
+var _server_first_finish_at_ms: float = 0.0
+var _server_first_finish_by: String = ""
+var _server_round_id: int = 0
+
+var _host_skill_phase_requested: bool = false
+var _host_typing_phase_requested: bool = false
+
 var is_paused: bool = false
 var debug_panel: Panel
 var pause_start_time: int = 0
@@ -119,15 +129,11 @@ func _on_entity_died(entity: String):
 
 func start_skill_phase():
 	current_state = GameState.SKILL_SELECT
+	_host_skill_phase_requested = false
+	_host_typing_phase_requested = false
 	
-	# Synchronize timer with server start time
-	var elapsed_since_start = 0.0
-	if GameManager.match_start_time > 0:
-		var now_ms = Time.get_unix_time_from_system() * 1000.0
-		elapsed_since_start = (now_ms - GameManager.match_start_time) / 1000.0
-	
-	skill_timer = max(0.1, 10.0 - elapsed_since_start)
-	print("[Sync] Elapsed since start: %.2fs | Adjusted skill_timer: %.2fs" % [elapsed_since_start, skill_timer])
+	# Default timer; online play uses server phase_started_at for sync.
+	skill_timer = 10.0
 	
 	chosen_skill_index = -1
 	chosen_skill_id    = ""  # No skill chosen yet
@@ -160,6 +166,14 @@ func start_skill_phase():
 	countdown_label.show()
 	typing_label.hide()
 
+	# Online: host declares the new skill-select phase (authoritative timers + round id)
+	if not GameManager.is_solo and GameManager.current_room != "":
+		if GameManager.is_host and not _host_skill_phase_requested:
+			_host_skill_phase_requested = true
+			var next_round = (_server_round_id + 1) if _server_round_id > 0 else 1
+			_server_round_id = next_round
+			_host_set_phase("skill_select", next_round)
+
 func start_typing_phase():
 	current_state = GameState.TYPING
 	skill_select.hide()
@@ -171,6 +185,12 @@ func start_typing_phase():
 	typos_count = 0
 	typos_in_current_word = 0
 	typed_statuses.clear()
+	_last_mutation_index = 0
+
+	if GameManager.is_solo or GameManager.current_room == "":
+		current_round += 1
+	else:
+		current_round = _server_round_id if _server_round_id > 0 else max(1, current_round)
 	pick_random_sentence()
 	
 	typing_label.show()
@@ -188,6 +208,13 @@ func start_typing_phase():
 			_queued_mutations.append({ "type": "phantom" })
 			
 	print("[Round] Starting TYPING Phase. Target: ", target_sentence)
+	sentence_start_time = Time.get_ticks_msec()
+	is_typing = true
+	
+	if not GameManager.is_solo and GameManager.current_room != "":
+		if GameManager.is_host and not _host_typing_phase_requested:
+			_host_typing_phase_requested = true
+			_host_set_phase("typing", _server_round_id)
 
 func _spawn_players():
 
@@ -280,11 +307,10 @@ func load_sentences():
 		sentences.append("Type this sentence to practice your skills.")
 
 func pick_random_sentence():
-	current_round += 1
 	# Re-seed every round using the room hash and round number.
 	# This prevents RNG drift if one player triggers a mutation and the other doesn't.
 	if not GameManager.is_solo and GameManager.current_room != "":
-		seed(GameManager.current_room.hash() + current_round)
+		seed(GameManager.current_room.hash() + int(current_round))
 	
 	if sentences.size() > 0:
 		target_sentence = sentences[randi() % sentences.size()]
@@ -300,26 +326,68 @@ func pick_random_sentence():
 
 func _process(delta):
 	if is_paused: return
+
+	# Always poll room state online so phase/timer transitions stay synced.
+	var now = Time.get_ticks_msec() / 1000.0
+	if not GameManager.is_solo and GameManager.current_room != "":
+		if now - last_poll_time > poll_interval:
+			last_poll_time = now
+			_poll_opponent_progress()
 	
 	if current_state == GameState.SKILL_SELECT:
-		skill_timer -= delta
+		# Server-authoritative skill timer when online.
+		if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "skill_select" and _server_phase_started_at_ms > 0.0:
+			var now_ms = Time.get_unix_time_from_system() * 1000.0
+			var elapsed = (now_ms - _server_phase_started_at_ms) / 1000.0
+			skill_timer = max(0.0, 10.0 - elapsed)
+		else:
+			skill_timer -= delta
 		if countdown_label:
 			countdown_label.text = "Choose Skill: %d" % max(0, int(ceil(skill_timer)))
 		if skill_timer <= 0:
-			start_typing_phase()
+			if not GameManager.is_solo and GameManager.current_room != "":
+				# Host advances to typing; guest follows the phase update.
+				if GameManager.is_host and not _host_typing_phase_requested:
+					_host_typing_phase_requested = true
+					_host_set_phase("typing", _server_round_id if _server_round_id > 0 else max(1, current_round))
+			else:
+				start_typing_phase()
 			
 	elif current_state == GameState.TYPING:
 		# ── Main 60s round timer ──────────────────────
+		# Server-authoritative timing when online.
+		if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "typing" and _server_typing_started_at_ms > 0.0:
+			var now_ms = Time.get_unix_time_from_system() * 1000.0
+			var round_deadline = _server_typing_started_at_ms + 60000.0
+			round_timer = max(0.0, (round_deadline - now_ms) / 1000.0)
+
+			# If opponent finished first, compute snap deadline (min(10s, remaining in 60s)).
+			if _server_first_finish_at_ms > 0.0 and not i_finished:
+				var am_first = (_server_first_finish_by == "host" and GameManager.is_host) or (_server_first_finish_by == "guest" and not GameManager.is_host)
+				if not am_first:
+					var snap_deadline = min(round_deadline, _server_first_finish_at_ms + 10000.0)
+					snap_timer = max(0.0, (snap_deadline - now_ms) / 1000.0)
+					enemy_finished = true
+					snap_active = true
+		else:
+			if snap_active:
+				snap_timer -= delta
+			else:
+				round_timer -= delta
+
 		if snap_active:
-			snap_timer -= delta
 			if countdown_label:
 				countdown_label.text = "⏱ Opp: %d" % max(0, int(ceil(snap_timer)))
 			if snap_timer <= 0.0:
-				print("[Round] Snap timer expired — FULL POWER resolution")
-				_resolve_and_advance("full_power")
+				# If opponent finished first and we ran out of time, we DNF.
+				if enemy_finished and not i_finished:
+					print("[Round] Snap timer expired — DNF (you didn't finish)")
+					_resolve_and_advance("dnf")
+				else:
+					print("[Round] Snap timer expired — FULL POWER resolution")
+					_resolve_and_advance("full_power")
 				return
 		else:
-			round_timer -= delta
 			if countdown_label:
 				countdown_label.text = "%d" % max(0, int(ceil(round_timer)))
 			if round_timer <= 0.0:
@@ -361,15 +429,11 @@ func _process(delta):
 		mana_bar_opp.value = SkillsManager.opponent_mana
 	
 	# ── Networking sync ────────────────────────────
-	var now = Time.get_ticks_msec() / 1000.0
+	now = Time.get_ticks_msec() / 1000.0
 	if current_state == GameState.TYPING:
 		if now - last_progress_sync > sync_interval:
 			last_progress_sync = now
 			_sync_progress_to_server()
-		
-		if now - last_poll_time > poll_interval:
-			last_poll_time = now
-			_poll_opponent_progress()
 
 func _sync_progress_to_server():
 	if GameManager.current_room == "" or GameManager.user_data.id == 0: return
@@ -400,9 +464,12 @@ func _poll_opponent_progress():
 
 func _on_poll_progress_done(_result, _code, _headers, body, http):
 	http.queue_free()
-	if current_state != GameState.TYPING: return
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if json:
+		_apply_room_phase(json)
+		if current_state != GameState.TYPING:
+			return
+
 		var opp_prog = 0.0
 		var opp_typos = 0
 		var my_muts = []
@@ -431,11 +498,38 @@ func _on_poll_progress_done(_result, _code, _headers, body, http):
 			else:
 				# Enemy finished before us — start snap for us
 				print("[Round] Enemy finished first — snap timer started for us")
-				if round_timer > 10.0:
-					snap_timer = 10.0
-				else:
-					snap_timer = round_timer
 				snap_active = true
+
+func _apply_room_phase(room: Dictionary) -> void:
+	_server_phase = str(room.get("phase", _server_phase))
+	_server_phase_started_at_ms = float(room.get("phase_started_at", _server_phase_started_at_ms))
+	_server_typing_started_at_ms = float(room.get("typing_started_at", _server_typing_started_at_ms))
+	_server_first_finish_at_ms = float(room.get("first_finish_at", _server_first_finish_at_ms))
+	_server_first_finish_by = "" if room.get("first_finish_by", null) == null else str(room.get("first_finish_by"))
+	_server_round_id = int(room.get("round_id", _server_round_id))
+
+	# Follow host phase changes.
+	if _server_phase == "typing" and current_state == GameState.SKILL_SELECT:
+		start_typing_phase()
+	elif _server_phase == "skill_select" and current_state == GameState.TYPING:
+		start_skill_phase()
+
+func _host_set_phase(phase: String, round_id: int) -> void:
+	if GameManager.current_room == "" or GameManager.user_data.id == 0:
+		return
+
+	var http = HTTPRequest.new()
+	add_child(http)
+	var body = JSON.stringify({
+		"user_id": GameManager.user_data.id,
+		"phase": phase,
+		"round_id": round_id
+	})
+	http.request_completed.connect(func(_r, _c, _h, _b):
+		if is_instance_valid(http):
+			http.queue_free()
+	)
+	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/phase", GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, body)
 
 @export var correct_color: Color = Color.GREEN
 @export var wrong_color: Color = Color.RED
