@@ -79,6 +79,12 @@ var _server_round_id: int = 0
 var _server_time_offset_ms: float = 0.0
 var _best_time_sync_rtt_ms: float = INF
 var _predicted_typing_started_at_ms: float = 0.0
+var _last_snap_fallback_log_ms: int = 0
+var _last_resolved_round_id: int = 0
+var _snap_trace_active: bool = false
+var _snap_trace_last_s: int = -1
+var _snap_trace_line: String = ""
+var _snap_trace_start_s: int = 0
 var _last_room_seq: int = -1
 
 var _host_skill_phase_requested: bool = false
@@ -150,6 +156,8 @@ func _setup_debug_overlay() -> void:
 	btn_finish.text = "Skip / Auto Finish Sentence"
 	btn_finish.pressed.connect(func():
 		if current_state == GameState.TYPING:
+			# Make skip-testing produce sane WPM/damage (otherwise elapsed≈0 -> absurd WPM).
+			sentence_start_time = Time.get_ticks_msec() - 12000
 			current_index = target_sentence.length()
 			typos_in_current_word = 0
 			_on_i_finished()
@@ -201,6 +209,9 @@ func start_skill_phase(announce_phase: bool = false):
 	_host_skill_phase_requested = false
 	_host_typing_phase_requested = false
 	_predicted_typing_started_at_ms = 0.0
+	_server_typing_started_at_ms = 0.0
+	_server_first_finish_at_ms = 0.0
+	_server_first_finish_by = ""
 	
 	# Default timer; online play uses server phase_started_at for sync.
 	skill_timer = 10.0
@@ -211,6 +222,10 @@ func start_skill_phase(announce_phase: bool = false):
 	enemy_finished = false
 	snap_active   = false
 	snap_timer    = 10.0
+	_last_snap_fallback_log_ms = 0
+	_snap_trace_active = false
+	_snap_trace_last_s = -1
+	_snap_trace_line = ""
 	round_timer   = 60.0
 	
 	current_index = 0
@@ -406,6 +421,8 @@ func _process(delta):
 			_poll_opponent_progress()
 	
 	if current_state == GameState.SKILL_SELECT:
+		# Online: guests should never locally advance to typing; host only advances when server says it's typing.
+		# This prevents phase flip-flopping when network/polling delays occur (especially during fast debug skips).
 		# Server-authoritative skill timer when online.
 		if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "skill_select" and _server_phase_started_at_ms > 0.0:
 			var now_ms = _get_synced_server_time_ms()
@@ -417,33 +434,45 @@ func _process(delta):
 			countdown_label.text = "Choose Skill: %d" % max(0, int(ceil(skill_timer)))
 		if skill_timer <= 0:
 			if not GameManager.is_solo and GameManager.current_room != "":
-				if GameManager.is_host:
-					if _predicted_typing_started_at_ms > 0.0 and _server_typing_started_at_ms <= 0.0:
-						_server_typing_started_at_ms = _predicted_typing_started_at_ms
-						_server_phase = "typing"
-					start_typing_phase(true)
-				else:
-					# Non-host waits for server authoritative phase to avoid desync/flip-flopping.
-					pass
+				# Host triggers the server phase change; both clients wait for server phase=typing before starting locally.
+				if GameManager.is_host and _server_phase == "skill_select" and not _host_typing_phase_requested:
+					_host_typing_phase_requested = true
+					_host_set_phase("typing", max(1, _server_round_id))
 			else:
 				start_typing_phase()
 			
 	elif current_state == GameState.TYPING:
 		# ── Main 60s round timer ──────────────────────
 		# Server-authoritative timing when online.
+		# NOTE: If we locally enter snap mode but the server hasn't yet recorded `first_finish_at`
+		# (e.g. transient /progress request failures), keep ticking the local snap timer so the UI
+		# doesn't freeze at 10s. Once the server reports `first_finish_at`, snap_timer becomes
+		# authoritative again.
 		if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "typing" and _server_typing_started_at_ms > 0.0:
 			var now_ms = _get_synced_server_time_ms()
 			var round_deadline = _server_typing_started_at_ms + 60000.0
 			round_timer = max(0.0, (round_deadline - now_ms) / 1000.0)
 
-			# If opponent finished first, compute snap deadline (min(10s, remaining in 60s)).
-			if _server_first_finish_at_ms > 0.0 and not i_finished:
+			# Server-authoritative snap window once someone finishes.
+			# Keep updating snap_timer for BOTH players (including the one who finished first),
+			# otherwise the countdown freezes at 10.0 when i_finished == true.
+			if _server_first_finish_at_ms > 0.0:
+				var snap_deadline = min(round_deadline, _server_first_finish_at_ms + 10000.0)
+				snap_timer = max(0.0, (snap_deadline - now_ms) / 1000.0)
+				snap_active = true
+
 				var am_first = (_server_first_finish_by == "host" and GameManager.is_host) or (_server_first_finish_by == "guest" and not GameManager.is_host)
 				if not am_first:
-					var snap_deadline = min(round_deadline, _server_first_finish_at_ms + 10000.0)
-					snap_timer = max(0.0, (snap_deadline - now_ms) / 1000.0)
 					enemy_finished = true
-					snap_active = true
+			elif snap_active:
+				# Fallback: tick local snap timer until server confirms first_finish_at.
+				# Clamp to remaining round time so it can't extend beyond 60s.
+				snap_timer = min(snap_timer, round_timer)
+				snap_timer = max(0.0, snap_timer - delta)
+				var now_ticks: int = int(Time.get_ticks_msec())
+				if now_ticks - _last_snap_fallback_log_ms > 2000:
+					_last_snap_fallback_log_ms = now_ticks
+					_log("[Snap] Fallback ticking (awaiting server first_finish_at)")
 		else:
 			if snap_active:
 				snap_timer -= delta
@@ -451,8 +480,28 @@ func _process(delta):
 				round_timer -= delta
 
 		if snap_active:
+			# Per-client snap trace for debugging: prints "10..9..8.."
+			var s_left := int(ceil(snap_timer))
+			if not _snap_trace_active:
+				_snap_trace_active = true
+				_snap_trace_last_s = s_left
+				_snap_trace_line = ""
+				_snap_trace_start_s = s_left
+			if s_left != _snap_trace_last_s:
+				_snap_trace_last_s = s_left
+				var elapsed_s := max(0, _snap_trace_start_s - s_left + 1)
+				_snap_trace_line += ("%d.." % elapsed_s)
+				_log("[SnapTrace] " + _snap_trace_line)
 			if countdown_label:
-				countdown_label.text = "⏱ Opp: %d" % max(0, int(ceil(snap_timer)))
+				# Always show a label (user requested) rather than a bare number.
+				if enemy_finished and not i_finished:
+					countdown_label.text = "⏱ You: %d" % max(0, int(ceil(snap_timer)))
+				else:
+					countdown_label.text = "⏱ Opp: %d" % max(0, int(ceil(snap_timer)))
+			# If both players are finished, resolve immediately (don’t wait for snap to expire).
+			if i_finished and enemy_finished:
+				_resolve_and_advance("buff")
+				return
 			if snap_timer <= 0.0:
 				# If opponent finished first and we ran out of time, we DNF.
 				if enemy_finished and not i_finished:
@@ -463,6 +512,10 @@ func _process(delta):
 					_resolve_and_advance("full_power")
 				return
 		else:
+			_snap_trace_active = false
+			_snap_trace_last_s = -1
+			_snap_trace_line = ""
+			_snap_trace_start_s = 0
 			if countdown_label:
 				countdown_label.text = "%d" % max(0, int(ceil(round_timer)))
 			if round_timer <= 0.0:
@@ -614,6 +667,10 @@ func _apply_room_phase(room: Dictionary, sent_local_ms: float = -1.0, recv_local
 		_predicted_typing_started_at_ms = _server_phase_started_at_ms + 10000.0
 
 	# Follow host phase changes.
+	# Guard: ignore stale "typing" phase for a round we've already resolved locally.
+	# This can happen if the host phase PATCH fails during rapid debug skipping.
+	if _server_phase == "typing" and current_state == GameState.SKILL_SELECT and _server_round_id <= _last_resolved_round_id:
+		return
 	if _server_phase == "typing" and current_state == GameState.SKILL_SELECT:
 		_log("[Net] Phase->typing (server) | round_id=%d" % _server_round_id)
 		start_typing_phase(false)
@@ -833,16 +890,25 @@ func _on_i_finished():
 			else:
 				snap_timer = round_timer
 			snap_active = true
+			# Immediately publish a "finished" update so the server can set first_finish_at even if
+			# the periodic sync loop is delayed.
+			_sync_progress_to_server()
 			_log("[Round] We finished FIRST — snap timer: %.1f s" % snap_timer)
 			countdown_label.show()
 
 func _resolve_and_advance(finish_mode: String):
 	if current_state == GameState.RESOLVING: return
 	current_state = GameState.RESOLVING
+	_last_resolved_round_id = max(_last_resolved_round_id, _server_round_id)
 	
-	var time_elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
-	var words = target_sentence.length() / 5.0
-	var wpm = int(words / time_elapsed_min) if time_elapsed_min > 0 else 0
+	var elapsed_ms: float = float(Time.get_ticks_msec() - sentence_start_time)
+	# Guard against ultra-small elapsed time (debug skip / hitch / clock issues) producing extreme WPM and damage.
+	# We cap both the minimum elapsed time and the maximum WPM used for combat.
+	var safe_elapsed_ms: float = max(250.0, elapsed_ms)
+	var time_elapsed_min: float = safe_elapsed_ms / 60000.0
+	var words: float = float(target_sentence.length()) / 5.0
+	var raw_wpm: int = int(words / time_elapsed_min) if time_elapsed_min > 0.0 else 0
+	var wpm: int = clamp(raw_wpm, 0, 250)
 	
 	var accuracy = 100.0
 	if total_keystrokes > 0:
@@ -913,6 +979,8 @@ func _resolve_and_advance(finish_mode: String):
 		start_skill_phase()
 	elif GameManager.is_host:
 		start_skill_phase(true)
+		# Immediately re-poll so both clients converge quickly after fast debug actions (skip sentence).
+		_poll_opponent_progress()
 
 ## DEPRECATED — kept as a compatibility stub
 func _on_sentence_completed():

@@ -250,20 +250,26 @@ const updateProgress = (req, res) => {
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
+    const progressNum = (progress === undefined) ? undefined : Number(progress);
+    const typosNum = (typos === undefined) ? undefined : Number(typos);
+
     if (room.host_id == user_id) {
-        if (progress !== undefined) room.host_progress = progress;
-        if (typos !== undefined) room.host_typos = typos;
+        if (progressNum !== undefined && Number.isFinite(progressNum)) room.host_progress = progressNum;
+        if (typosNum !== undefined && Number.isFinite(typosNum)) room.host_typos = typosNum;
         if (send_mutation) room.guest_mutations.push(send_mutation);
     } else if (room.guest_id == user_id) {
-        if (progress !== undefined) room.guest_progress = progress;
-        if (typos !== undefined) room.guest_typos = typos;
+        if (progressNum !== undefined && Number.isFinite(progressNum)) room.guest_progress = progressNum;
+        if (typosNum !== undefined && Number.isFinite(typosNum)) room.guest_typos = typosNum;
         if (send_mutation) room.host_mutations.push(send_mutation);
     }
 
     // First-finish tracking for authoritative snap timer
-    if (!room.first_finish_at && progress !== undefined && progress >= 0.999) {
+    if (!room.first_finish_at && progressNum !== undefined && Number.isFinite(progressNum) && progressNum >= 0.999) {
         room.first_finish_at = Date.now();
         room.first_finish_by = (room.host_id == user_id) ? 'host' : 'guest';
+    }
+    if (process.env.LOG_ROOMS === 'true' && progressNum !== undefined) {
+        console.log(`[rooms] ${code} progress host=${room.host_progress} guest=${room.guest_progress} first_finish_at=${room.first_finish_at} by=${room.first_finish_by}`);
     }
     room.seq = (room.seq || 0) + 1;
     return res.json({ ok: true });
