@@ -3,7 +3,7 @@ extends Node
 ## Global Game Manager Singleton
 ## Register this in Project Settings > Autoload as 'Game' or 'GameManager'
 
-const SERVER_URL = "http://127.0.0.1:3000"
+const SERVER_URL = "http://34.126.180.170:3000"
 
 signal game_started
 signal game_ended(results: Dictionary)
