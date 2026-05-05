@@ -26,6 +26,10 @@ func load_current_pfp():
 	var icon = GameManager.user_data.profile_icon
 	if icon == "default" or icon == "":
 		return
+	
+	# Prevent the scene's placeholder texture from flashing while we fetch the real avatar.
+	# (The PFP TextureRect has a default texture set in `settings.tscn`.)
+	pfp_rect.texture = null
 		
 	var url = GameManager.SERVER_URL + "/uploads/" + icon
 	var loader = HTTPRequest.new()
@@ -67,8 +71,12 @@ func _on_file_dialog_file_selected(path):
 		var tex = ImageTexture.create_from_image(cropped_img)
 		pfp_rect.texture = tex
 		
-		# Resize to standard 256x256 for the server
-		cropped_img.resize(256, 256, Image.INTERPOLATE_BILINEAR)
+		# Avoid always resampling avatars before upload.
+		# Bilinear downscaling can heavily distort pixel-art style images.
+		# Only downscale when the source is very large to keep uploads reasonable.
+		const MAX_UPLOAD_DIM := 512
+		if min_dim > MAX_UPLOAD_DIM:
+			cropped_img.resize(MAX_UPLOAD_DIM, MAX_UPLOAD_DIM, Image.INTERPOLATE_CUBIC)
 		var buffer = cropped_img.save_png_to_buffer()
 		
 		# Upload directly

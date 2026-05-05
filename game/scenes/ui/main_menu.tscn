@@ -14,6 +14,8 @@ grow_vertical = 2
 script = ExtResource("1_menu_script")
 metadata/_edit_lock_ = true
 
+[node name="IntroAnimationPlayer" type="AnimationPlayer" parent="." unique_id=2000000010]
+
 [node name="Greeting" type="Label" parent="." unique_id=1598912125]
 unique_name_in_owner = true
 layout_mode = 1

@@ -35,6 +35,7 @@ const TEXT_PLAYERS_ONLINE    = "● %d players online"
 @onready var friend_search_input     = friends_panel.get_node("%SearchInput")
 @onready var friend_status_label     = friends_panel.get_node("%StatusLabel")
 @onready var req_unread_label        = friends_panel.get_node_or_null("%ReqUnreadLabel")
+@onready var intro_anim_player       = $IntroAnimationPlayer
 
 var is_matchmaking = false
 var matchmaking_start_time = 0.0
@@ -65,11 +66,8 @@ func _ready():
 		GameManager.auto_queue_matchmaking = false
 		if not GameManager.is_matchmaking_penalized():
 			call_deferred("_on_play_online_pressed")
-	
-	# Fade in
-	modulate.a = 0.0
-	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+	_play_intro_animation()
 	
 	friends_panel.z_index = 100
 	friends_panel.top_level = true
@@ -84,6 +82,77 @@ func _ready():
 	$HistoryButton.pressed.connect(_on_history_pressed)
 	
 	_setup_chat()
+
+
+func _play_intro_animation():
+	if intro_anim_player == null:
+		return
+
+	# Ensure layout is settled (anchors/containers) before sampling positions.
+	await get_tree().process_frame
+	
+	var viewport_size: Vector2 = get_viewport_rect().size
+	var center_x: float = viewport_size.x * 0.5
+	var slide_distance: float = maxf(120.0, viewport_size.x * 0.18)
+
+	# Build a fresh animation each time the menu is entered (no hard-coded node list).
+	var library := AnimationLibrary.new()
+	var reset := Animation.new()
+	reset.length = 0.001
+	library.add_animation(&"RESET", reset)
+
+	var anim := Animation.new()
+	anim.resource_name = "intro"
+	anim.length = 0.55
+	anim.loop_mode = Animation.LOOP_NONE
+
+	# Fade in the whole menu.
+	modulate.a = 0.0
+	var fade_track := anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(fade_track, NodePath("..:modulate:a"))
+	anim.track_insert_key(fade_track, 0.0, 0.0)
+	anim.track_insert_key(fade_track, anim.length, 1.0)
+	anim.track_set_interpolation_type(fade_track, Animation.INTERPOLATION_CUBIC)
+
+	for child_node in get_children():
+		if child_node == intro_anim_player:
+			continue
+		var child := child_node as Control
+		if child == null:
+			continue
+		if not child.visible:
+			continue
+		# Don't animate modal/overlay UI that isn't part of the intro.
+		if child == friends_panel or child == friends_dimmer or child == join_panel:
+			continue
+
+		# Sample final position after layout, then offset for the intro.
+		var final_pos: Vector2 = child.position
+		var child_center_x: float = child.global_position.x + (child.size.x * 0.5)
+		var from_pos: Vector2 = final_pos
+		if child_center_x < center_x:
+			# Left side slides in towards the right (from further left).
+			from_pos.x -= slide_distance
+		else:
+			# Right side slides in towards the left (from further right).
+			from_pos.x += slide_distance
+
+		child.position = from_pos
+
+		var track := anim.add_track(Animation.TYPE_VALUE)
+		anim.track_set_path(track, NodePath("../%s:position" % child.name))
+		anim.track_insert_key(track, 0.0, from_pos)
+		anim.track_insert_key(track, anim.length, final_pos)
+		anim.track_set_interpolation_type(track, Animation.INTERPOLATION_CUBIC)
+
+	# Replace any existing libraries to avoid accumulating animations.
+	var lib_name := StringName("intro_lib")
+	if intro_anim_player.has_animation_library(lib_name):
+		intro_anim_player.remove_animation_library(lib_name)
+	intro_anim_player.add_animation_library(lib_name, library)
+	intro_anim_player.get_animation_library(lib_name).add_animation(&"intro", anim)
+
+	intro_anim_player.play(&"intro")
 
 func _setup_chat():
 	if has_node("%ChatBox"):
