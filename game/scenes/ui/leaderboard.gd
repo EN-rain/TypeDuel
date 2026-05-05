@@ -11,7 +11,7 @@ func _ready():
 	fetch_leaderboard()
 
 func fetch_leaderboard():
-	http_request.request(BASE_URL)
+	http_request.request(BASE_URL, GameManager.get_auth_headers())
 
 func _on_request_completed(result, response_code, headers, body):
 	if response_code != 200:

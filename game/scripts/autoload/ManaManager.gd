@@ -1,7 +1,12 @@
 extends Node
 
-## ManaManager Singleton
-## Manages Combo Points (CP) for Player and Opponent
+## ManaManager — DEPRECATED / UNUSED
+##
+## Fix #2: All mana state is managed by SkillsManager (player_mana / opponent_mana).
+## This singleton is registered as an autoload but is never referenced anywhere in the
+## codebase.  It is kept here to avoid breaking the autoload list in project.godot, but
+## it does nothing.  If you want to centralise mana management in the future, migrate
+## SkillsManager.player_mana / opponent_mana into this class and update all call sites.
 
 signal cp_changed(entity: String, current_cp: int)
 

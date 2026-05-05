@@ -16,7 +16,7 @@ func _ready():
 	fetch_history()
 
 func fetch_history():
-	http_request.request(BASE_URL)
+	http_request.request(BASE_URL, GameManager.get_auth_headers())
 	GameManager.viewing_history_id = 0 # Reset after fetching
 
 func _on_request_completed(result, response_code, headers, body):

@@ -19,7 +19,7 @@ var opponent_innate: String = ""
 var characters_data = []
 
 func _ready():
-	var path = "c:/Users/LENOVO/Documents/type-duel/server/data/characters.json"
+	var path = "res://assets/data/characters.json"
 	var file = FileAccess.open(path, FileAccess.READ)
 	if file:
 		var json = JSON.parse_string(file.get_as_text())
@@ -54,6 +54,10 @@ func init_game():
 	opponent_hp = opponent_max_hp
 	hp_changed.emit("player", player_hp, player_max_hp)
 	hp_changed.emit("opponent", opponent_hp, opponent_max_hp)
+	
+	# Fix #3: reset all per-match SkillsManager state (streaks, mana, Liora heal cap,
+	# Phantom stack) so nothing bleeds across rematches.
+	SkillsManager.reset_match()
 	
 	# ── DEBUG: confirm character stats loaded ──────────────────────────
 	print("╔══════ HPManager Init ══════╗")

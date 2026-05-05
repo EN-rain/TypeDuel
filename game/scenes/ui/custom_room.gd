@@ -171,6 +171,8 @@ func _handle_matchmaking_forfeit(i_was_ready: bool):
 
 	var now_unix_ms: float = Time.get_unix_time_from_system() * 1000.0
 	if not i_was_ready:
+		# Fix #10: apply penalty server-side so it persists across restarts
+		_apply_matchmaking_penalty(10000)
 		GameManager.matchmaking_penalty_until_unix_ms = now_unix_ms + 10000.0
 		GameManager.auto_queue_matchmaking = false
 	else:
@@ -178,6 +180,18 @@ func _handle_matchmaking_forfeit(i_was_ready: bool):
 
 	GameManager.is_matchmaking = false
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+## Fix #10: tell the server to record a matchmaking penalty for this user.
+func _apply_matchmaking_penalty(duration_ms: int) -> void:
+	if GameManager.user_data.id == 0: return
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
+	var body = JSON.stringify({
+		"user_id": GameManager.user_data.id,
+		"duration_ms": duration_ms
+	})
+	http.request(GameManager.SERVER_URL + "/api/game/matchmaking-penalty", GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
 
 # ── Network ──────────────────────────────────────────────────────────────────
 
@@ -233,15 +247,7 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if seq >= 0:
 		_last_room_seq = seq
 
-	if json.get("status") == "started":
-		# Write opponent character to GameManager BEFORE changing scene
-		GameManager.opponent_character = _opp_character
-		GameManager.opponent_passive = _opp_passive
-		GameManager.match_start_time = float(json.get("started_at", 0))
-		print("[Lobby] Starting game | Me: %s (%s) | Opp: %s (%s) | StartTime: %f" % [GameManager.selected_character, SkillsManager.selected_passive, GameManager.opponent_character, GameManager.opponent_passive, GameManager.match_start_time])
-		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
-		return
-
+	# 1. Update opponent selections from current poll first
 	if GameManager.is_host:
 		if json.get("guest_id", null) != null:
 			guest_joined = true
@@ -285,6 +291,15 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 			status_label.text = "Waiting for host to start..."
 		else:
 			status_label.text = "Pick 1 character and 2 skills."
+
+	# 2. Check for game start
+	if json.get("status") == "started":
+		GameManager.opponent_character = _opp_character
+		GameManager.opponent_passive = _opp_passive
+		GameManager.match_start_time = float(json.get("started_at", 0))
+		print("[Lobby] Starting game | Me: %s (%s) | Opp: %s (%s) | StartTime: %f" % [GameManager.selected_character, SkillsManager.selected_passive, GameManager.opponent_character, GameManager.opponent_passive, GameManager.match_start_time])
+		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
+		return
 
 # ── Dynamic UI setup ────────────────────────────────────────────────────────
 

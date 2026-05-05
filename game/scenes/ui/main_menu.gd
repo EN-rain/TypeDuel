@@ -3,7 +3,6 @@ extends Control
 # ── Constants ────────────────────────────────────────────────────────────────
 const SCENE_CUSTOM_ROOM = "res://scenes/ui/custom_room.tscn"
 const SCENE_LEADERBOARD = "res://scenes/ui/leaderboard.tscn"
-const SCENE_SETTINGS    = "res://scenes/ui/settings.tscn"
 const SCENE_LOGIN       = "res://scenes/ui/login_scene.tscn"
 
 const TEXT_PLAY_ONLINE       = "Play Online"
@@ -80,7 +79,7 @@ func _ready():
 	friends_panel.get_node("%ReqBtn").pressed.connect(_on_req_btn_pressed)
 	friends_dimmer.pressed.connect(_collapse_friends)
 	
-	$HistoryButton.pressed.connect(_on_history_pressed)
+	%HistoryButton.pressed.connect(_on_history_pressed)
 	
 	_setup_chat()
 
@@ -330,7 +329,8 @@ func _on_leaderboard_pressed():
 	get_tree().change_scene_to_file(SCENE_LEADERBOARD)
 
 func _on_settings_pressed():
-	get_tree().change_scene_to_file(SCENE_SETTINGS)
+	$Settings.show()
+	$Settings/AnimationPlayer.play("slide_in")
 
 func _on_logout_pressed():
 	# Notify server we're going offline
@@ -418,14 +418,24 @@ func _on_friends_list_received(_result, code, _headers, body, http):
 	
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if json is Array:
+		# ── Merge new data while preserving unread_counts ─────────────────
+		var old_counts = {}
+		for f in current_friends_data:
+			old_counts[int(f.get("user_id", 0))] = f.get("unread_count", 0)
+			
 		current_friends_data = json
-		var render_signature = JSON.stringify(current_friends_data) + "|" + str(showing_requests)
+		for f in current_friends_data:
+			var uid = int(f.get("user_id", 0))
+			if old_counts.has(uid):
+				f["unread_count"] = old_counts[uid]
 
 		for f in current_friends_data:
 			if f.status == "accepted" and not f.has("unread_count"):
 				_fetch_dm_unread_count_for_friend(f)
 
 		_update_friend_badges()
+		
+		var render_signature = JSON.stringify(current_friends_data) + "|" + str(showing_requests)
 		if render_signature != _last_friends_render_signature:
 			_last_friends_render_signature = render_signature
 			_render_friends_list()
@@ -709,3 +719,7 @@ func _on_remove_friend(friend_id: int):
 		"friend_id": friend_id
 	})
 	http.request(GameManager.SERVER_URL + "/api/friends/remove", GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
+
+
+func _on_close_button_pressed() -> void:
+	$Settings/AnimationPlayer.play_backwards("slide_in")
