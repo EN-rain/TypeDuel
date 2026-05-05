@@ -560,6 +560,18 @@ tracks/16/keys = {
 "update": 0,
 "values": [Color(1, 1, 1, 0)]
 }
+tracks/17/type = "value"
+tracks/17/imported = false
+tracks/17/enabled = true
+tracks/17/path = NodePath("CloseButton:modulate")
+tracks/17/interp = 1
+tracks/17/loop_wrap = true
+tracks/17/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 0)]
+}
 
 [sub_resource type="Animation" id="Animation_m1kxf"]
 resource_name = "slide_in"
@@ -762,10 +774,22 @@ tracks/16/path = NodePath("SettingsLabel:modulate")
 tracks/16/interp = 1
 tracks/16/loop_wrap = true
 tracks/16/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Color(1, 1, 1, 0)]
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+tracks/17/type = "value"
+tracks/17/imported = false
+tracks/17/enabled = true
+tracks/17/path = NodePath("CloseButton:modulate")
+tracks/17/interp = 1
+tracks/17/loop_wrap = true
+tracks/17/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_x2yvf"]
@@ -1032,6 +1056,7 @@ offset_left = 10.0
 offset_right = 310.0
 
 [node name="Settings" type="Control" parent="." unique_id=160369676]
+visible = false
 layout_mode = 1
 anchors_preset = 11
 anchor_left = 1.0
@@ -1049,8 +1074,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 699.53375
 offset_top = 876.88196
-offset_right = 1424.649
-offset_bottom = 1233.8401
+offset_right = 1424.6494
+offset_bottom = 1233.8398
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
@@ -1065,8 +1090,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 720.6644
 offset_top = 862.5718
-offset_right = 1337.5874
-offset_bottom = 1219.5297
+offset_right = 1337.5869
+offset_bottom = 1219.5288
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
@@ -1080,8 +1105,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 822.59814
 offset_top = 862.9369
-offset_right = 1372.7101
-offset_bottom = 1219.8894
+offset_right = 1372.7102
+offset_bottom = 1219.8895
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
@@ -1092,11 +1117,12 @@ color = Color(0.23, 0.23, 0.23, 1)
 libraries/ = SubResource("AnimationLibrary_x2yvf")
 
 [node name="CloseButton" type="Button" parent="Settings" unique_id=176239284]
+modulate = Color(1, 1, 1, 0)
 layout_mode = 0
-offset_left = -58.0
-offset_top = 4.0
-offset_right = -40.0
-offset_bottom = 35.0
+offset_left = -71.0
+offset_top = 10.0
+offset_right = -53.0
+offset_bottom = 41.0
 text = "X"
 
 [node name="SettingsLabel" type="Label" parent="Settings" unique_id=363387504]
