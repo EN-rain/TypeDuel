@@ -232,8 +232,12 @@ const updatePhase = (req, res) => {
         room.round_id = round_id;
     }
     if (phase === 'typing') {
-        // Add a short ready countdown so the typing start isn't a surprise (esp. when skill-select auto-skips).
-        room.typing_started_at = now + 3000;
+        // Add a short ready countdown so the typing start isn't a surprise for the first round.
+        if (room.round_id <= 1) {
+            room.typing_started_at = now + 3000;
+        } else {
+            room.typing_started_at = now;
+        }
         room.first_finish_at = 0;
         room.first_finish_by = null;
         room.host_progress = 0.0;

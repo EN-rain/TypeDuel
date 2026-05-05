@@ -438,7 +438,9 @@ func start_typing_phase(announce_phase: bool = false):
 	
 	typing_label.show()
 	countdown_label.show()
-	countdown_label.text = "Get Ready: 3"
+	countdown_label.show()
+	_host_typing_phase_requested = false
+	remove_meta("jumble_triggered_this_round")
 	update_typing_ui()
 	
 	set_meta("jumble_triggered_this_round", false)
@@ -457,7 +459,12 @@ func start_typing_phase(announce_phase: bool = false):
 	if not GameManager.is_solo and GameManager.current_room != "" and _server_typing_started_at_ms > 0.0:
 		_typing_go_at_ms = _server_typing_started_at_ms
 	else:
-		_typing_go_at_ms = float(Time.get_ticks_msec()) + 3000.0
+		if current_round <= 1:
+			_typing_go_at_ms = float(Time.get_ticks_msec()) + 3000.0
+			countdown_label.text = "Get Ready: 3"
+		else:
+			_typing_go_at_ms = float(Time.get_ticks_msec())
+
 	
 	if announce_phase and not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
 		_host_typing_phase_requested = true
@@ -570,6 +577,12 @@ func _process(delta):
 			_poll_opponent_progress()
 	
 	if current_state == GameState.SKILL_SELECT:
+		# If server is ALREADY in typing phase for a new round, catch up immediately.
+		if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "typing" and _server_round_id > _last_resolved_round_id:
+			_log("[Net] Catching up to typing phase | round_id=%d" % _server_round_id)
+			start_typing_phase(false)
+			return
+
 		# Online: guests should never locally advance to typing; host only advances when server says it's typing.
 		# This prevents phase flip-flopping when network/polling delays occur (especially during fast debug skips).
 		# Server-authoritative skill timer when online.
@@ -596,6 +609,7 @@ func _process(delta):
 					_host_typing_phase_requested = true
 					_host_set_phase("typing", max(1, _server_round_id))
 			
+		
 	elif current_state == GameState.TYPING:
 		# Ready countdown (3s) before typing starts.
 		if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "typing" and _server_typing_started_at_ms > 0.0:
@@ -612,6 +626,7 @@ func _process(delta):
 				if countdown_label:
 					countdown_label.text = "Get Ready: %d" % max(0, sec_left)
 				return
+
 
 		# ── Main 60s round timer ──────────────────────
 		# Server-authoritative timing when online.
@@ -1196,6 +1211,8 @@ func _resolve_and_advance(finish_mode: String):
 		print("[Combat] ", line)
 	
 	# Apply HP changes
+	
+	
 	if result.player_hp_delta != 0:
 		HPManager.heal("player", result.player_hp_delta)
 	if result.opp_hp_delta != 0:

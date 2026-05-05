@@ -107,13 +107,13 @@ func _ready():
 	_setup_chat()
 
 func _setup_chat():
-
 	if room_code == "" or not has_node("ChatBox"): return
 	$ChatBox.room_id = room_code
 
 
 
 func _process(delta: float):
+
 	_heartbeat_timer += delta
 	if _heartbeat_timer >= 8.0:
 		_heartbeat_timer = 0.0

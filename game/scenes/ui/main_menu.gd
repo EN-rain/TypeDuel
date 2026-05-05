@@ -1,8 +1,5 @@
 extends Control
 
-
-
-
 # ── Constants ────────────────────────────────────────────────────────────────
 const SCENE_CUSTOM_ROOM = "res://scenes/ui/custom_room.tscn"
 const SCENE_LEADERBOARD = "res://scenes/ui/leaderboard.tscn"
@@ -35,7 +32,7 @@ const TEXT_PLAYERS_ONLINE    = "● %d players online"
 @onready var friend_search_input     = friends_panel.get_node("%SearchInput")
 @onready var friend_status_label     = friends_panel.get_node("%StatusLabel")
 @onready var req_unread_label        = friends_panel.get_node_or_null("%ReqUnreadLabel")
-@onready var intro_anim_player       = $IntroAnimationPlayer
+@onready var intro_anim_player       = $AnimationPlayer
 
 var is_matchmaking = false
 var matchmaking_start_time = 0.0
@@ -48,7 +45,11 @@ var showing_requests = false
 var _last_friends_render_signature: String = ""
 var _avatar_texture_cache: Dictionary = {}
 
+func _enter_tree():
+	modulate.a = 0.0
+
 func _ready():
+
 	var name_to_show = GameManager.user_data.display_name
 	if name_to_show == "":
 		name_to_show = GameManager.user_data.username
@@ -88,71 +89,12 @@ func _play_intro_animation():
 	if intro_anim_player == null:
 		return
 
-	# Ensure layout is settled (anchors/containers) before sampling positions.
-	await get_tree().process_frame
-	
-	var viewport_size: Vector2 = get_viewport_rect().size
-	var center_x: float = viewport_size.x * 0.5
-	var slide_distance: float = maxf(120.0, viewport_size.x * 0.18)
-
-	# Build a fresh animation each time the menu is entered (no hard-coded node list).
-	var library := AnimationLibrary.new()
-	var reset := Animation.new()
-	reset.length = 0.001
-	library.add_animation(&"RESET", reset)
-
-	var anim := Animation.new()
-	anim.resource_name = "intro"
-	anim.length = 0.55
-	anim.loop_mode = Animation.LOOP_NONE
-
-	# Fade in the whole menu.
-	modulate.a = 0.0
-	var fade_track := anim.add_track(Animation.TYPE_VALUE)
-	anim.track_set_path(fade_track, NodePath("..:modulate:a"))
-	anim.track_insert_key(fade_track, 0.0, 0.0)
-	anim.track_insert_key(fade_track, anim.length, 1.0)
-	anim.track_set_interpolation_type(fade_track, Animation.INTERPOLATION_CUBIC)
-
-	for child_node in get_children():
-		if child_node == intro_anim_player:
-			continue
-		var child := child_node as Control
-		if child == null:
-			continue
-		if not child.visible:
-			continue
-		# Don't animate modal/overlay UI that isn't part of the intro.
-		if child == friends_panel or child == friends_dimmer or child == join_panel:
-			continue
-
-		# Sample final position after layout, then offset for the intro.
-		var final_pos: Vector2 = child.position
-		var child_center_x: float = child.global_position.x + (child.size.x * 0.5)
-		var from_pos: Vector2 = final_pos
-		if child_center_x < center_x:
-			# Left side slides in towards the right (from further left).
-			from_pos.x -= slide_distance
-		else:
-			# Right side slides in towards the left (from further right).
-			from_pos.x += slide_distance
-
-		child.position = from_pos
-
-		var track := anim.add_track(Animation.TYPE_VALUE)
-		anim.track_set_path(track, NodePath("../%s:position" % child.name))
-		anim.track_insert_key(track, 0.0, from_pos)
-		anim.track_insert_key(track, anim.length, final_pos)
-		anim.track_set_interpolation_type(track, Animation.INTERPOLATION_CUBIC)
-
-	# Replace any existing libraries to avoid accumulating animations.
-	var lib_name := StringName("intro_lib")
-	if intro_anim_player.has_animation_library(lib_name):
-		intro_anim_player.remove_animation_library(lib_name)
-	intro_anim_player.add_animation_library(lib_name, library)
-	intro_anim_player.get_animation_library(lib_name).add_animation(&"intro", anim)
-
-	intro_anim_player.play(&"intro")
+	if intro_anim_player.has_animation(&"intro"):
+		# Force the first frame to match the animation's t=0 state to avoid a visible "blink"
+		# right after the scene loads (properties otherwise apply on the next frame).
+		intro_anim_player.stop()
+		intro_anim_player.seek(0.0, true)
+		intro_anim_player.play(&"intro")
 
 func _setup_chat():
 	if has_node("%ChatBox"):
@@ -619,7 +561,7 @@ func _create_friend_entry(data: Dictionary):
 	var status_dot = entry.get_node("%StatusDot")
 	var avatar_icon = entry.get_node("%AvatarIcon")
 	var action_btn = entry.get_node("%ActionBtn")
-	var remove_btn = entry.get_node("%RemoveBtn")
+
 	
 	name_label.text = data.display_name if data.display_name else data.username
 	
@@ -670,7 +612,7 @@ func _create_friend_entry(data: Dictionary):
 			status_label.modulate = Color(0.6, 0.6, 0.6)
 			status_dot.color = Color(0.4, 0.4, 0.4)
 		action_btn.hide()
-	remove_btn.pressed.connect(_on_remove_friend.bind(data.user_id))
+
 	
 	# Unread badge
 	var unread_label = entry.get_node_or_null("%UnreadLabel")

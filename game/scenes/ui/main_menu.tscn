@@ -4,6 +4,356 @@
 [ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
 [ext_resource type="PackedScene" uid="uid://bkqnn57tfo72j" path="res://scenes/ui/friends_panel.tscn" id="3_friends_panel"]
 
+[sub_resource type="Animation" id="Animation_intro"]
+resource_name = "intro"
+length = 0.55
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate:a")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Greeting:position")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(633.36, 53), Vector2(426, 53)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Title:position")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(630.36, 132), Vector2(423, 132)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("OnlineCount:position")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(727.86, 0), Vector2(520.5, 0)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("PlayOnlineButton:position")
+tracks/4/interp = 2
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1075.36, 524), Vector2(868, 524)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("JoinButton:position")
+tracks/5/interp = 2
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(936.36, 554), Vector2(729, 554)]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("CreateRoomButton:position")
+tracks/6/interp = 2
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(930.36, 596), Vector2(723, 596)]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("LeaderboardButton:position")
+tracks/7/interp = 2
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1135.36, 465), Vector2(928, 465)]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("SettingsButton:position")
+tracks/8/interp = 2
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1142.36, 0), Vector2(935, 0)]
+}
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("LogoutButton:position")
+tracks/9/interp = 2
+tracks/9/loop_wrap = true
+tracks/9/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-207.36, 0), Vector2(0, 0)]
+}
+tracks/10/type = "value"
+tracks/10/imported = false
+tracks/10/enabled = true
+tracks/10/path = NodePath("ChatBox:offset_left")
+tracks/10/interp = 2
+tracks/10/loop_wrap = true
+tracks/10/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [-197.36, 10.0]
+}
+tracks/11/type = "value"
+tracks/11/imported = false
+tracks/11/enabled = true
+tracks/11/path = NodePath("ChatBox:offset_right")
+tracks/11/interp = 2
+tracks/11/loop_wrap = true
+tracks/11/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [102.64, 310.0]
+}
+tracks/12/type = "value"
+tracks/12/imported = false
+tracks/12/enabled = true
+tracks/12/path = NodePath("FriendsButton:position")
+tracks/12/interp = 2
+tracks/12/loop_wrap = true
+tracks/12/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1088.36, 1), Vector2(881, 1)]
+}
+tracks/13/type = "value"
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/path = NodePath("HistoryButton:position")
+tracks/13/interp = 2
+tracks/13/loop_wrap = true
+tracks/13/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(956.36, 1), Vector2(749, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_outro"]
+resource_name = "outro"
+length = 0.55
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate:a")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [1.0, 0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Greeting:position")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(426, 53), Vector2(633.36, 53)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Title:position")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(423, 132), Vector2(630.36, 132)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("OnlineCount:position")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(520.5, 0), Vector2(727.86, 0)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("PlayOnlineButton:position")
+tracks/4/interp = 2
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(868, 524), Vector2(1075.36, 524)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("JoinButton:position")
+tracks/5/interp = 2
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(729, 554), Vector2(936.36, 554)]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("CreateRoomButton:position")
+tracks/6/interp = 2
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(723, 596), Vector2(930.36, 596)]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("LeaderboardButton:position")
+tracks/7/interp = 2
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(928, 465), Vector2(1135.36, 465)]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("SettingsButton:position")
+tracks/8/interp = 2
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(935, 0), Vector2(1142.36, 0)]
+}
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("LogoutButton:position")
+tracks/9/interp = 2
+tracks/9/loop_wrap = true
+tracks/9/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(-207.36, 0)]
+}
+tracks/10/type = "value"
+tracks/10/imported = false
+tracks/10/enabled = true
+tracks/10/path = NodePath("ChatBox:offset_left")
+tracks/10/interp = 2
+tracks/10/loop_wrap = true
+tracks/10/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [10.0, -197.36]
+}
+tracks/11/type = "value"
+tracks/11/imported = false
+tracks/11/enabled = true
+tracks/11/path = NodePath("ChatBox:offset_right")
+tracks/11/interp = 2
+tracks/11/loop_wrap = true
+tracks/11/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [310.0, 102.64]
+}
+tracks/12/type = "value"
+tracks/12/imported = false
+tracks/12/enabled = true
+tracks/12/path = NodePath("FriendsButton:position")
+tracks/12/interp = 2
+tracks/12/loop_wrap = true
+tracks/12/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(881, 1), Vector2(1088.36, 1)]
+}
+tracks/13/type = "value"
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/path = NodePath("HistoryButton:position")
+tracks/13/interp = 2
+tracks/13/loop_wrap = true
+tracks/13/keys = {
+"times": PackedFloat32Array(0, 0.55),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(749, 1), Vector2(956.36, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_intro"]
+_data = {
+&"intro": SubResource("Animation_intro"),
+&"outro": SubResource("Animation_outro")
+}
+
 [node name="MainMenu" type="Control" unique_id=126697270]
 layout_mode = 3
 anchors_preset = 15
@@ -14,7 +364,11 @@ grow_vertical = 2
 script = ExtResource("1_menu_script")
 metadata/_edit_lock_ = true
 
-[node name="IntroAnimationPlayer" type="AnimationPlayer" parent="." unique_id=2000000010]
+
+
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=2000000010]
+libraries/ = SubResource("AnimationLibrary_intro")
 
 [node name="Greeting" type="Label" parent="." unique_id=1598912125]
 unique_name_in_owner = true
@@ -22,14 +376,14 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -150.0
+offset_left = 57.359985
 offset_top = 53.0
-offset_right = 150.0
+offset_right = 357.36
 offset_bottom = 124.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 24
 text = "Hi, Player!
-Wlcome to"
+Welcome to"
 horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="." unique_id=977881426]
@@ -37,9 +391,9 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -153.0
+offset_left = 54.359985
 offset_top = 132.0
-offset_right = 153.0
+offset_right = 360.36
 offset_bottom = 220.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 64
@@ -52,8 +406,8 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -55.5
-offset_right = 55.5
+offset_left = 151.85999
+offset_right = 262.86
 offset_bottom = 19.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 13
@@ -69,9 +423,9 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -284.0
+offset_left = -76.640015
 offset_top = -124.0
-offset_right = -9.0
+offset_right = 198.35999
 offset_bottom = -13.0
 grow_horizontal = 0
 grow_vertical = 0
@@ -80,9 +434,9 @@ text = "Play Online"
 [node name="JoinButton" type="Button" parent="." unique_id=893456260]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 729.0
+offset_left = 936.36
 offset_top = 554.0
-offset_right = 860.0
+offset_right = 1067.36
 offset_bottom = 591.0
 text = "Join button
 "
@@ -90,9 +444,9 @@ text = "Join button
 [node name="CreateRoomButton" type="Button" parent="." unique_id=895909165]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 723.0
+offset_left = 930.36
 offset_top = 596.0
-offset_right = 867.0
+offset_right = 1074.36
 offset_bottom = 636.0
 text = "Create Room"
 
@@ -100,9 +454,9 @@ text = "Create Room"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 0
-offset_left = 928.0
+offset_left = 1135.36
 offset_top = 465.0
-offset_right = 1128.0
+offset_right = 1335.36
 offset_bottom = 515.0
 text = "Leaderboard"
 
@@ -113,8 +467,8 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -217.0
-offset_right = -17.0
+offset_left = -9.640015
+offset_right = 190.35999
 offset_bottom = 50.0
 grow_horizontal = 0
 text = "Settings"
@@ -123,7 +477,8 @@ text = "Settings"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 1
-offset_right = 200.0
+offset_left = -207.36
+offset_right = -7.3600006
 offset_bottom = 50.0
 text = "Logout"
 
@@ -264,10 +619,9 @@ grow_horizontal = 0
 [node name="ChatBox" parent="." unique_id=975926982 instance=ExtResource("2_chat_box")]
 unique_name_in_owner = true
 layout_mode = 1
-offset_left = 10.0
-offset_top = -50.0
-offset_right = 310.0
-offset_bottom = -10.0
+offset_left = -197.36
+offset_right = 102.64
+
 
 [node name="FriendsButton" type="Button" parent="." unique_id=987842182]
 unique_name_in_owner = true
@@ -275,9 +629,9 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -271.0
+offset_left = -63.640015
 offset_top = 1.0
-offset_right = -235.0
+offset_right = 2.3599854
 offset_bottom = 32.0
 grow_horizontal = 0
 text = "Friends"
@@ -300,9 +654,9 @@ vertical_alignment = 1
 
 [node name="HistoryButton" type="Button" parent="." unique_id=87916517]
 layout_mode = 0
-offset_left = 749.0
+offset_left = 956.36
 offset_top = 1.0
-offset_right = 813.0
+offset_right = 1020.36
 offset_bottom = 32.0
 text = "History"
 

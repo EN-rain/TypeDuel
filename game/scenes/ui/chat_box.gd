@@ -24,6 +24,8 @@ var room_id: String = "":
 			else:
 				%LocalBtn.show()
 				_fetch_messages("local")
+				_switch_tab("local")
+
 var current_tab: String = "global" # "global", "local", or "friends"
 var last_message_ids: Dictionary = {"global": 0}
 var message_histories: Dictionary = {"global": []}
@@ -59,6 +61,8 @@ func _ready():
 		%LocalBtn.hide()
 	else:
 		%LocalBtn.show()
+		_switch_tab("local")
+
 	
 	_fetch_messages("global")
 	if room_id != "" and room_id != "global":
@@ -99,7 +103,7 @@ func _switch_tab(tab_name: String):
 		fake_input.placeholder_text = "Local chat..."
 	else: # global
 		friends_list_scroll.hide()
-		fake_input.placeholder_text = "No messages yet..."
+		fake_input.placeholder_text = "Global chat..."
 		
 	_rebuild_chat_view()
 	_update_tab_visuals()
@@ -131,7 +135,11 @@ func _expand_panel():
 	is_expanded = true
 	
 	var tween = create_tween()
+	if current_tab == "global" and room_id != "" and room_id != "global":
+		_switch_tab("local")
+	
 	tween.tween_property(chat_panel, "position:x", 0, panel_slide_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
 	
 	real_input.grab_focus()
 	fake_input.release_focus()
