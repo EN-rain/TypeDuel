@@ -64,19 +64,19 @@ const CHARACTER_SPRITES = {
 # Character name → idle animation name
 const CHARACTER_IDLE_ANIM = {
 	"Riven": "idle",
-	"Zephon": "zephon-idle",
+	"Zephon": "idle",
 	"Liora": "idle",
 }
 
 const CHARACTER_HURT_ANIM = {
 	"Riven": "hurt",
-	"Zephon": "zephone-hurt",
+	"Zephon": "hurt",
 	"Liora": "hurt",
 }
 
 const CHARACTER_DEATH_ANIM = {
 	"Riven": "death",
-	"Zephon": "zephone-death",
+	"Zephon": "death",
 	"Liora": "death",
 }
 
@@ -94,47 +94,113 @@ func _get_sprite(node: Node) -> AnimatedSprite2D:
 		return node.get_node("AnimatedSprite2D") as AnimatedSprite2D
 	return null
 
+func _get_anim_player(node: Node) -> AnimationPlayer:
+	if node == null:
+		return null
+	if node.has_node("AnimationPlayer"):
+		return node.get_node("AnimationPlayer") as AnimationPlayer
+	return null
+
 func _safe_play_anim(node: Node, anim: String) -> void:
-	var sprite: AnimatedSprite2D = _get_sprite(node)
-	if sprite == null or sprite.sprite_frames == null:
-		return
-	if anim == "" or not sprite.sprite_frames.has_animation(anim):
-		return
-	sprite.play(anim)
+	var anim_player: AnimationPlayer = _get_anim_player(node)
+	var has_anim = false
+	if anim_player != null and anim != "" and anim_player.has_animation(anim):
+		var anim_res = anim_player.get_animation(anim)
+		if anim_res:
+			anim_res.loop_mode = Animation.LOOP_NONE
+		anim_player.speed_scale = 1.0
+		anim_player.play(anim)
+		has_anim = true
+	else:
+		var sprite: AnimatedSprite2D = _get_sprite(node)
+		if sprite != null and sprite.sprite_frames != null:
+			if anim != "" and sprite.sprite_frames.has_animation(anim):
+				sprite.speed_scale = 1.0
+				sprite.play(anim)
+				has_anim = true
+				
+	if has_anim and (anim == "whipsplash" or anim == "soulbreak"):
+		_dash_attack(node, anim)
+
+func _dash_attack(node: Node, anim: String) -> void:
+	if node.has_meta("dash_tween"):
+		var prev = node.get_meta("dash_tween")
+		if prev != null and prev is Tween and prev.is_valid():
+			return
+			
+	var original_pos = node.position
+	var dir = 1
+	var sprite = _get_sprite(node)
+	if sprite != null:
+		dir = -1 if sprite.flip_h else 1
+	else:
+		dir = 1 if node.position.x < 500 else -1
+
+	var tween = create_tween()
+	node.set_meta("dash_tween", tween)
+	
+	var dur = _get_anim_duration(node, anim)
+	var dash_time = 0.2
+	var wait_time = max(0.0, dur - dash_time)
+	
+	# Dash forward
+	tween.tween_property(node, "position:x", original_pos.x + (400 * dir), dash_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	
+	# Wait for animation
+	if wait_time > 0:
+		tween.tween_interval(wait_time)
+		
+	# Snap back to original position instantly
+	tween.tween_callback(func(): node.position = original_pos)
+	
+	tween.finished.connect(func(): if node.has_meta("dash_tween"): node.remove_meta("dash_tween"))
 
 func _fade_out_in(node: Node, out_s: float = 0.12, in_s: float = 0.12, hold_s: float = 0.03) -> void:
-	var sprite: AnimatedSprite2D = _get_sprite(node)
-	if sprite == null:
+	if node == null:
 		return
+	var target: CanvasItem = node
+	var sprite: AnimatedSprite2D = _get_sprite(node)
+	if sprite != null:
+		target = sprite
+
 	# Avoid stacking tweens on rapid resolves.
-	if sprite.has_meta("fade_tween"):
-		var prev = sprite.get_meta("fade_tween")
+	if target.has_meta("fade_tween"):
+		var prev = target.get_meta("fade_tween")
 		if prev != null and prev is Tween:
 			(prev as Tween).kill()
 
-	sprite.modulate.a = 1.0
+	target.modulate.a = 1.0
 	var tween: Tween = create_tween()
-	sprite.set_meta("fade_tween", tween)
-	tween.tween_property(sprite, "modulate:a", 0.0, out_s).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	target.set_meta("fade_tween", tween)
+	tween.tween_property(target, "modulate:a", 0.0, out_s).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_interval(hold_s)
-	tween.tween_property(sprite, "modulate:a", 1.0, in_s).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(target, "modulate:a", 1.0, in_s).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func _restore_idle_after(node: Node, char_name: String, seconds: float) -> void:
-	var sprite: AnimatedSprite2D = _get_sprite(node)
-	if sprite == null:
-		return
 	var idle_anim: String = str(CHARACTER_IDLE_ANIM.get(char_name, "idle"))
 	await get_tree().create_timer(seconds).timeout
-	if is_instance_valid(sprite) and sprite.sprite_frames and sprite.sprite_frames.has_animation(idle_anim):
-		sprite.play(idle_anim)
+	_safe_play_anim(node, idle_anim)
+
+func _get_anim_duration(node: Node, anim: String) -> float:
+	var anim_player: AnimationPlayer = _get_anim_player(node)
+	if anim_player != null and anim != "" and anim_player.has_animation(anim):
+		return anim_player.get_animation(anim).length
+		
+	var sprite: AnimatedSprite2D = _get_sprite(node)
+	if sprite == null or sprite.sprite_frames == null:
+		return 0.6
+	if not sprite.sprite_frames.has_animation(anim):
+		return 0.6
+	var fps = sprite.sprite_frames.get_animation_speed(anim)
+	if fps <= 0:
+		fps = 5.0
+	var frames = sprite.sprite_frames.get_frame_count(anim)
+	return float(frames) / fps
 
 func _attack_anim_for(char_name: String, skill_id: String) -> String:
 	var base: String = str(SKILL_ANIM_NAME.get(skill_id, ""))
 	if base == "":
 		base = "quickslash"
-	# Zephon spriteframes use a prefix (zephone-quickslash etc).
-	if char_name == "Zephon":
-		return "zephone-" + base
 	return base
 
 func _play_combat_anims(skill_id: String, dealt_damage: float) -> void:
@@ -145,18 +211,21 @@ func _play_combat_anims(skill_id: String, dealt_damage: float) -> void:
 	var opp_char: String = GameManager.opponent_character
 
 	var attack_anim: String = _attack_anim_for(own_char, skill_id)
-	_safe_play_anim(p1, attack_anim)
-	_fade_out_in(p1)
-	_restore_idle_after(p1, own_char, 0.6)
-
 	var death_anim: String = str(CHARACTER_DEATH_ANIM.get(opp_char, "death"))
 	var hurt_anim: String = str(CHARACTER_HURT_ANIM.get(opp_char, "hurt"))
+
 	if HPManager.opponent_hp <= 0:
 		_safe_play_anim(p2, death_anim)
 	else:
 		_safe_play_anim(p2, hurt_anim)
-		_fade_out_in(p2)
-	_restore_idle_after(p2, opp_char, 0.6)
+		var hurt_dur = _get_anim_duration(p2, hurt_anim)
+		_restore_idle_after(p2, opp_char, hurt_dur)
+
+	_safe_play_anim(p1, attack_anim)
+	var attack_dur = _get_anim_duration(p1, attack_anim)
+	
+	await get_tree().create_timer(attack_dur + 0.2).timeout
+	_restore_idle_after(p1, own_char, 0.0)
 
 @onready var typing_label = $HUD/TypingText
 @onready var skill_select = $HUD/SkillSelect
@@ -322,13 +391,16 @@ func _on_entity_died(entity: String):
 		# Play death animation before showing victory.
 		var my_char: String = GameManager.selected_character
 		var opp_char: String = GameManager.opponent_character
+		var death_dur = 0.6
 		if entity == "player":
 			var death_anim: String = str(CHARACTER_DEATH_ANIM.get(my_char, "death"))
 			_safe_play_anim(p1, death_anim)
+			death_dur = _get_anim_duration(p1, death_anim)
 		else:
 			var death_anim: String = str(CHARACTER_DEATH_ANIM.get(opp_char, "death"))
 			_safe_play_anim(p2, death_anim)
-		await get_tree().create_timer(0.6).timeout
+			death_dur = _get_anim_duration(p2, death_anim)
+		await get_tree().create_timer(death_dur).timeout
 		
 		var victory_scene = load("res://scenes/ui/victory_screen.tscn").instantiate()
 		# Pause everything behind the victory panel.
@@ -411,6 +483,7 @@ func start_skill_phase(announce_phase: bool = false):
 		_host_set_phase("skill_select", next_round)
 
 func start_typing_phase(announce_phase: bool = false):
+	
 	current_state = GameState.TYPING
 	skill_select.hide()
 	_host_typing_phase_requested = announce_phase and GameManager.is_host
@@ -486,6 +559,7 @@ func _spawn_players():
 	# Spawn own player (p1)
 	p1 = _create_character_sprite(own_char, not am_i_left) # Flip if on right
 	if has_node(my_side_node):
+		_safe_play_anim(p1, "quickslash")  # for debug only
 		get_node(my_side_node).add_child(p1)
 		p1.position = Vector2.ZERO
 	else:
@@ -495,6 +569,7 @@ func _spawn_players():
 	# Spawn opponent (p2)
 	p2 = _create_character_sprite(opp_char, am_i_left) # Flip if on right (which is am_i_left false)
 	if has_node(enemy_side_node):
+		_safe_play_anim(p2, "hurt") # for debug only
 		get_node(enemy_side_node).add_child(p2)
 		p2.position = Vector2.ZERO
 	else:
@@ -510,15 +585,15 @@ func _spawn_players():
 func _create_character_sprite(char_name: String, flip: bool) -> Node2D:
 	var player_scene = load("res://scenes/entities/player.tscn")
 	var node = player_scene.instantiate()
-	var sprite = node.get_node("AnimatedSprite2D")
 	
-	var sf_path = CHARACTER_SPRITES.get(char_name, "res://assets/spriteframes/riven.tres")
-	sprite.sprite_frames = load(sf_path)
-	sprite.flip_h = flip
+	if node.has_node("AnimatedSprite2D"):
+		var sprite = node.get_node("AnimatedSprite2D")
+		var sf_path = CHARACTER_SPRITES.get(char_name, "res://assets/spriteframes/riven.tres")
+		sprite.sprite_frames = load(sf_path)
+		sprite.flip_h = flip
 	
 	var idle_anim = CHARACTER_IDLE_ANIM.get(char_name, "idle")
-	sprite.animation = idle_anim
-	sprite.play(idle_anim)
+	_safe_play_anim(node, idle_anim)
 	
 	return node
 
