@@ -1,12 +1,8 @@
 extends Control
 
-
-
-
 # ── Constants ────────────────────────────────────────────────────────────────
 const SCENE_CUSTOM_ROOM = "res://scenes/ui/custom_room.tscn"
 const SCENE_LEADERBOARD = "res://scenes/ui/leaderboard.tscn"
-const SCENE_SETTINGS    = "res://scenes/ui/settings.tscn"
 const SCENE_LOGIN       = "res://scenes/ui/login_scene.tscn"
 
 const TEXT_PLAY_ONLINE       = "Play Online"
@@ -35,6 +31,7 @@ const TEXT_PLAYERS_ONLINE    = "● %d players online"
 @onready var friend_search_input     = friends_panel.get_node("%SearchInput")
 @onready var friend_status_label     = friends_panel.get_node("%StatusLabel")
 @onready var req_unread_label        = friends_panel.get_node_or_null("%ReqUnreadLabel")
+@onready var intro_anim_player       = $AnimationPlayer
 
 var is_matchmaking = false
 var matchmaking_start_time = 0.0
@@ -47,7 +44,11 @@ var showing_requests = false
 var _last_friends_render_signature: String = ""
 var _avatar_texture_cache: Dictionary = {}
 
+func _enter_tree():
+	modulate.a = 0.0
+
 func _ready():
+
 	var name_to_show = GameManager.user_data.display_name
 	if name_to_show == "":
 		name_to_show = GameManager.user_data.username
@@ -65,11 +66,8 @@ func _ready():
 		GameManager.auto_queue_matchmaking = false
 		if not GameManager.is_matchmaking_penalized():
 			call_deferred("_on_play_online_pressed")
-	
-	# Fade in
-	modulate.a = 0.0
-	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+	_play_intro_animation()
 	
 	friends_panel.z_index = 100
 	friends_panel.top_level = true
@@ -81,9 +79,21 @@ func _ready():
 	friends_panel.get_node("%ReqBtn").pressed.connect(_on_req_btn_pressed)
 	friends_dimmer.pressed.connect(_collapse_friends)
 	
-	$HistoryButton.pressed.connect(_on_history_pressed)
+	%HistoryButton.pressed.connect(_on_history_pressed)
 	
 	_setup_chat()
+
+
+func _play_intro_animation():
+	if intro_anim_player == null:
+		return
+
+	if intro_anim_player.has_animation(&"intro"):
+		# Force the first frame to match the animation's t=0 state to avoid a visible "blink"
+		# right after the scene loads (properties otherwise apply on the next frame).
+		intro_anim_player.stop()
+		intro_anim_player.seek(0.0, true)
+		intro_anim_player.play(&"intro")
 
 func _setup_chat():
 	if has_node("%ChatBox"):
@@ -319,7 +329,8 @@ func _on_leaderboard_pressed():
 	get_tree().change_scene_to_file(SCENE_LEADERBOARD)
 
 func _on_settings_pressed():
-	get_tree().change_scene_to_file(SCENE_SETTINGS)
+	$Settings.show()
+	$Settings/AnimationPlayer.play("slide_in")
 
 func _on_logout_pressed():
 	# Notify server we're going offline
@@ -407,14 +418,24 @@ func _on_friends_list_received(_result, code, _headers, body, http):
 	
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if json is Array:
+		# ── Merge new data while preserving unread_counts ─────────────────
+		var old_counts = {}
+		for f in current_friends_data:
+			old_counts[int(f.get("user_id", 0))] = f.get("unread_count", 0)
+			
 		current_friends_data = json
-		var render_signature = JSON.stringify(current_friends_data) + "|" + str(showing_requests)
+		for f in current_friends_data:
+			var uid = int(f.get("user_id", 0))
+			if old_counts.has(uid):
+				f["unread_count"] = old_counts[uid]
 
 		for f in current_friends_data:
 			if f.status == "accepted" and not f.has("unread_count"):
 				_fetch_dm_unread_count_for_friend(f)
 
 		_update_friend_badges()
+		
+		var render_signature = JSON.stringify(current_friends_data) + "|" + str(showing_requests)
 		if render_signature != _last_friends_render_signature:
 			_last_friends_render_signature = render_signature
 			_render_friends_list()
@@ -550,7 +571,7 @@ func _create_friend_entry(data: Dictionary):
 	var status_dot = entry.get_node("%StatusDot")
 	var avatar_icon = entry.get_node("%AvatarIcon")
 	var action_btn = entry.get_node("%ActionBtn")
-	var remove_btn = entry.get_node("%RemoveBtn")
+
 	
 	name_label.text = data.display_name if data.display_name else data.username
 	
@@ -601,7 +622,7 @@ func _create_friend_entry(data: Dictionary):
 			status_label.modulate = Color(0.6, 0.6, 0.6)
 			status_dot.color = Color(0.4, 0.4, 0.4)
 		action_btn.hide()
-	remove_btn.pressed.connect(_on_remove_friend.bind(data.user_id))
+
 	
 	# Unread badge
 	var unread_label = entry.get_node_or_null("%UnreadLabel")
@@ -698,3 +719,7 @@ func _on_remove_friend(friend_id: int):
 		"friend_id": friend_id
 	})
 	http.request(GameManager.SERVER_URL + "/api/friends/remove", GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
+
+
+func _on_close_button_pressed() -> void:
+	$Settings/AnimationPlayer.play_backwards("slide_in")

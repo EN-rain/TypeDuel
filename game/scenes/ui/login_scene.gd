@@ -14,16 +14,20 @@ var BASE_URL: String:
 
 var is_login_mode = true
 
+func _enter_tree():
+	modulate.a = 0.0
+
 func _ready():
 	login_mode_btn.pressed.connect(_on_mode_selected.bind(true))
+
 	register_mode_btn.pressed.connect(_on_mode_selected.bind(false))
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	http_request.request_completed.connect(_on_request_completed)
 	
 	# Fade in
-	modulate.a = 0.0
 	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+	tween.tween_property(self, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func _on_mode_selected(login):
 	is_login_mode = login
@@ -83,5 +87,5 @@ func _on_request_completed(_result, response_code, _headers, body):
 
 func _fade_out_and_transition(scene_path: String):
 	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "modulate:a", 0.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.finished.connect(func(): get_tree().change_scene_to_file(scene_path))

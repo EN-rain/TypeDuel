@@ -46,6 +46,9 @@ const initDb = () => {
         } else {
             console.log('Database initialized');
             
+            // Fix #10: run migrations to add any new columns to existing databases
+            require('./scripts/migrate');
+
             // Check if seeding is needed
             db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
                 if (!err && row.count === 0) {
@@ -62,15 +65,17 @@ app.listen(PORT, () => {
     console.log('Connected to SQLite database');
     initDb();
 
-    // Purge chat messages older than 12 hours
+    // Fix #11: only purge global chat messages, not DMs.
+    // DM room IDs follow the pattern 'dm_<id>_<id>'; global chat uses 'global'.
+    // This prevents users losing private conversation history.
     const purgeOldMessages = () => {
         db.run(
-            `DELETE FROM chat_messages WHERE created_at < datetime('now', '-12 hours')`,
+            `DELETE FROM chat_messages WHERE room_id NOT LIKE 'dm_%' AND created_at < datetime('now', '-12 hours')`,
             function(err) {
                 if (err) {
                     console.error('Chat purge error:', err.message);
                 } else if (this.changes > 0) {
-                    console.log(`Purged ${this.changes} old chat message(s).`);
+                    console.log(`Purged ${this.changes} old global chat message(s).`);
                 }
             }
         );

@@ -48,6 +48,11 @@ custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
 text = "Back to Menu"
 
+[node name="RematchButton" type="Button" parent="CenterContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+text = "Rematch"
+
 [node name="MatchAgainButton" type="Button" parent="CenterContainer/VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
