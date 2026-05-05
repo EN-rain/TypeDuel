@@ -1,13 +1,10 @@
 [gd_scene format=3 uid="uid://bqanhwc0hs40v"]
 
-[ext_resource type="SpriteFrames" uid="uid://dqc3fkig61vf7" path="res://assets/spriteframes/leora.tres" id="1_ucweq"]
+[ext_resource type="SpriteFrames" uid="uid://don7dgnstb6tp" path="res://assets/spriteframes/zephone.tres" id="1_ucweq"]
 
 [node name="Player" type="Node2D" unique_id=1953234846]
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1063536577]
 scale = Vector2(2, 2)
 sprite_frames = ExtResource("1_ucweq")
-animation = &"hurt"
-autoplay = "idle"
-frame = 2
-frame_progress = 1.0
+animation = &"zephon-idle"
