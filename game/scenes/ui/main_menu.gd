@@ -183,7 +183,8 @@ func _on_solo_play_pressed():
 	GameManager.is_solo = true
 	GameManager.is_matchmaking = false
 	GameManager.current_room = ""
-	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
+	await $AnimationPlayer.play("outro")
+	await $AnimationPlayer.animation_finished && 	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
 func _on_custom_room_pressed():
 	print("Custom Room pressed")
@@ -191,13 +192,16 @@ func _on_custom_room_pressed():
 	GameManager.is_solo = false
 	GameManager.is_matchmaking = false
 	GameManager.current_room = ""
-	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
+	$AnimationPlayer.play("outro")
+	await $AnimationPlayer.animation_finished && 	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
 func _on_join_pressed():
 	join_panel.visible = true
 	join_input.text = ""
 	join_error.text = ""
-
+	$AnimationPlayer.play("outro")
+	await $AnimationPlayer.animation_finished
+	
 func _on_cancel_join_pressed():
 	join_panel.visible = false
 

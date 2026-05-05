@@ -352,6 +352,8 @@ func _show_opponent_forfeited_overlay() -> void:
 		if t > 0:
 			timer = get_tree().create_timer(1.0)
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+func _on_entity_died(entity: String):
 	if _victory_shown:
 		return
 	# Only trigger game over if we are not already resolving/ended

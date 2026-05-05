@@ -21,6 +21,7 @@ GameManager="*res://scripts/autoload/GameManager.gd"
 SkillsManager="*res://scripts/autoload/SkillsManager.gd"
 HPManager="*res://scripts/autoload/HPManager.gd"
 ManaManager="*res://scripts/autoload/ManaManager.gd"
+AutoplayTester="*res://scripts/autoload/AutoplayTester.gd"
 
 [physics]
 
