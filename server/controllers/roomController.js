@@ -4,11 +4,24 @@ const rooms = {};
 
 const ROOM_TTL_MS = 10 * 60 * 1000; // rooms expire after 10 minutes
 
+// Fix #6: allowed values for server-side selection validation
+const VALID_CHARACTERS = new Set(['Riven', 'Zephon', 'Liora']);
+const VALID_SKILLS     = new Set(['quickslash', 'whiplash', 'soulbreak']);
+const VALID_PASSIVES   = new Set(['reversal', 'jumble', 'phantom', 'stutter', 'erosion']);
+
+// Fix #10 + Fix #14: import penalty helpers from gameController
+const { isMatchmakingPenalized, setMatchmakingPenalty } = require('./gameController');
+
+// Fix #14: use last_activity_at for TTL so long games are not evicted mid-match
+const ROOM_IDLE_TTL_MS = 10 * 60 * 1000; // evict only if idle for 10 minutes
+
 // Cleanup old rooms every minute
 setInterval(() => {
     const now = Date.now();
     for (const code in rooms) {
-        if (now - rooms[code].created_at > ROOM_TTL_MS) {
+        const room = rooms[code];
+        const lastActivity = room.last_activity_at || room.created_at;
+        if (now - lastActivity > ROOM_IDLE_TTL_MS) {
             delete rooms[code];
         }
     }
@@ -105,9 +118,15 @@ const closeRoom = (req, res) => {
     return res.json({ ok: true });
 };
 
-const matchmake = (req, res) => {
+const matchmake = async (req, res) => {
     const { user_id, display_name } = req.body;
     if (!user_id) return res.status(400).json({ message: 'user_id required' });
+
+    // Fix #10: enforce server-side matchmaking penalty
+    const penalized = await isMatchmakingPenalized(user_id);
+    if (penalized) {
+        return res.status(429).json({ message: 'Matchmaking penalty active. Please wait before queuing again.' });
+    }
 
     for (const code in rooms) {
         if (!rooms[code].guest_id && rooms[code].host_id !== user_id) {
@@ -167,6 +186,28 @@ const updateSelections = (req, res) => {
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
+    // Fix #6: validate character, skills, and passive against allowed values
+    if (character !== undefined && !VALID_CHARACTERS.has(character)) {
+        return res.status(400).json({ message: 'Invalid character' });
+    }
+    if (skills !== undefined) {
+        if (!Array.isArray(skills) || skills.length > 2) {
+            return res.status(400).json({ message: 'skills must be an array of at most 2 entries' });
+        }
+        for (const s of skills) {
+            if (!VALID_SKILLS.has(s)) {
+                return res.status(400).json({ message: `Invalid skill: ${s}` });
+            }
+        }
+        const unique = new Set(skills);
+        if (unique.size !== skills.length) {
+            return res.status(400).json({ message: 'Duplicate skills are not allowed' });
+        }
+    }
+    if (passive !== undefined && passive !== '' && !VALID_PASSIVES.has(passive)) {
+        return res.status(400).json({ message: 'Invalid passive' });
+    }
+
     if (room.host_id == user_id) {
         if (character !== undefined) room.host_character = character;
         if (skills !== undefined)    room.host_skills    = skills;
@@ -179,6 +220,7 @@ const updateSelections = (req, res) => {
         return res.status(403).json({ message: 'Not in this room' });
     }
     room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = Date.now(); // Fix #14: refresh idle timer
     return res.json({ ok: true });
 };
 
@@ -249,6 +291,7 @@ const updatePhase = (req, res) => {
     }
 
     room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = Date.now(); // Fix #14: refresh idle timer
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
@@ -262,17 +305,21 @@ const updateProgress = (req, res) => {
     const progressNum = (progress === undefined) ? undefined : Number(progress);
     const typosNum = (typos === undefined) ? undefined : Number(typos);
 
+    // Fix #12: cap typos to a sane maximum to prevent damage manipulation
+    const MAX_TYPOS = 500;
+
     if (room.host_id == user_id) {
-        if (progressNum !== undefined && Number.isFinite(progressNum)) room.host_progress = progressNum;
-        if (typosNum !== undefined && Number.isFinite(typosNum)) room.host_typos = typosNum;
+        if (progressNum !== undefined && Number.isFinite(progressNum)) room.host_progress = Math.min(1.0, Math.max(0.0, progressNum));
+        if (typosNum !== undefined && Number.isFinite(typosNum)) room.host_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
         if (send_mutation) room.guest_mutations.push(send_mutation);
     } else if (room.guest_id == user_id) {
-        if (progressNum !== undefined && Number.isFinite(progressNum)) room.guest_progress = progressNum;
-        if (typosNum !== undefined && Number.isFinite(typosNum)) room.guest_typos = typosNum;
+        if (progressNum !== undefined && Number.isFinite(progressNum)) room.guest_progress = Math.min(1.0, Math.max(0.0, progressNum));
+        if (typosNum !== undefined && Number.isFinite(typosNum)) room.guest_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
         if (send_mutation) room.host_mutations.push(send_mutation);
     }
 
-    // First-finish tracking for authoritative snap timer
+    // Fix #7: first-finish is set only once and never overwritten.
+    // We also record the exact timestamp so the second player can't race-overwrite it.
     if (!room.first_finish_at && progressNum !== undefined && Number.isFinite(progressNum) && progressNum >= 0.999) {
         room.first_finish_at = Date.now();
         room.first_finish_by = (room.host_id == user_id) ? 'host' : 'guest';
@@ -281,6 +328,7 @@ const updateProgress = (req, res) => {
         console.log(`[rooms] ${code} progress host=${room.host_progress} guest=${room.guest_progress} first_finish_at=${room.first_finish_at} by=${room.first_finish_by}`);
     }
     room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = Date.now(); // Fix #14: refresh idle timer
     return res.json({ ok: true });
 };
 
@@ -303,6 +351,7 @@ const updateHP = (req, res) => {
     room.host_hp = hostHpNum;
     room.guest_hp = guestHpNum;
     room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = Date.now(); // Fix #14: refresh idle timer
     if (process.env.LOG_ROOMS === 'true') {
         console.log(`[rooms] ${code} hp host=${room.host_hp} guest=${room.guest_hp}`);
     }

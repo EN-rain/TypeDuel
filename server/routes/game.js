@@ -8,6 +8,8 @@ router.get('/online-count',  gameController.getOnlineCount);
 router.post('/heartbeat',    authMiddleware, gameController.heartbeat);
 router.post('/history',      authMiddleware, gameController.saveMatchHistory);
 router.get('/history/:user_id', authMiddleware, gameController.getMatchHistory);
+// Fix #10: apply server-side matchmaking penalty on forfeit
+router.post('/matchmaking-penalty', authMiddleware, gameController.applyMatchmakingPenalty);
 // DEV ONLY: instantly clear all online sessions (use during debug resets)
 router.post('/dev/clear-online', gameController.clearAllOnline);
 

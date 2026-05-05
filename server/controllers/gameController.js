@@ -157,6 +157,19 @@ const getMatchHistory = (req, res) => {
     });
 };
 
+// Fix #10: HTTP endpoint to apply a matchmaking penalty for a user
+const applyMatchmakingPenalty = (req, res) => {
+    const { user_id, duration_ms } = req.body;
+    const userIdNum = Number(user_id);
+    if (!Number.isFinite(userIdNum) || userIdNum <= 0) {
+        return res.status(400).json({ message: 'user_id must be a positive number' });
+    }
+    const dur = Number(duration_ms);
+    const safeDur = Number.isFinite(dur) && dur > 0 ? Math.min(dur, 60000) : 10000; // cap at 60s
+    setMatchmakingPenalty(userIdNum, safeDur);
+    res.json({ ok: true, penalty_until: Date.now() + safeDur });
+};
+
 // DEV ONLY: clear all online sessions instantly (for debug resets)
 const clearAllOnline = (req, res) => {
     const count = onlinePlayers.size;
@@ -165,4 +178,20 @@ const clearAllOnline = (req, res) => {
     res.json({ ok: true, cleared: count });
 };
 
-module.exports = { getLeaderboard, getOnlineCount, heartbeat, setOnline, setOffline, isUserOnline, saveMatchHistory, getMatchHistory, clearAllOnline };
+// Fix #10: set a server-side matchmaking penalty for a user (unix ms)
+const setMatchmakingPenalty = (userId, durationMs) => {
+    const until = Date.now() + durationMs;
+    db.run('UPDATE users SET matchmaking_penalty_until = ? WHERE id = ?', [until, userId], (err) => {
+        if (err) console.error('[Penalty] Failed to set penalty:', err.message);
+    });
+};
+
+// Fix #10: check if a user is currently penalised (returns Promise<bool>)
+const isMatchmakingPenalized = (userId) => new Promise((resolve) => {
+    db.get('SELECT matchmaking_penalty_until FROM users WHERE id = ?', [userId], (err, row) => {
+        if (err || !row) return resolve(false);
+        resolve(Date.now() < (row.matchmaking_penalty_until || 0));
+    });
+});
+
+module.exports = { getLeaderboard, getOnlineCount, heartbeat, setOnline, setOffline, isUserOnline, saveMatchHistory, getMatchHistory, clearAllOnline, setMatchmakingPenalty, isMatchmakingPenalized, applyMatchmakingPenalty };
