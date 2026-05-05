@@ -38,6 +38,8 @@ func _on_rematch_pressed():
 	if GameManager.is_solo:
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
 	else:
+		# Clear old room so custom_room.gd creates a fresh one
+		GameManager.current_room = ""
 		get_tree().change_scene_to_file("res://scenes/ui/custom_room.tscn")
 
 func _on_match_again_pressed():

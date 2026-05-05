@@ -428,7 +428,12 @@ func _on_start_notified(_result, _code, _headers, _body, http: HTTPRequest):
 	get_tree().change_scene_to_file("res://scenes/game/game.tscn")
 
 func _on_back_pressed():
-	_delete_room()
+	if GameManager.is_solo:
+		_delete_room()
+	elif GameManager.is_host:
+		_delete_room()
+	else:
+		_leave_room()
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
 func _on_room_code_input(event):
@@ -442,6 +447,13 @@ func _delete_room():
 	add_child(http)
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
 	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code, GameManager.get_auth_headers(), HTTPClient.METHOD_DELETE)
+
+func _leave_room():
+	if room_code == "": return
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
+	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code + "/leave", GameManager.get_auth_headers(), HTTPClient.METHOD_POST)
 
 func _create_room():
 	var http = HTTPRequest.new()

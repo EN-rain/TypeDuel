@@ -3,6 +3,11 @@
 [ext_resource type="Script" uid="uid://bmsqrto3isa4a" path="res://scenes/game/game.gd" id="1_game_gd"]
 [ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_kfd0b"]
 [ext_resource type="Texture2D" uid="uid://cru6ltepkd3fr" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png" id="3_lakwo"]
+[ext_resource type="PackedScene" uid="uid://bqanhwc0hs40v" path="res://scenes/entities/player.tscn" id="8_87uf6"]
+[ext_resource type="Script" uid="uid://dmr300ctl4yd8" path="res://scenes/game/animation_controller.gd" id="10_anim_ctrl"]
+[ext_resource type="Script" uid="uid://dmd8luvc1i657" path="res://scenes/game/network_sync.gd" id="11_net_sync"]
+[ext_resource type="Script" uid="uid://frxg518kays6" path="res://scenes/game/typing_handler.gd" id="12_typing"]
+[ext_resource type="Script" uid="uid://b3ewd1idjqdkb" path="res://scenes/game/combat_resolver.gd" id="13_combat"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_blue"]
 bg_color = Color(0, 0.46, 1, 1)
@@ -17,6 +22,114 @@ corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
+
+[sub_resource type="Animation" id="Animation_87uf6"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("bottom/ColorRect:size")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1152, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("top/ColorRect:size")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1152, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("bottom/ColorRect:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("top/ColorRect:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_2a8rs"]
+resource_name = "skill_extra"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("bottom/ColorRect:size")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5749448),
+"transitions": PackedFloat32Array(-2, -2),
+"update": 0,
+"values": [Vector2(1152, 0), Vector2(1152, 110)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("top/ColorRect:size")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.5749448),
+"transitions": PackedFloat32Array(-2, -2),
+"update": 0,
+"values": [Vector2(1152, 0), Vector2(1152, 93)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("bottom/ColorRect:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.5749448),
+"transitions": PackedFloat32Array(-2, -2),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -110)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("top/ColorRect:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0.5749448),
+"transitions": PackedFloat32Array(-2),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_4j704"]
+_data = {
+&"RESET": SubResource("Animation_87uf6"),
+&"skill_extra": SubResource("Animation_2a8rs")
+}
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5mgl0"]
 texture = ExtResource("3_lakwo")
@@ -514,8 +627,26 @@ texture = ExtResource("3_lakwo")
 physics_layer_0/collision_layer = 1
 sources/0 = SubResource("TileSetAtlasSource_5mgl0")
 
-[node name="Game" type="Node2D" unique_id=703395492]
+[node name="Game" type="Control" unique_id=1405779312]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_game_gd")
+
+[node name="AnimationController" type="Node" parent="." unique_id=800000001]
+script = ExtResource("10_anim_ctrl")
+
+[node name="NetworkSync" type="Node" parent="." unique_id=800000002]
+script = ExtResource("11_net_sync")
+
+[node name="TypingHandler" type="Node" parent="." unique_id=800000003]
+script = ExtResource("12_typing")
+
+[node name="CombatResolver" type="Node" parent="." unique_id=800000004]
+script = ExtResource("13_combat")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1133873849]
 
@@ -766,6 +897,49 @@ layout_mode = 2
 custom_minimum_size = Vector2(25, 0)
 layout_mode = 2
 
+[node name="Animation" type="Control" parent="HUD" unique_id=1167378269]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="HUD/Animation" unique_id=1690223267]
+libraries/ = SubResource("AnimationLibrary_4j704")
+
+[node name="top" type="Control" parent="HUD/Animation" unique_id=983417348]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+
+[node name="ColorRect" type="ColorRect" parent="HUD/Animation/top" unique_id=273108971]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+color = Color(0, 0, 0, 1)
+
+[node name="bottom" type="Control" parent="HUD/Animation" unique_id=506548363]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ColorRect" type="ColorRect" parent="HUD/Animation/bottom" unique_id=757680319]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0, 0, 0, 1)
+
 [node name="TileMap" type="Node" parent="." unique_id=2083404031]
 
 [node name="Sky" type="TextureRect" parent="TileMap" unique_id=1159814342]
@@ -790,3 +964,6 @@ position = Vector2(314, 404)
 
 [node name="P2" type="Marker2D" parent="TileMap" unique_id=126840181]
 position = Vector2(788, 404)
+
+[node name="Player" parent="." unique_id=1953234846 instance=ExtResource("8_87uf6")]
+position = Vector2(285.3711, 385.25623)

@@ -183,8 +183,9 @@ func _on_solo_play_pressed():
 	GameManager.is_solo = true
 	GameManager.is_matchmaking = false
 	GameManager.current_room = ""
-	await $AnimationPlayer.play("outro")
-	await $AnimationPlayer.animation_finished && 	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
+	$AnimationPlayer.play("outro")
+	await $AnimationPlayer.animation_finished
+	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
 func _on_custom_room_pressed():
 	print("Custom Room pressed")
@@ -193,14 +194,13 @@ func _on_custom_room_pressed():
 	GameManager.is_matchmaking = false
 	GameManager.current_room = ""
 	$AnimationPlayer.play("outro")
-	await $AnimationPlayer.animation_finished && 	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
+	await $AnimationPlayer.animation_finished
+	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 
 func _on_join_pressed():
 	join_panel.visible = true
 	join_input.text = ""
 	join_error.text = ""
-	$AnimationPlayer.play("outro")
-	await $AnimationPlayer.animation_finished
 	
 func _on_cancel_join_pressed():
 	join_panel.visible = false
@@ -237,6 +237,9 @@ func _on_join_done(_result, req_code, _headers, body, http):
 		GameManager.is_host = false
 		GameManager.is_solo = false
 		GameManager.is_matchmaking = false
+		# Play outro only after successful join
+		$AnimationPlayer.play("outro")
+		await $AnimationPlayer.animation_finished
 		get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
 	else:
 		if json and json.has("message"):
@@ -408,7 +411,11 @@ func _on_friend_request_done(_result, code, _headers, body, http):
 	else:
 		friend_status_label.text = json.get("message", "Error adding friend")
 
+var _friends_refresh_in_flight: bool = false
+
 func _refresh_friends_list():
+	if _friends_refresh_in_flight: return
+	_friends_refresh_in_flight = true
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_friends_list_received.bind(http))

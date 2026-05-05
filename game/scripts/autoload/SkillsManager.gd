@@ -24,7 +24,8 @@ var opponent_mana: int = 0
 var player_win_streak:   int = 0
 var opponent_win_streak: int = 0
 
-var liora_heal_total: float = 0.0  # Liora heal cap (max 15HP per match)
+var liora_heal_total: float = 0.0      # Liora heal cap for player (max 15HP per match)
+var liora_opp_heal_total: float = 0.0  # Liora heal cap for opponent (max 15HP per match)
 
 ## Skills equipped in the class-selection screen (up to 2 slots)
 var selected_skills: Array[String] = []
@@ -52,7 +53,8 @@ func reset_match() -> void:
 	opponent_mana       = 0
 	player_win_streak   = 0
 	opponent_win_streak = 0
-	liora_heal_total    = 0.0
+	liora_heal_total     = 0.0
+	liora_opp_heal_total = 0.0
 	phantom_stack       = 0
 
 ## Called after every accurately-typed word during the typing phase.
@@ -166,7 +168,7 @@ func resolve_round(
 	else:
 		match chosen_skill:
 			"quickslash":
-				player_damage = _quickslash(wpm_mod, typo_penalty, won, full_power, char_base, combat_log)
+				player_damage = _quickslash(wpm_mod, typo_penalty, won, full_power, char_base, combat_log, actor_role)
 			"whiplash":
 				player_damage = _whiplash(acc_mod, typo_penalty, won, full_power, char_base, combat_log, actor_role)
 			"soulbreak":
@@ -197,28 +199,33 @@ func resolve_round(
 	match innate:
 
 		"Bloodlust":  # Riven — -3HP self when dealing damage; skip on the 2nd consecutive win, then reset
-			# Fix #5: check the already-incremented streak so the pause fires after the 2nd win,
-			# not the 1st.  streak==2 means this is the 2nd consecutive winning round.
+			# Use the actor's own streak (player_win_streak for player, opponent_win_streak for opponent)
+			var actor_streak = player_win_streak if actor_role == "player" else opponent_win_streak
 			if player_damage > 0.0:
-				if player_win_streak == 2:
-					# Hit the 2-win milestone: pause self-damage this round, reset streak
-					player_win_streak = 0
+				if actor_streak == 2:
+					if actor_role == "player": player_win_streak = 0
+					else: opponent_win_streak = 0
 					combat_log.append("[Innate Ability: Bloodlust] 2-win streak! Self-damage skipped. Streak reset.")
 				else:
 					player_hp_delta -= 3.0
-					combat_log.append("[Innate Ability: Bloodlust] Dealt DMG → -3HP self-damage (streak: %d)" % player_win_streak)
+					combat_log.append("[Innate Ability: Bloodlust] Dealt DMG → -3HP self-damage (streak: %d)" % actor_streak)
 
-		"Grace":  # Liora — +3HP heal if accuracy > 95%; capped at 15HP total
-			if accuracy > 95.0 and liora_heal_total < 15.0:
-				var heal := minf(3.0, 15.0 - liora_heal_total)
+		"Grace":  # Liora — +3HP heal if accuracy > 95%; capped at 15HP total per actor
+			# Use separate heal caps for player and opponent
+			var heal_total = liora_heal_total if actor_role == "player" else liora_opp_heal_total
+			if accuracy > 95.0 and heal_total < 15.0:
+				var heal := minf(3.0, 15.0 - heal_total)
 				player_hp_delta += heal
-				liora_heal_total += heal
-				combat_log.append("[Innate Ability: Grace] Acc > 95%% → +%.0fHP (total: %.0f/15)" % [heal, liora_heal_total])
+				if actor_role == "player": liora_heal_total += heal
+				else: liora_opp_heal_total += heal
+				combat_log.append("[Innate Ability: Grace] Acc > 95%% → +%.0fHP (total: %.0f/15)" % [heal, heal_total + heal])
 
 		"Overdrive":  # Zephon — +5 bonus damage when mana >= 9
-			if player_mana >= 9 and player_damage > 0.0:
+			# Use the actor's own mana
+			var actor_mana = player_mana if actor_role == "player" else opponent_mana
+			if actor_mana >= 9 and player_damage > 0.0:
 				player_damage += 5.0
-				combat_log.append("[Innate Ability: Overdrive] High Mana (%d)! +5 bonus DMG → %.0f total" % [player_mana, player_damage])
+				combat_log.append("[Innate Ability: Overdrive] High Mana (%d)! +5 bonus DMG → %.0f total" % [actor_mana, player_damage])
 
 	combat_log.append("RESULT → DMG:%.0f | SelfHP:%+.0f | OppHP:%+.0f" % [player_damage, player_hp_delta, opp_hp_delta])
 	return _result(player_damage, player_hp_delta, opp_hp_delta, combat_log)
@@ -228,21 +235,23 @@ func resolve_round(
 # ─────────────────────────────────────────────
 
 ## ⚡ Quickslash (2 Mana) — WPM-based
-func _quickslash(wpm_mod: float, typo_penalty: float, won: bool, full_power: bool, base: float, combat_log: Array) -> float:
+func _quickslash(wpm_mod: float, typo_penalty: float, won: bool, full_power: bool, base: float, combat_log: Array, actor_role: String = "player") -> float:
 	var dmg := maxf(0.0, ceil(base * (1.0 + wpm_mod) - typo_penalty))
+	var my_streak  = player_win_streak   if actor_role == "player" else opponent_win_streak
+	var opp_streak = opponent_win_streak if actor_role == "player" else player_win_streak
 
 	if won:
-		if player_win_streak >= 1:
+		if my_streak >= 1:
 			dmg = ceil(dmg * 1.2)
 			combat_log.append("[Quickslash] Win + streak → ×1.20 = %.0f" % dmg)
 		else:
 			dmg = ceil(dmg * 1.1)
 			combat_log.append("[Quickslash] Win → ×1.10 = %.0f" % dmg)
 		if full_power:
-			dmg = ceil(dmg * 1.2)  # 2× lose debuff magnitude (lose was -10%, so full_power is +20% extra)
+			dmg = ceil(dmg * 1.2)
 			combat_log.append("[Quickslash] FULL POWER (opp didn't finish) → ×1.20 extra = %.0f" % dmg)
 	else:
-		if opponent_win_streak >= 1:
+		if opp_streak >= 1:
 			dmg = 0.0
 			combat_log.append("[Quickslash] Lose on opp streak → 0 DMG")
 		else:

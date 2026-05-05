@@ -4,10 +4,30 @@ const rooms = {};
 
 const ROOM_TTL_MS = 10 * 60 * 1000; // rooms expire after 10 minutes
 
+function _normalizeCode(code) {
+    return String(code || '').toUpperCase();
+}
+
+function _actorId(req) {
+    return req.user && req.user.id;
+}
+
+function _assertBodyUserMatchesActor(req, res) {
+    const actorId = _actorId(req);
+    // If the client sends user_id, ensure it matches the authenticated actor.
+    // This prevents spoofing another user's actions with a valid token.
+    if (req.body && req.body.user_id !== undefined && String(req.body.user_id) !== String(actorId)) {
+        res.status(403).json({ message: 'user_id does not match authenticated user' });
+        return false;
+    }
+    return true;
+}
+
 // Fix #6: allowed values for server-side selection validation
 const VALID_CHARACTERS = new Set(['Riven', 'Zephon', 'Liora']);
 const VALID_SKILLS     = new Set(['quickslash', 'whiplash', 'soulbreak']);
 const VALID_PASSIVES   = new Set(['reversal', 'jumble', 'phantom', 'stutter', 'erosion']);
+const VALID_PHASES     = new Set(['lobby', 'skill_select', 'typing', 'resolving', 'finished']);
 
 // Fix #10 + Fix #14: import penalty helpers from gameController
 const { isMatchmakingPenalized, setMatchmakingPenalty } = require('./gameController');
@@ -31,17 +51,20 @@ setInterval(() => {
 // Body: { user_id, display_name, code }
 const createRoom = (req, res) => {
     const { user_id, display_name, code } = req.body;
+    if (!_assertBodyUserMatchesActor(req, res)) return;
+    const actorId = _actorId(req);
     if (!user_id || !code) {
         return res.status(400).json({ message: 'user_id and code required' });
     }
+    const normalizedCode = _normalizeCode(code);
     // Clean up any existing room hosted by this user
     for (const c in rooms) {
-        if (rooms[c].host_id === user_id) delete rooms[c];
+        if (rooms[c].host_id === actorId) delete rooms[c];
     }
-    rooms[code] = {
-        code,
+    rooms[normalizedCode] = {
+        code: normalizedCode,
         seq:            0,
-        host_id:        user_id,
+        host_id:        actorId,
         host_name:      display_name || 'Player',
         host_character: null,
         host_skills:    [],
@@ -55,9 +78,11 @@ const createRoom = (req, res) => {
         host_progress:  0.0,
         host_typos:     0,
         host_mutations: [],
+        host_skill:     "",
         guest_progress: 0.0,
         guest_typos:    0,
         guest_mutations:[],
+        guest_skill:    "",
         // Phase sync (authoritative timers)
         phase:          'lobby',      // lobby, skill_select, typing, resolving, finished
         phase_started_at: 0,
@@ -67,34 +92,38 @@ const createRoom = (req, res) => {
         round_id:          0,
         host_hp:           0,
         guest_hp:          0,
-        created_at:     Date.now()
+        created_at:     Date.now(),
+        last_activity_at: Date.now()
     };
-    return res.json({ ok: true, code });
+    return res.json({ ok: true, code: normalizedCode });
 };
 
 // POST /api/rooms/join
 // Body: { user_id, display_name, code }
 const joinRoom = (req, res) => {
     const { user_id, display_name, code } = req.body;
+    if (!_assertBodyUserMatchesActor(req, res)) return;
+    const actorId = _actorId(req);
     if (!user_id || !code) {
         return res.status(400).json({ message: 'user_id and code required' });
     }
-    const room = rooms[code.toUpperCase()];
+    const room = rooms[_normalizeCode(code)];
     if (!room) {
         return res.status(404).json({ message: 'Room not found' });
     }
-    if (room.host_id == user_id) {   // loose == handles string/int mismatch
+    if (room.host_id == actorId) {   // loose == handles string/int mismatch
         return res.status(403).json({ message: 'Cannot join your own room' });
     }
-    if (room.guest_id && room.guest_id != user_id) {
+    if (room.guest_id && room.guest_id != actorId) {
         return res.status(409).json({ message: 'Room is full' });
     }
-    room.guest_id      = user_id;
+    room.guest_id      = actorId;
     room.guest_name    = display_name || 'Player';
     room.guest_character = null;
     room.guest_skills  = [];
     room.guest_passive = "";
     room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = Date.now();
     return res.json({ ok: true, room });
 };
 
@@ -105,48 +134,98 @@ const roomSnapshot = (room) => ({
 
 // GET /api/rooms/:code
 const getRoomStatus = (req, res) => {
-    const code = req.params.code.toUpperCase();
+    const code = _normalizeCode(req.params.code);
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
+    const actorId = _actorId(req);
+    if (room.host_id != actorId && room.guest_id != actorId) {
+        return res.status(403).json({ message: 'Not in this room' });
+    }
     return res.json(roomSnapshot(room));
 };
 
 // DELETE /api/rooms/:code  (host closes the room)
 const closeRoom = (req, res) => {
-    const code = req.params.code.toUpperCase();
+    const code = _normalizeCode(req.params.code);
+    const room = rooms[code];
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+    const actorId = _actorId(req);
+    if (room.host_id != actorId) {
+        return res.status(403).json({ message: 'Only host may close the room' });
+    }
     delete rooms[code];
     return res.json({ ok: true });
 };
 
+// POST /api/rooms/:code/leave  (guest leaves the room)
+// Guest leaving during a started game counts as a forfeit: the room is deleted so the opponent sees 404.
+const leaveRoom = (req, res) => {
+    const code = _normalizeCode(req.params.code);
+    const room = rooms[code];
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+    const actorId = _actorId(req);
+
+    if (room.host_id == actorId) {
+        delete rooms[code];
+        return res.json({ ok: true });
+    }
+
+    if (room.guest_id != actorId) {
+        return res.status(403).json({ message: 'Not in this room' });
+    }
+
+    if (room.status === 'started') {
+        delete rooms[code];
+        return res.json({ ok: true });
+    }
+
+    room.guest_id = null;
+    room.guest_name = null;
+    room.guest_character = null;
+    room.guest_skills = [];
+    room.guest_passive = "";
+    room.guest_progress = 0.0;
+    room.guest_typos = 0;
+    room.guest_mutations = [];
+    room.guest_skill = "";
+    room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = Date.now();
+    return res.json({ ok: true, room: roomSnapshot(room) });
+};
+
 const matchmake = async (req, res) => {
     const { user_id, display_name } = req.body;
+    if (!_assertBodyUserMatchesActor(req, res)) return;
+    const actorId = _actorId(req);
     if (!user_id) return res.status(400).json({ message: 'user_id required' });
 
     // Fix #10: enforce server-side matchmaking penalty
-    const penalized = await isMatchmakingPenalized(user_id);
+    const penalized = await isMatchmakingPenalized(actorId);
     if (penalized) {
         return res.status(429).json({ message: 'Matchmaking penalty active. Please wait before queuing again.' });
     }
 
     for (const code in rooms) {
-        if (!rooms[code].guest_id && rooms[code].host_id !== user_id) {
-            rooms[code].guest_id       = user_id;
+        if (!rooms[code].guest_id && rooms[code].host_id !== actorId) {
+            rooms[code].guest_id       = actorId;
             rooms[code].guest_name     = display_name || 'Player';
             rooms[code].guest_character = null;
             rooms[code].guest_skills   = [];
             rooms[code].guest_passive  = "";
+            rooms[code].seq = (rooms[code].seq || 0) + 1;
+            rooms[code].last_activity_at = Date.now();
             return res.json({ ok: true, role: 'guest', room: rooms[code] });
         }
     }
 
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     for (const c in rooms) {
-        if (rooms[c].host_id === user_id) delete rooms[c];
+        if (rooms[c].host_id === actorId) delete rooms[c];
     }
     rooms[code] = {
         code,
         seq:             0,
-        host_id:         user_id,
+        host_id:         actorId,
         host_name:       display_name || 'Player',
         host_character:  null,
         host_skills:     [],
@@ -161,14 +240,19 @@ const matchmake = async (req, res) => {
         host_typos:      0,
         guest_typos:     0,
         host_mutations:  [],
+        host_skill:      "",
         guest_mutations: [],
+        guest_skill:     "",
         phase:           'lobby',
         phase_started_at: 0,
         typing_started_at: 0,
         first_finish_at:   0,
         first_finish_by:   null,
         round_id:          0,
-        created_at:      Date.now()
+        host_hp:          0,
+        guest_hp:         0,
+        created_at:      Date.now(),
+        last_activity_at: Date.now()
     };
     return res.json({ ok: true, role: 'host', code });
 };
@@ -181,10 +265,12 @@ const listRooms = (req, res) => {
 // PATCH /api/rooms/:code/select
 // Body: { user_id, character, skills }
 const updateSelections = (req, res) => {
-    const code = req.params.code.toUpperCase();
+    const code = _normalizeCode(req.params.code);
     const { user_id, character, skills, passive } = req.body;
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
+    if (!_assertBodyUserMatchesActor(req, res)) return;
+    const actorId = _actorId(req);
 
     // Fix #6: validate character, skills, and passive against allowed values
     if (character !== undefined && !VALID_CHARACTERS.has(character)) {
@@ -208,11 +294,11 @@ const updateSelections = (req, res) => {
         return res.status(400).json({ message: 'Invalid passive' });
     }
 
-    if (room.host_id == user_id) {
+    if (room.host_id == actorId) {
         if (character !== undefined) room.host_character = character;
         if (skills !== undefined)    room.host_skills    = skills;
         if (passive !== undefined)   room.host_passive   = passive;
-    } else if (room.guest_id == user_id) {
+    } else if (room.guest_id == actorId) {
         if (character !== undefined) room.guest_character = character;
         if (skills !== undefined)    room.guest_skills    = skills;
         if (passive !== undefined)   room.guest_passive   = passive;
@@ -226,9 +312,19 @@ const updateSelections = (req, res) => {
 
 // POST /api/rooms/:code/start
 const startRoomGame = (req, res) => {
-    const code = req.params.code.toUpperCase();
+    const code = _normalizeCode(req.params.code);
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
+    const actorId = _actorId(req);
+    if (room.host_id != actorId) {
+        return res.status(403).json({ message: 'Only host may start the game' });
+    }
+    if (!room.guest_id) {
+        return res.status(409).json({ message: 'Cannot start without guest' });
+    }
+    if (room.status === 'started') {
+        return res.status(409).json({ message: 'Room already started' });
+    }
     room.status = 'started';
     room.started_at = Date.now();
 
@@ -249,6 +345,7 @@ const startRoomGame = (req, res) => {
     room.host_hp = room.host_hp || 0;
     room.guest_hp = room.guest_hp || 0;
     room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = Date.now();
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
@@ -256,13 +353,18 @@ const startRoomGame = (req, res) => {
 // Body: { user_id, phase, round_id? }
 // Host is authoritative for phase transitions.
 const updatePhase = (req, res) => {
-    const code = req.params.code.toUpperCase();
+    const code = _normalizeCode(req.params.code);
     const { user_id, phase, round_id } = req.body;
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
     if (!user_id || !phase) return res.status(400).json({ message: 'user_id and phase required' });
+    if (!VALID_PHASES.has(phase)) return res.status(400).json({ message: 'Invalid phase' });
+    if (room.status !== 'started') return res.status(409).json({ message: 'Room not started' });
 
-    if (room.host_id != user_id) {
+    if (!_assertBodyUserMatchesActor(req, res)) return;
+    const actorId = _actorId(req);
+
+    if (room.host_id != actorId) {
         return res.status(403).json({ message: 'Only host may change phase' });
     }
 
@@ -288,6 +390,8 @@ const updatePhase = (req, res) => {
         room.guest_typos = 0;
         room.host_mutations = [];
         room.guest_mutations = [];
+        room.host_skill = "";
+        room.guest_skill = "";
     }
 
     room.seq = (room.seq || 0) + 1;
@@ -297,10 +401,13 @@ const updatePhase = (req, res) => {
 
 // PATCH /api/rooms/:code/progress
 const updateProgress = (req, res) => {
-    const code = req.params.code.toUpperCase();
+    const code = _normalizeCode(req.params.code);
     const { user_id, progress, typos, send_mutation } = req.body;
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
+    if (!_assertBodyUserMatchesActor(req, res)) return;
+    const actorId = _actorId(req);
+    if (room.status !== 'started') return res.status(409).json({ message: 'Room not started' });
 
     const progressNum = (progress === undefined) ? undefined : Number(progress);
     const typosNum = (typos === undefined) ? undefined : Number(typos);
@@ -308,21 +415,27 @@ const updateProgress = (req, res) => {
     // Fix #12: cap typos to a sane maximum to prevent damage manipulation
     const MAX_TYPOS = 500;
 
-    if (room.host_id == user_id) {
+    if (room.host_id == actorId) {
         if (progressNum !== undefined && Number.isFinite(progressNum)) room.host_progress = Math.min(1.0, Math.max(0.0, progressNum));
         if (typosNum !== undefined && Number.isFinite(typosNum)) room.host_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
         if (send_mutation) room.guest_mutations.push(send_mutation);
-    } else if (room.guest_id == user_id) {
+        // Store chosen skill so opponent can see it in their stats label
+        if (req.body.chosen_skill !== undefined) room.host_skill = String(req.body.chosen_skill || '');
+    } else if (room.guest_id == actorId) {
         if (progressNum !== undefined && Number.isFinite(progressNum)) room.guest_progress = Math.min(1.0, Math.max(0.0, progressNum));
         if (typosNum !== undefined && Number.isFinite(typosNum)) room.guest_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
         if (send_mutation) room.host_mutations.push(send_mutation);
+        // Store chosen skill so opponent can see it in their stats label
+        if (req.body.chosen_skill !== undefined) room.guest_skill = String(req.body.chosen_skill || '');
+    } else {
+        return res.status(403).json({ message: 'Not in this room' });
     }
 
     // Fix #7: first-finish is set only once and never overwritten.
     // We also record the exact timestamp so the second player can't race-overwrite it.
     if (!room.first_finish_at && progressNum !== undefined && Number.isFinite(progressNum) && progressNum >= 0.999) {
         room.first_finish_at = Date.now();
-        room.first_finish_by = (room.host_id == user_id) ? 'host' : 'guest';
+        room.first_finish_by = (room.host_id == actorId) ? 'host' : 'guest';
     }
     if (process.env.LOG_ROOMS === 'true' && progressNum !== undefined) {
         console.log(`[rooms] ${code} progress host=${room.host_progress} guest=${room.guest_progress} first_finish_at=${room.first_finish_at} by=${room.first_finish_by}`);
@@ -336,11 +449,14 @@ const updateProgress = (req, res) => {
 // Body: { user_id, host_hp, guest_hp }
 // Host is authoritative for HP sync.
 const updateHP = (req, res) => {
-    const code = req.params.code.toUpperCase();
+    const code = _normalizeCode(req.params.code);
     const { user_id, host_hp, guest_hp } = req.body;
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
-    if (room.host_id != user_id) return res.status(403).json({ message: 'Only host may sync hp' });
+    if (!_assertBodyUserMatchesActor(req, res)) return;
+    const actorId = _actorId(req);
+    if (room.host_id != actorId) return res.status(403).json({ message: 'Only host may sync hp' });
+    if (room.status !== 'started') return res.status(409).json({ message: 'Room not started' });
 
     const hostHpNum = Number(host_hp);
     const guestHpNum = Number(guest_hp);
@@ -358,4 +474,4 @@ const updateHP = (req, res) => {
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
-module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, matchmake, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP };
+module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom, matchmake, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP };

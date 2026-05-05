@@ -1,0 +1,224 @@
+﻿extends Node
+
+## CombatResolver
+## Owns round resolution: damage calculation, HP application, match history saving,
+## and the victory/forfeit overlays.
+## Attach to "CombatResolver" under the Game scene root.
+
+signal round_resolved
+signal match_ended
+
+# Set by Game
+var typing_handler  # ref to TypingHandler node
+var network_sync    # ref to NetworkSync node
+var anim_controller # ref to AnimationController node
+
+# ─────────────────────────────────────────────
+#  Round resolution
+# ─────────────────────────────────────────────
+
+func resolve(finish_mode: String, chosen_skill: String, enemy_typing_progress: float,
+		server_first_finish_at_ms: float, current_round: int) -> Dictionary:
+
+	var sentence_length = typing_handler.target_sentence.length()
+	var elapsed_ms: float = float(Time.get_ticks_msec() - typing_handler.sentence_start_time)
+	var safe_elapsed_ms: float = max(250.0, elapsed_ms)
+	var time_elapsed_min: float = safe_elapsed_ms / 60000.0
+	var words: float = float(sentence_length) / 5.0
+	var wpm: int = clamp(int(words / time_elapsed_min) if time_elapsed_min > 0.0 else 0, 0, 250)
+
+	var accuracy = typing_handler.get_accuracy()
+	var typos    = typing_handler.typos_count
+
+	var result = SkillsManager.resolve_round(
+		float(wpm), accuracy, typos,
+		network_sync.opp_typos,  # synced from poll, no meta needed
+		finish_mode, chosen_skill,
+		HPManager.opponent_hp, HPManager.player_hp,
+		"player"
+	)
+
+	# Host resolves opponent authoritatively
+	if not GameManager.is_solo and GameManager.is_host:
+		var opp_finish_mode = _mirror_finish_mode(finish_mode)
+		var opp_wpm = _estimate_opp_wpm(opp_finish_mode, words, server_first_finish_at_ms)
+		var opp_typos = network_sync.opp_typos
+		var opp_acc = _derive_opp_accuracy(enemy_typing_progress, sentence_length, opp_typos)
+
+		var opp_result = SkillsManager.resolve_round(
+			float(opp_wpm), opp_acc, opp_typos, typos,
+			opp_finish_mode, network_sync.opp_chosen_skill,
+			HPManager.player_hp, HPManager.opponent_hp,
+			"opponent"
+		)
+
+		result.player_hp_delta += opp_result.opp_hp_delta
+		result.opp_hp_delta    += opp_result.player_hp_delta
+		result["opp_player_damage"] = opp_result.player_damage
+
+		for line in opp_result.log:
+			result.log.append(line)
+
+	_apply_hp(result)
+	_log_result(result, finish_mode, chosen_skill)
+	_update_phantom_stack()
+
+	return result
+
+func _mirror_finish_mode(fm: String) -> String:
+	match fm:
+		"debuff":     return "buff"
+		"full_power": return "dnf"
+		"tie":        return "tie"
+		"no_attack":  return "no_attack"
+		_:            return "debuff"
+
+func _estimate_opp_wpm(opp_finish_mode: String, words: float, server_first_finish_at_ms: float) -> int:
+	if opp_finish_mode in ["buff", "tie"]:
+		var start_ms = GameManager.match_start_time
+		var finish_ms = server_first_finish_at_ms if server_first_finish_at_ms > 0 else float(Time.get_unix_time_from_system() * 1000.0)
+		var dur_min = (finish_ms - start_ms) / 60000.0
+		return clamp(int(words / dur_min) if dur_min > 0.0 else 0, 0, 250)
+	elif opp_finish_mode == "debuff":
+		return 40
+	return 0
+
+func _derive_opp_accuracy(opp_progress: float, sentence_length: int, opp_typos: int) -> float:
+	var chars_typed = opp_progress * float(sentence_length)
+	var total_typed = chars_typed + float(opp_typos)
+	if total_typed <= 0: return 100.0
+	return clampf((chars_typed / total_typed) * 100.0, 0.0, 100.0)
+
+func _apply_hp(result: Dictionary) -> void:
+	if result.player_hp_delta != 0:
+		HPManager.heal("player", result.player_hp_delta)
+	if result.opp_hp_delta != 0:
+		HPManager.heal("opponent", result.opp_hp_delta)
+	if result.player_damage > 0:
+		HPManager.take_damage("opponent", result.player_damage)
+	if not GameManager.is_solo and GameManager.is_host:
+		var opp_dmg = result.get("opp_player_damage", 0.0)
+		if opp_dmg > 0:
+			HPManager.take_damage("player", opp_dmg)
+
+func _update_phantom_stack() -> void:
+	if SkillsManager.selected_passive != "phantom": return
+	var acc = typing_handler.get_accuracy()
+	if acc >= 90.0 and SkillsManager.phantom_stack > 0:
+		SkillsManager.phantom_stack = min(3, SkillsManager.phantom_stack + 1)
+	elif acc >= 85.0 and SkillsManager.phantom_stack == 0:
+		SkillsManager.phantom_stack = 1
+	else:
+		SkillsManager.phantom_stack = 0
+
+func _log_result(result: Dictionary, finish_mode: String, chosen_skill: String) -> void:
+	for line in result.log:
+		print("[Combat] ", line)
+	print("╔══════════════════════════════════════════╗")
+	if chosen_skill == "":
+		print("║  [NO SKILL] — Base attack only           ║")
+	else:
+		match finish_mode:
+			"buff":        print("║  🎯 [%s] — BUFF  (you finished 1st)   ║" % chosen_skill.to_upper())
+			"debuff":      print("║  ⬇️ [%s] — DEBUFF (you finished 2nd) ║" % chosen_skill.to_upper())
+			"full_power":  print("║  💥 [%s] — FULL POWER! (opp timed out)║" % chosen_skill.to_upper())
+			"tie":         print("║  ⚡ [%s] — TIE (both get buff)        ║" % chosen_skill.to_upper())
+			"no_attack":   print("║  ⏱️ [TIMEOUT] — No skill fires         ║")
+	print("║  Player: %-30s  ║" % GameManager.user_data.username)
+	print("║  DMG dealt:  %-5.0f                         ║" % result.player_damage)
+	print("║  HP delta:   %+.0f                          ║" % result.player_hp_delta)
+	print("║  Your HP:    %.0f / %.0f                     ║" % [HPManager.player_hp, HPManager.player_max_hp])
+	print("║  Opp HP:     %.0f / %.0f                     ║" % [HPManager.opponent_hp, HPManager.opponent_max_hp])
+	print("║  Mana:       %d                             ║" % SkillsManager.player_mana)
+	print("╚══════════════════════════════════════════╝")
+
+# ─────────────────────────────────────────────
+#  Victory / forfeit overlays
+# ─────────────────────────────────────────────
+
+func show_victory(entity: String, hud: Node) -> void:
+	anim_controller.play_death_anim(entity)
+	await get_tree().create_timer(0.6).timeout
+
+	var victory_scene = load("res://scenes/ui/victory_screen.tscn").instantiate()
+	get_tree().paused = true
+	victory_scene.process_mode = Node.PROCESS_MODE_ALWAYS
+	hud.add_child(victory_scene)
+
+	var won = (entity == "opponent")
+	_save_match_history(won)
+	victory_scene.set_result(won)
+	match_ended.emit()
+
+func show_opponent_forfeited_overlay(hud: Node) -> void:
+	var overlay = Panel.new()
+	overlay.set_anchors_preset(Control.PRESET_CENTER)
+	overlay.custom_minimum_size = Vector2(380, 200)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	hud.add_child(overlay)
+
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 24; vbox.offset_top = 24
+	vbox.offset_right = -24; vbox.offset_bottom = -24
+	vbox.add_theme_constant_override("separation", 16)
+	overlay.add_child(vbox)
+
+	var msg = Label.new()
+	msg.text = "Opponent forfeited!"
+	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	msg.add_theme_font_size_override("font_size", 24)
+	msg.add_theme_color_override("font_color", Color.GREEN)
+	vbox.add_child(msg)
+
+	var countdown_lbl = Label.new()
+	countdown_lbl.text = "Returning to main menu in 10..."
+	countdown_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(countdown_lbl)
+
+	var leave_btn = Button.new()
+	leave_btn.text = "Leave Now"
+	leave_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn"))
+	vbox.add_child(leave_btn)
+
+	var t = 10
+	var timer = get_tree().create_timer(1.0)
+	while t > 0:
+		await timer.timeout
+		t -= 1
+		if is_instance_valid(countdown_lbl):
+			countdown_lbl.text = "Returning to main menu in %d..." % t
+		if t > 0:
+			timer = get_tree().create_timer(1.0)
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+# ─────────────────────────────────────────────
+#  Match history
+# ─────────────────────────────────────────────
+
+func _save_match_history(won: bool) -> void:
+	if GameManager.user_data.id == 0: return
+	var wpm = 0.0
+	var accuracy = typing_handler.get_accuracy()
+	var time_elapsed_min = 0.0
+	if typing_handler.is_typing and typing_handler.sentence_start_time > 0:
+		time_elapsed_min = (Time.get_ticks_msec() - typing_handler.sentence_start_time) / 60000.0
+	if time_elapsed_min > 0:
+		wpm = (float(typing_handler.total_keystrokes) / 5.0) / time_elapsed_min
+	wpm      = clampf(wpm if is_finite(wpm) else 0.0, 0.0, 250.0)
+	accuracy = clampf(accuracy if is_finite(accuracy) else 0.0, 0.0, 100.0)
+
+	var SERVER = GameManager.SERVER_URL
+	var req = HTTPRequest.new()
+	add_child(req)
+	var data = {
+		"user_id":    GameManager.user_data.id,
+		"username":   GameManager.user_data.username,
+		"match_type": "custom" if GameManager.is_solo else ("online" if GameManager.is_matchmaking else "custom"),
+		"wpm":        wpm,
+		"accuracy":   accuracy,
+		"typos":      typing_handler.typos_count,
+		"won":        won
+	}
+	req.request(SERVER + "/api/game/history", ["Content-Type: application/json"],
+		HTTPClient.METHOD_POST, JSON.stringify(data))
