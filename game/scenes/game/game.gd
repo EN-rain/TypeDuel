@@ -498,6 +498,10 @@ func _resolve_and_advance(finish_mode: String) -> void:
 	if typing_label:     typing_label.hide()
 	if stats_label:      stats_label.hide()
 	if opp_stats_label:  opp_stats_label.hide()
+	# Guard: clear skill if player can't actually afford it (e.g. round 1 with 0 mana)
+	if chosen_skill_id != "" and not SkillsManager.can_pick_skill(chosen_skill_id):
+		_log("[Resolve] Skill '%s' cancelled — insufficient mana (%d)" % [chosen_skill_id, SkillsManager.player_mana])
+		chosen_skill_id = ""
 	var result = combat.resolve(finish_mode, chosen_skill_id, net.opp_progress, _server_first_finish_at_ms, current_round)
 	anim.play_combat_anims(
 		chosen_skill_id, 

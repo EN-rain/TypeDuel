@@ -157,9 +157,22 @@ const getMatchHistory = (req, res) => {
     });
 };
 
-// Fix #10: HTTP endpoint to apply a matchmaking penalty for a user
+// Fix #10: HTTP endpoint to apply a matchmaking penalty for a user.
+// This endpoint is intentionally called ONLY from the matchmaking flow
+// (custom_room.gd → _apply_matchmaking_penalty, gated by GameManager.is_matchmaking).
+// Custom-room players are never penalized — the client never calls this endpoint for them.
 const applyMatchmakingPenalty = (req, res) => {
     const { user_id, duration_ms } = req.body;
+
+    // Authenticated-only: do not allow a client to penalize someone else.
+    const actorId = req.user && req.user.id;
+    if (actorId === undefined || actorId === null) {
+        return res.status(401).json({ message: 'Not authenticated' });
+    }
+    if (user_id !== undefined && String(user_id) !== String(actorId)) {
+        return res.status(403).json({ message: 'user_id does not match authenticated user' });
+    }
+
     const userIdNum = Number(user_id);
     if (!Number.isFinite(userIdNum) || userIdNum <= 0) {
         return res.status(400).json({ message: 'user_id must be a positive number' });

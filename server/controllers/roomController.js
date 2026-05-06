@@ -37,8 +37,11 @@ function _maybeAutoForfeitRoom(room) {
     if (!room.host_id || !room.guest_id) return;
 
     const now = Date.now();
-    const hostSeen = room.host_last_seen_at || room.last_activity_at || room.created_at || 0;
-    const guestSeen = room.guest_last_seen_at || room.last_activity_at || room.created_at || 0;
+    // IMPORTANT: do not fall back to room.last_activity_at for per-player presence.
+    // last_activity_at can be updated by the *other* player, which would mask a disconnect and
+    // can incorrectly assign the forfeit/penalty to the wrong side.
+    const hostSeen = room.host_last_seen_at || room.created_at || 0;
+    const guestSeen = room.guest_last_seen_at || room.created_at || 0;
 
     const hostSuspect = (now - hostSeen) > ROOM_PRESENCE_SUSPECT_MS;
     const guestSuspect = (now - guestSeen) > ROOM_PRESENCE_SUSPECT_MS;
@@ -211,6 +214,12 @@ const getRoomStatus = (req, res) => {
 };
 
 // DELETE /api/rooms/:code  (host closes the room)
+// Behaviour by game mode:
+//   - Lobby (not yet started): room is deleted silently. No forfeit, no penalty — applies to
+//     both custom rooms and matchmaking lobbies.
+//   - Started (in-game): recorded as a host forfeit so the guest sees the result. The
+//     matchmaking penalty is applied client-side only when GameManager.is_matchmaking is true;
+//     custom-room players are never penalized.
 const closeRoom = (req, res) => {
     const code = _normalizeCode(req.params.code);
     const room = rooms[code];
@@ -220,6 +229,8 @@ const closeRoom = (req, res) => {
         return res.status(403).json({ message: 'Only host may close the room' });
     }
     if (room.status === 'started') {
+        // In-game forfeit — guest wins. Penalty (if any) is applied by the client only for
+        // matchmaking mode; custom-room hosts are not penalized.
         room.forfeit = { at: Date.now(), by: 'host', winner: 'guest', loser: 'host', reason: 'leave' };
         room.status = 'finished';
         room.phase = 'finished';
@@ -227,12 +238,20 @@ const closeRoom = (req, res) => {
         room.last_activity_at = Date.now();
         return res.json({ ok: true, room: roomSnapshot(room) });
     }
+    // Lobby: just delete the room. No forfeit, no penalty.
     delete rooms[code];
     return res.json({ ok: true });
 };
 
-// POST /api/rooms/:code/leave  (guest leaves the room)
-// Guest leaving during a started game counts as a forfeit.
+// POST /api/rooms/:code/leave  (either player leaves the room)
+// Behaviour by game mode:
+//   - Lobby (not yet started):
+//       Host leaving  → room is deleted silently. No forfeit, no penalty.
+//       Guest leaving → guest slot is cleared; room stays alive for the host. No forfeit, no penalty.
+//       This applies to BOTH custom rooms and matchmaking lobbies.
+//   - Started (in-game): recorded as a forfeit so the remaining player sees the result.
+//       The matchmaking penalty is applied client-side only when GameManager.is_matchmaking is
+//       true; custom-room players are never penalized.
 const leaveRoom = (req, res) => {
     const code = _normalizeCode(req.params.code);
     const room = rooms[code];
@@ -241,6 +260,7 @@ const leaveRoom = (req, res) => {
 
     if (room.host_id == actorId) {
         if (room.status === 'started') {
+            // In-game forfeit — guest wins.
             room.forfeit = { at: Date.now(), by: 'host', winner: 'guest', loser: 'host', reason: 'leave' };
             room.status = 'finished';
             room.phase = 'finished';
@@ -248,6 +268,7 @@ const leaveRoom = (req, res) => {
             room.last_activity_at = Date.now();
             return res.json({ ok: true, room: roomSnapshot(room) });
         }
+        // Lobby: host is leaving their own room — delete it silently. No forfeit, no penalty.
         delete rooms[code];
         return res.json({ ok: true });
     }
@@ -257,6 +278,7 @@ const leaveRoom = (req, res) => {
     }
 
     if (room.status === 'started') {
+        // In-game forfeit — host wins.
         room.forfeit = { at: Date.now(), by: 'guest', winner: 'host', loser: 'guest', reason: 'leave' };
         room.status = 'finished';
         room.phase = 'finished';
@@ -264,6 +286,9 @@ const leaveRoom = (req, res) => {
         room.last_activity_at = Date.now();
         return res.json({ ok: true, room: roomSnapshot(room) });
     }
+
+    // Lobby: guest is leaving — clear their slot so the host can accept a new guest.
+    // Room stays alive. No forfeit, no penalty.
 
     room.guest_id = null;
     room.guest_name = null;

@@ -144,15 +144,21 @@ func resolve_round(
 		combat_log.append("[DNF] Actor did not finish. 0 DMG.")
 		return _result(0.0, 0.0, 0.0, combat_log)
 
-	# ── Spend Mana (only if a skill was picked) ───────
+	# ── Spend Mana (only if a skill was picked AND actor can afford it) ───────
 	if chosen_skill != "":
 		var cost: int = int(SKILL_COSTS.get(chosen_skill, 0))
-		if actor_role == "player":
-			player_mana = max(0, player_mana - cost)
-			combat_log.append("[Mana] Spent %d on '%s' → %d remaining" % [cost, chosen_skill, player_mana])
+		var current_mana: int = player_mana if actor_role == "player" else opponent_mana
+		if current_mana < cost:
+			# Not enough mana — cancel the skill silently and treat as no-skill round.
+			combat_log.append("[Mana] BLOCKED '%s' — need %d, have %d. Falling back to no-skill." % [chosen_skill, cost, current_mana])
+			chosen_skill = ""
 		else:
-			opponent_mana = max(0, opponent_mana - cost)
-			combat_log.append("[Mana] Opponent spent %d on '%s' → %d remaining" % [cost, chosen_skill, opponent_mana])
+			if actor_role == "player":
+				player_mana = max(0, player_mana - cost)
+				combat_log.append("[Mana] Spent %d on '%s' → %d remaining" % [cost, chosen_skill, player_mana])
+			else:
+				opponent_mana = max(0, opponent_mana - cost)
+				combat_log.append("[Mana] Opponent spent %d on '%s' → %d remaining" % [cost, chosen_skill, opponent_mana])
 
 	# ── Debuff case: refund Mana if opponent didn't finish ─
 	# P2 who did NOT finish → Mana refunded (handled by caller marking finish_mode="debuff"
