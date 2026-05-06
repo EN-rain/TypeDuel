@@ -73,7 +73,12 @@ func on_finish_first() -> void:
 
 func on_opponent_accurate_word() -> void:
 	opponent_mana = min(10, opponent_mana + 1)
-	print("[Mana] Opponent typed word → %d Mana" % opponent_mana)
+	# Zephon innate: extra +1 Mana when opponent WPM > 80 (estimated via progress)
+	if HPManager.opponent_innate == "Overdrive":
+		opponent_mana = min(10, opponent_mana + 1)
+		print("[Innate Ability: Overdrive] Opponent Zephon accurate word → %d Mana" % opponent_mana)
+	else:
+		print("[Mana] Opponent typed word → %d Mana" % opponent_mana)
 
 func on_opponent_finish_first() -> void:
 	opponent_mana = min(10, opponent_mana + 2)
@@ -131,6 +136,8 @@ func resolve_round(
 		return _result(0.0, 0.0, 0.0, combat_log)
 
 	# ── Spend Mana (only if a skill was picked AND actor can afford it) ───────
+	# Snapshot mana BEFORE spending so Overdrive can check pre-spend value
+	var mana_before_spend: int = player_mana if actor_role == "player" else opponent_mana
 	if chosen_skill != "":
 		var cost: int = int(SKILL_COSTS.get(chosen_skill, 0))
 		var current_mana: int = player_mana if actor_role == "player" else opponent_mana
@@ -212,12 +219,10 @@ func resolve_round(
 				else: liora_opp_heal_total += heal
 				combat_log.append("[Innate Ability: Grace] Acc > 95%% → +%.0fHP (total: %.0f/15)" % [heal, heal_total + heal])
 
-		"Overdrive":  # Zephon — +5 bonus damage when mana >= 9
-			# Use the actor's own mana
-			var actor_mana = player_mana if actor_role == "player" else opponent_mana
-			if actor_mana >= 9 and player_damage > 0.0:
+		"Overdrive":  # Zephon — +5 bonus damage when mana >= 9 (checked before skill spend)
+			if mana_before_spend >= 9 and player_damage > 0.0:
 				player_damage += 5.0
-				combat_log.append("[Innate Ability: Overdrive] High Mana (%d)! +5 bonus DMG → %.0f total" % [actor_mana, player_damage])
+				combat_log.append("[Innate Ability: Overdrive] High Mana (%d before spend)! +5 bonus DMG → %.0f total" % [mana_before_spend, player_damage])
 
 	combat_log.append("RESULT → DMG:%.0f | SelfHP:%+.0f | OppHP:%+.0f" % [player_damage, player_hp_delta, opp_hp_delta])
 	return _result(player_damage, player_hp_delta, opp_hp_delta, combat_log)

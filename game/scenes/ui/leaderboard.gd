@@ -2,16 +2,19 @@ extends Control
 
 @onready var list = $VBoxContainer/ScrollContainer/List
 @onready var http_request = $HTTPRequest
-@onready var scene_anim = $AnimationPlayer
 
 var BASE_URL: String:
 	get: return GameManager.SERVER_URL + "/api/game/leaderboard"
 
 func _ready():
-	if scene_anim != null and scene_anim.has_animation(&"intro"):
-		scene_anim.stop()
-		scene_anim.seek(0.0, true)
-		scene_anim.play(&"intro")
+	# Fade in UI content only
+	$VBoxContainer.modulate.a = 0.0
+	$Scroll.modulate.a = 0.0
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property($VBoxContainer, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property($Scroll, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
 	http_request.request_completed.connect(_on_request_completed)
 	fetch_leaderboard()
 

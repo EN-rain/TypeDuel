@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://bsts6cp4wqcmj"]
 
-[ext_resource type="Script" path="res://scenes/ui/account.gd" id="1_settings_script"]
+[ext_resource type="Script" uid="uid://cm08hoggnme0a" path="res://scenes/ui/account.gd" id="1_settings_script"]
 [ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="2_7pacj"]
+[ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_8j5j1"]
 
 [node name="Account" type="Control" unique_id=1832984600]
 layout_mode = 3
@@ -12,16 +13,17 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_settings_script")
 
-[node name="Background" type="ColorRect" parent="." unique_id=2000821137]
+[node name="Bg" type="TextureRect" parent="." unique_id=1887144098]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.2, 0.2, 0.2, 1)
+texture = ExtResource("2_8j5j1")
 
 [node name="BackButton" type="Button" parent="." unique_id=849240718]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 1
 offset_right = 300.0
@@ -29,6 +31,7 @@ offset_bottom = 50.0
 text = "Back to Menu"
 
 [node name="PFP" type="TextureRect" parent="." unique_id=645872083]
+modulate = Color(1, 1, 1, 0)
 clip_contents = true
 layout_mode = 1
 anchors_preset = -1
@@ -45,6 +48,7 @@ stretch_mode = 6
 metadata/_edit_use_anchors_ = true
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=26434344]
+modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5

@@ -252,6 +252,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+modulate = Color(1, 1, 1, 0)
 script = ExtResource("1_custom_room_script")
 metadata/_edit_lock_ = true
 
@@ -378,8 +379,8 @@ layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_left = 23.0
-offset_right = 63.0
+offset_left = -200.0
+offset_right = -160.0
 offset_bottom = 40.0
 grow_vertical = 2
 
@@ -416,9 +417,9 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -59.0
+offset_left = 200.0
 offset_top = 4.0
-offset_right = -19.0
+offset_right = 240.0
 offset_bottom = 44.0
 grow_horizontal = 0
 grow_vertical = 2
@@ -455,13 +456,12 @@ text = "Skill Name 3
 
 [node name="ChatBox" parent="." unique_id=1946247923 instance=ExtResource("2_chat_box")]
 layout_mode = 1
-offset_left = 10.0
+offset_left = -300.0
 offset_top = -50.0
-offset_right = 310.0
+offset_right = 0.0
 offset_bottom = -10.0
 
 [node name="Passive" type="Control" parent="." unique_id=1756940328]
-modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0

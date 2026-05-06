@@ -12,6 +12,14 @@ var BASE_URL: String:
 		return GameManager.SERVER_URL + "/api/game/history/" + str(target_id)
 
 func _ready():
+	# Fade in UI content only
+	$VBoxContainer.modulate.a = 0.0
+	$Scroll.modulate.a = 0.0
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property($VBoxContainer, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property($Scroll, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
 	http_request.request_completed.connect(_on_request_completed)
 	fetch_history()
 

@@ -190,12 +190,25 @@ func _on_custom_room_pressed():
 	await _transition_with_outro(SCENE_CUSTOM_ROOM)
 
 func _on_join_pressed():
+	join_panel.modulate.a = 0.0
+	join_panel.offset_top = 0.0
+	join_panel.offset_bottom = 200.0
 	join_panel.visible = true
 	join_input.text = ""
 	join_error.text = ""
-	
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(join_panel, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(join_panel, "offset_top", -100.0, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(join_panel, "offset_bottom", 100.0, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
 func _on_cancel_join_pressed():
-	join_panel.visible = false
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(join_panel, "modulate:a", 0.0, 0.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.tween_property(join_panel, "offset_top", 0.0, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.tween_property(join_panel, "offset_bottom", 200.0, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(func(): join_panel.visible = false)
 
 func _on_submit_join_pressed():
 	var code = join_input.text.strip_edges().to_upper()
@@ -324,7 +337,14 @@ func _on_poll_match_done(_result, code, _headers, body, http):
 			await _transition_with_outro(SCENE_CUSTOM_ROOM)
 
 func _on_leaderboard_pressed():
-	await _transition_with_outro(SCENE_LEADERBOARD)
+	# Play settings slide-out AND main menu outro simultaneously
+	is_settings_open = false
+	$Settings/AnimationPlayer.play_backwards("slide_in")
+	if intro_anim_player != null and intro_anim_player.has_animation(&"outro"):
+		intro_anim_player.play(&"outro")
+	await $Settings/AnimationPlayer.animation_finished
+	$Settings.hide()
+	get_tree().change_scene_to_file(SCENE_LEADERBOARD)
 
 func _transition_with_outro(scene_path: String) -> void:
 	if intro_anim_player != null and intro_anim_player.has_animation(&"outro"):
@@ -343,31 +363,34 @@ func _input(event: InputEvent) -> void:
 	if not is_settings_open:
 		return
 	
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var mouse_pos = get_viewport().get_mouse_position()
-		
-		# Check if click is on friends button - don't close anything
-		var friends_btn_rect = Rect2(friends_button.global_position, friends_button.size)
-		if friends_btn_rect.has_point(mouse_pos):
-			return
-		
-		# If friends panel is open, check if click is outside friends panel
-		if is_friends_expanded:
-			var friends_rect = Rect2(friends_panel.global_position, friends_panel.size)
-			if not friends_rect.has_point(mouse_pos):
-				# Click outside friends panel - close friends only
-				_collapse_friends()
-				get_viewport().set_input_as_handled()
-			return
-
-func _unhandled_input(event: InputEvent) -> void:
-	if not is_settings_open:
+	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
 	
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		# Friends is closed and click wasn't handled by any Settings button - close settings
+	var mouse_pos = get_viewport().get_mouse_position()
+	
+	# Check if click is on friends button - don't close anything
+	var friends_btn_rect = Rect2(friends_button.global_position, friends_button.size)
+	if friends_btn_rect.has_point(mouse_pos):
+		return
+	
+	# If friends panel is open, handle friends first
+	if is_friends_expanded:
+		var friends_rect = Rect2(friends_panel.global_position, friends_panel.size)
+		if not friends_rect.has_point(mouse_pos):
+			_collapse_friends()
+			get_viewport().set_input_as_handled()
+		return
+	
+	# Check if click is inside the visible Settings Panel
+	var panel = $Settings/Panel
+	var panel_rect = Rect2(panel.global_position, panel.size)
+	if not panel_rect.has_point(mouse_pos):
+		# Clicked outside the panel — close settings
 		_on_close_button_pressed()
 		get_viewport().set_input_as_handled()
+
+func _unhandled_input(_event: InputEvent) -> void:
+	pass
 
 func _on_logout_pressed():
 	# Notify server we're going offline
@@ -379,7 +402,15 @@ func _on_logout_pressed():
 		"display_name": "",
 		"token": ""
 	}
-	get_tree().change_scene_to_file(SCENE_LOGIN)
+	# Play settings slide-out AND main menu outro simultaneously
+	is_settings_open = false
+	$Settings/AnimationPlayer.play_backwards("slide_in")
+	if intro_anim_player != null and intro_anim_player.has_animation(&"outro"):
+		intro_anim_player.play(&"outro")
+	await $Settings/AnimationPlayer.animation_finished
+	$Settings.hide()
+	if is_inside_tree():
+		get_tree().change_scene_to_file(SCENE_LOGIN)
 
 func _check_auth_error(code: int) -> bool:
 	if code == 401:
@@ -399,12 +430,34 @@ func _on_friends_pressed():
 		_expand_friends()
 
 func _on_history_pressed():
+	# Play settings slide-out AND main menu outro simultaneously
+	is_settings_open = false
+	$Settings/AnimationPlayer.play_backwards("slide_in")
+	if intro_anim_player != null and intro_anim_player.has_animation(&"outro"):
+		intro_anim_player.play(&"outro")
+	await $Settings/AnimationPlayer.animation_finished
+	$Settings.hide()
 	get_tree().change_scene_to_file("res://scenes/ui/history.tscn")
 
 func _on_account_pressed():
+	# Play settings slide-out AND main menu outro simultaneously
+	is_settings_open = false
+	$Settings/AnimationPlayer.play_backwards("slide_in")
+	if intro_anim_player != null and intro_anim_player.has_animation(&"outro"):
+		intro_anim_player.play(&"outro")
+	# slide_in is 0.8s, outro is 0.55s — wait for the longer one (settings)
+	await $Settings/AnimationPlayer.animation_finished
+	$Settings.hide()
 	get_tree().change_scene_to_file("res://scenes/ui/account.tscn")
 
 func _on_credits_pressed():
+	# Play settings slide-out AND main menu outro simultaneously
+	is_settings_open = false
+	$Settings/AnimationPlayer.play_backwards("slide_in")
+	if intro_anim_player != null and intro_anim_player.has_animation(&"outro"):
+		intro_anim_player.play(&"outro")
+	await $Settings/AnimationPlayer.animation_finished
+	$Settings.hide()
 	get_tree().change_scene_to_file("res://scenes/ui/credits.tscn")
 
 func _on_feedback_pressed():

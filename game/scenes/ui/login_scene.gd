@@ -25,13 +25,19 @@ func _ready():
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	http_request.request_completed.connect(_on_request_completed)
 	
-	# Fade in only the form elements, not the background
+	# Fade in + slide up only the form elements, not the background
 	$TextureRect2.modulate.a = 0.0
 	$VBoxContainer.modulate.a = 0.0
+	var start_y_tr = $TextureRect2.position.y + 60.0
+	var start_y_vb = $VBoxContainer.position.y + 60.0
+	$TextureRect2.position.y = start_y_tr
+	$VBoxContainer.position.y = start_y_vb
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property($TextureRect2, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_property($VBoxContainer, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property($TextureRect2, "position:y", start_y_tr - 60.0, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property($VBoxContainer, "position:y", start_y_vb - 60.0, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func _on_mode_selected(login):
 	is_login_mode = login
@@ -92,6 +98,10 @@ func _on_request_completed(_result, response_code, _headers, body):
 func _fade_out_and_transition(scene_path: String):
 	var tween = create_tween()
 	tween.set_parallel(true)
+	# Slide down
+	tween.tween_property($TextureRect2, "position:y", $TextureRect2.position.y + 80.0, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.tween_property($VBoxContainer, "position:y", $VBoxContainer.position.y + 80.0, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	# Fade out
 	tween.tween_property($TextureRect2, "modulate:a", 0.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_property($VBoxContainer, "modulate:a", 0.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(func(): get_tree().change_scene_to_file(scene_path))

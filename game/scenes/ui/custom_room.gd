@@ -60,10 +60,16 @@ var _char_buttons: Array      = []
 var _skill_buttons: Array     = []
 var _passive_buttons: Array   = []
 
+func _enter_tree():
+	# Seek animation to t=0 before first frame so nodes start invisible — prevents blink
+	if has_node("AnimationPlayer"):
+		var ap = get_node("AnimationPlayer")
+		if ap.has_animation(&"intro"):
+			ap.stop()
+			ap.seek(0.0, true)
+
 func _ready():
 	if scene_anim_player != null and scene_anim_player.has_animation(&"intro"):
-		scene_anim_player.stop()
-		scene_anim_player.seek(0.0, true)
 		scene_anim_player.play(&"intro")
 
 	my_user_id = GameManager.user_data.id

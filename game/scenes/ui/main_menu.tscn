@@ -1339,7 +1339,14 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 2
-mouse_filter = 0
+mouse_filter = 1
+
+[node name="Panel" type="Panel" parent="Settings" unique_id=695803978]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+offset_left = -392.0
+offset_right = 40.0
+offset_bottom = 711.0
 
 [node name="ColorRect1" type="ColorRect" parent="Settings" unique_id=834966925]
 layout_mode = 1
@@ -1365,8 +1372,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 720.6644
 offset_top = 862.5718
-offset_right = 1337.5892
-offset_bottom = 1219.5271
+offset_right = 1337.589
+offset_bottom = 1219.5273
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
@@ -1380,8 +1387,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 822.59814
 offset_top = 862.9369
-offset_right = 1372.7101
-offset_bottom = 1219.8905
+offset_right = 1372.71
+offset_bottom = 1219.8903
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
