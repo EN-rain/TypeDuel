@@ -185,7 +185,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_i62oa")
 }],
-"loop": false,
+"loop": true,
 "name": &"death",
 "speed": 5.0
 }, {
@@ -199,9 +199,9 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_tnaso")
 }],
-"loop": false,
+"loop": true,
 "name": &"hurt",
-"speed": 10.0
+"speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -248,7 +248,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_gf7w3")
 }],
-"loop": false,
+"loop": true,
 "name": &"quickslash",
 "speed": 15.0
 }, {
@@ -271,7 +271,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_jfo5a")
 }],
-"loop": false,
+"loop": true,
 "name": &"soulbreak",
 "speed": 10.0
 }, {
@@ -315,7 +315,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_ri1ru")
 }],
-"loop": false,
+"loop": true,
 "name": &"whipsplash",
 "speed": 15.0
 }]
