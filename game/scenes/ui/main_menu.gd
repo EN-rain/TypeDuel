@@ -45,7 +45,7 @@ var _last_friends_render_signature: String = ""
 var _avatar_texture_cache: Dictionary = {}
 
 func _enter_tree():
-	modulate.a = 0.0
+	pass
 
 func _ready():
 
@@ -86,10 +86,7 @@ func _ready():
 func _play_intro_animation():
 	if intro_anim_player == null:
 		return
-
 	if intro_anim_player.has_animation(&"intro"):
-		# Force the first frame to match the animation's t=0 state to avoid a visible "blink"
-		# right after the scene loads (properties otherwise apply on the next frame).
 		intro_anim_player.stop()
 		intro_anim_player.seek(0.0, true)
 		intro_anim_player.play(&"intro")
@@ -362,13 +359,15 @@ func _input(event: InputEvent) -> void:
 				_collapse_friends()
 				get_viewport().set_input_as_handled()
 			return
-		
-		# Friends is closed, check if click is outside settings panel
-		var settings_rect = Rect2($Settings.global_position, $Settings.size)
-		if not settings_rect.has_point(mouse_pos):
-			# Click outside settings - close settings
-			_on_close_button_pressed()
-			get_viewport().set_input_as_handled()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_settings_open:
+		return
+	
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		# Friends is closed and click wasn't handled by any Settings button - close settings
+		_on_close_button_pressed()
+		get_viewport().set_input_as_handled()
 
 func _on_logout_pressed():
 	# Notify server we're going offline

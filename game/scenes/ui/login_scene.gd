@@ -15,7 +15,8 @@ var BASE_URL: String:
 var is_login_mode = true
 
 func _enter_tree():
-	modulate.a = 0.0
+	# Don't touch root modulate — background stays visible always
+	pass
 
 func _ready():
 	login_mode_btn.pressed.connect(_on_mode_selected.bind(true))
@@ -24,10 +25,13 @@ func _ready():
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	http_request.request_completed.connect(_on_request_completed)
 	
-	# Fade in
+	# Fade in only the form elements, not the background
+	$TextureRect2.modulate.a = 0.0
+	$VBoxContainer.modulate.a = 0.0
 	var tween = create_tween()
-
-	tween.tween_property(self, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.set_parallel(true)
+	tween.tween_property($TextureRect2, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property($VBoxContainer, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func _on_mode_selected(login):
 	is_login_mode = login
@@ -87,5 +91,7 @@ func _on_request_completed(_result, response_code, _headers, body):
 
 func _fade_out_and_transition(scene_path: String):
 	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tween.finished.connect(func(): get_tree().change_scene_to_file(scene_path))
+	tween.set_parallel(true)
+	tween.tween_property($TextureRect2, "modulate:a", 0.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.tween_property($VBoxContainer, "modulate:a", 0.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(func(): get_tree().change_scene_to_file(scene_path))

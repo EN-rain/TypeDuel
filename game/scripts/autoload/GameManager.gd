@@ -61,8 +61,25 @@ func _ready():
 	# Let us handle the quit event manually so we can send logout first
 	get_tree().set_auto_accept_quit(false)
 	
+	_create_persistent_background()
 	_create_connection_overlay()
 	_start_connection_watchdog()
+
+func _create_persistent_background():
+	# Keeps the background visible between scene transitions so there's no black flash
+	var bg_layer = CanvasLayer.new()
+	bg_layer.layer = -100  # render behind everything
+	add_child(bg_layer)
+	var bg_rect = TextureRect.new()
+	bg_rect.texture = load("res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png")
+	bg_rect.layout_mode = 1
+	bg_rect.anchors_preset = 15  # full rect
+	bg_rect.anchor_right = 1.0
+	bg_rect.anchor_bottom = 1.0
+	bg_rect.grow_horizontal = 2
+	bg_rect.grow_vertical = 2
+	bg_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	bg_layer.add_child(bg_rect)
 
 func set_connection_online(online: bool) -> void:
 	if online == is_online:
