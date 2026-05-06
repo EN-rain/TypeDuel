@@ -69,7 +69,9 @@ func has_anim(node: Node, anim: String) -> bool:
 
 func safe_play_anim(node: Node, anim: String) -> void:
 	if anim == "" or not has_anim(node, anim):
+		print("[AnimController] safe_play_anim SKIPPED | anim='%s' | has_anim=%s" % [anim, has_anim(node, anim)])
 		return
+	print("[AnimController] safe_play_anim PLAYING | node=%s | anim='%s'" % [node.name if node else "null", anim])
 	if node.has_method("play"):
 		node.call("play", StringName(anim))
 		return
@@ -126,6 +128,8 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 	var my_char: String = GameManager.selected_character
 	var opp_char: String = GameManager.opponent_character
 
+	print("[AnimController] play_combat_anims called | skill_id='%s' | opp_skill_id='%s' | finish_mode='%s'" % [skill_id, opp_skill_id, finish_mode])
+
 	# Yield one frame so the scene tree is fully settled before playing animations.
 	await get_tree().process_frame
 
@@ -136,6 +140,8 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 	var player_has_skill: bool = skill_id != ""
 	var opp_has_skill:    bool = opp_skill_id != ""
 	var any_skill:        bool = player_has_skill or opp_has_skill
+
+	print("[AnimController] player_has_skill=%s | opp_has_skill=%s | any_skill=%s" % [player_has_skill, opp_has_skill, any_skill])
 
 	# ── HUD "anim" forward — only when at least one skill fires ──────────
 	if any_skill and hud_anim and hud_anim.has_animation("anim"):
@@ -149,6 +155,8 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 	var player_won:    bool = finish_mode in ["buff", "full_power", "tie"]
 	var simultaneous:  bool = finish_mode == "no_attack" or finish_mode == ""
 
+	print("[AnimController] player_won=%s | simultaneous=%s" % [player_won, simultaneous])
+
 	if simultaneous:
 		# Timeout: both take the penalty hit at the same time, no skill anims.
 		await get_tree().create_timer(0.15).timeout
@@ -159,6 +167,7 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 		# ── Winner (player) attacks first ────────────────────────────────
 		if player_has_skill:
 			var atk = attack_anim_for(my_char, skill_id)
+			print("[AnimController] Player attacking | char=%s | skill=%s | anim=%s" % [my_char, skill_id, atk])
 			var sprite = get_visual(p1)
 			var marker = p2.get_node_or_null("Marker2D") if p2 else null
 			if skill_id != "quickslash" and marker and sprite:

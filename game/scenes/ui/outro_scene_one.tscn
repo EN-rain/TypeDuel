@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://l4n0qfe1anng"]
 
 [ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="1_7cx8b"]
-[ext_resource type="Script" path="res://scenes/ui/outro_scene_one.gd" id="2_8rr41"]
 
 [sub_resource type="Animation" id="Animation_reset"]
 length = 0.001
@@ -193,7 +192,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("2_8rr41")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=240114090]
 libraries/ = SubResource("AnimationLibrary_main")

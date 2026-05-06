@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://bmsqrto3isa4a" path="res://scenes/game/game.gd" id="1_game_gd"]
 [ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_kfd0b"]
 [ext_resource type="Texture2D" uid="uid://cru6ltepkd3fr" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png" id="3_lakwo"]
-[ext_resource type="PackedScene" uid="uid://bqanhwc0hs40v" path="res://scenes/entities/player.tscn" id="8_87uf6"]
 [ext_resource type="Script" uid="uid://dmr300ctl4yd8" path="res://scenes/game/animation_controller.gd" id="10_anim_ctrl"]
 [ext_resource type="Script" uid="uid://dmd8luvc1i657" path="res://scenes/game/network_sync.gd" id="11_net_sync"]
 [ext_resource type="Script" uid="uid://frxg518kays6" path="res://scenes/game/typing_handler.gd" id="12_typing"]
@@ -1033,6 +1032,3 @@ position = Vector2(314, 404)
 
 [node name="P2" type="Marker2D" parent="TileMap" unique_id=126840181]
 position = Vector2(788, 404)
-
-[node name="Player" parent="." unique_id=1953234846 instance=ExtResource("8_87uf6")]
-position = Vector2(285.3711, 385.25623)

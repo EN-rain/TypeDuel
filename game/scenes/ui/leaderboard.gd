@@ -2,11 +2,16 @@ extends Control
 
 @onready var list = $VBoxContainer/ScrollContainer/List
 @onready var http_request = $HTTPRequest
+@onready var scene_anim = $AnimationPlayer
 
 var BASE_URL: String:
 	get: return GameManager.SERVER_URL + "/api/game/leaderboard"
 
 func _ready():
+	if scene_anim != null and scene_anim.has_animation(&"intro"):
+		scene_anim.stop()
+		scene_anim.seek(0.0, true)
+		scene_anim.play(&"intro")
 	http_request.request_completed.connect(_on_request_completed)
 	fetch_leaderboard()
 

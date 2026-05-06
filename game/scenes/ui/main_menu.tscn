@@ -359,163 +359,163 @@ length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("ColorRect1:position")
+tracks/0/path = NodePath("AccountButton:position")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(699.53375, 876.88196)]
+"values": [Vector2(41, 94)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("ColorRect2:position")
+tracks/1/path = NodePath("%FriendsButton:position")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(720.6644, 862.5718)]
+"values": [Vector2(41, 174)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
 tracks/2/enabled = true
-tracks/2/path = NodePath("ColorRect3:position")
+tracks/2/path = NodePath("%HistoryButton:position")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(822.59814, 862.9369)]
+"values": [Vector2(41, 254)]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
 tracks/3/enabled = true
-tracks/3/path = NodePath("AccountButton:position")
+tracks/3/path = NodePath("Credits:position")
 tracks/3/interp = 1
 tracks/3/loop_wrap = true
 tracks/3/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(-314, 75)]
+"values": [Vector2(41, 334)]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
 tracks/4/enabled = true
-tracks/4/path = NodePath("FriendsButton:position")
+tracks/4/path = NodePath("Feedback:position")
 tracks/4/interp = 1
 tracks/4/loop_wrap = true
 tracks/4/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(-314, 150)]
+"values": [Vector2(41, 414)]
 }
 tracks/5/type = "value"
 tracks/5/imported = false
 tracks/5/enabled = true
-tracks/5/path = NodePath("HistoryButton:position")
+tracks/5/path = NodePath("%LogoutButton:position")
 tracks/5/interp = 1
 tracks/5/loop_wrap = true
 tracks/5/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(-314, 225)]
+"values": [Vector2(41, 494)]
 }
 tracks/6/type = "value"
 tracks/6/imported = false
 tracks/6/enabled = true
-tracks/6/path = NodePath("Credits:position")
+tracks/6/path = NodePath("CloseButton:disabled")
 tracks/6/interp = 1
 tracks/6/loop_wrap = true
 tracks/6/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(-314, 300)]
+"update": 1,
+"values": [false]
 }
 tracks/7/type = "value"
 tracks/7/imported = false
 tracks/7/enabled = true
-tracks/7/path = NodePath("Feedback:position")
+tracks/7/path = NodePath("AccountButton:disabled")
 tracks/7/interp = 1
 tracks/7/loop_wrap = true
 tracks/7/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(-314, 375)]
+"update": 1,
+"values": [false]
 }
 tracks/8/type = "value"
 tracks/8/imported = false
 tracks/8/enabled = true
-tracks/8/path = NodePath("LogoutButton:position")
+tracks/8/path = NodePath("%FriendsButton:disabled")
 tracks/8/interp = 1
 tracks/8/loop_wrap = true
 tracks/8/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(-314, 450)]
+"update": 1,
+"values": [false]
 }
 tracks/9/type = "value"
 tracks/9/imported = false
 tracks/9/enabled = true
-tracks/9/path = NodePath("AccountButton:modulate")
+tracks/9/path = NodePath("%HistoryButton:disabled")
 tracks/9/interp = 1
 tracks/9/loop_wrap = true
 tracks/9/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Color(1, 1, 1, 1)]
+"update": 1,
+"values": [false]
 }
 tracks/10/type = "value"
 tracks/10/imported = false
 tracks/10/enabled = true
-tracks/10/path = NodePath("FriendsButton:modulate")
+tracks/10/path = NodePath("Credits:disabled")
 tracks/10/interp = 1
 tracks/10/loop_wrap = true
 tracks/10/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Color(1, 1, 1, 1)]
+"update": 1,
+"values": [false]
 }
 tracks/11/type = "value"
 tracks/11/imported = false
 tracks/11/enabled = true
-tracks/11/path = NodePath("HistoryButton:modulate")
+tracks/11/path = NodePath("Feedback:disabled")
 tracks/11/interp = 1
 tracks/11/loop_wrap = true
 tracks/11/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Color(1, 1, 1, 1)]
+"update": 1,
+"values": [false]
 }
 tracks/12/type = "value"
 tracks/12/imported = false
 tracks/12/enabled = true
-tracks/12/path = NodePath("Credits:modulate")
+tracks/12/path = NodePath("%LogoutButton:disabled")
 tracks/12/interp = 1
 tracks/12/loop_wrap = true
 tracks/12/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Color(1, 1, 1, 1)]
+"update": 1,
+"values": [false]
 }
 tracks/13/type = "value"
 tracks/13/imported = false
 tracks/13/enabled = true
-tracks/13/path = NodePath("Feedback:modulate")
+tracks/13/path = NodePath("CloseButton:modulate")
 tracks/13/interp = 1
 tracks/13/loop_wrap = true
 tracks/13/keys = {
@@ -527,7 +527,7 @@ tracks/13/keys = {
 tracks/14/type = "value"
 tracks/14/imported = false
 tracks/14/enabled = true
-tracks/14/path = NodePath("LogoutButton:modulate")
+tracks/14/path = NodePath("AccountButton:modulate")
 tracks/14/interp = 1
 tracks/14/loop_wrap = true
 tracks/14/keys = {
@@ -539,122 +539,122 @@ tracks/14/keys = {
 tracks/15/type = "value"
 tracks/15/imported = false
 tracks/15/enabled = true
-tracks/15/path = NodePath("SettingsLabel:position")
+tracks/15/path = NodePath("%FriendsButton:modulate")
 tracks/15/interp = 1
 tracks/15/loop_wrap = true
 tracks/15/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(-314, 16)]
+"values": [Color(1, 1, 1, 1)]
 }
 tracks/16/type = "value"
 tracks/16/imported = false
 tracks/16/enabled = true
-tracks/16/path = NodePath("SettingsLabel:modulate")
+tracks/16/path = NodePath("%HistoryButton:modulate")
 tracks/16/interp = 1
 tracks/16/loop_wrap = true
 tracks/16/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Color(1, 1, 1, 0)]
+"values": [Color(1, 1, 1, 1)]
 }
 tracks/17/type = "value"
 tracks/17/imported = false
 tracks/17/enabled = true
-tracks/17/path = NodePath("CloseButton:modulate")
+tracks/17/path = NodePath("Credits:modulate")
 tracks/17/interp = 1
 tracks/17/loop_wrap = true
 tracks/17/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Color(1, 1, 1, 0)]
+"values": [Color(1, 1, 1, 1)]
 }
 tracks/18/type = "value"
 tracks/18/imported = false
 tracks/18/enabled = true
-tracks/18/path = NodePath("%LogoutButton:disabled")
+tracks/18/path = NodePath("Feedback:modulate")
 tracks/18/interp = 1
 tracks/18/loop_wrap = true
 tracks/18/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
 }
 tracks/19/type = "value"
 tracks/19/imported = false
 tracks/19/enabled = true
-tracks/19/path = NodePath("CloseButton:disabled")
+tracks/19/path = NodePath("%LogoutButton:modulate")
 tracks/19/interp = 1
 tracks/19/loop_wrap = true
 tracks/19/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
 }
 tracks/20/type = "value"
 tracks/20/imported = false
 tracks/20/enabled = true
-tracks/20/path = NodePath("AccountButton:disabled")
+tracks/20/path = NodePath("ColorRect3:position")
 tracks/20/interp = 1
 tracks/20/loop_wrap = true
 tracks/20/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
+"update": 0,
+"values": [Vector2(822.59814, 862.9369)]
 }
 tracks/21/type = "value"
 tracks/21/imported = false
 tracks/21/enabled = true
-tracks/21/path = NodePath("%FriendsButton:disabled")
+tracks/21/path = NodePath("ColorRect1:position")
 tracks/21/interp = 1
 tracks/21/loop_wrap = true
 tracks/21/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
+"update": 0,
+"values": [Vector2(699.53375, 876.88196)]
 }
 tracks/22/type = "value"
 tracks/22/imported = false
 tracks/22/enabled = true
-tracks/22/path = NodePath("%HistoryButton:disabled")
+tracks/22/path = NodePath("ColorRect2:position")
 tracks/22/interp = 1
 tracks/22/loop_wrap = true
 tracks/22/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
+"update": 0,
+"values": [Vector2(720.6644, 862.5718)]
 }
 tracks/23/type = "value"
 tracks/23/imported = false
 tracks/23/enabled = true
-tracks/23/path = NodePath("Credits:disabled")
+tracks/23/path = NodePath("SettingsLabel:modulate")
 tracks/23/interp = 1
 tracks/23/loop_wrap = true
 tracks/23/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
 }
 tracks/24/type = "value"
 tracks/24/imported = false
 tracks/24/enabled = true
-tracks/24/path = NodePath("Feedback:disabled")
+tracks/24/path = NodePath("SettingsLabel:position")
 tracks/24/interp = 1
 tracks/24/loop_wrap = true
 tracks/24/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
+"update": 0,
+"values": [Vector2(44, 46)]
 }
 
 [sub_resource type="Animation" id="Animation_m1kxf"]
@@ -662,167 +662,167 @@ resource_name = "slide_in"
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("ColorRect1:position")
+tracks/0/path = NodePath("AccountButton:position")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.8),
-"transitions": PackedFloat32Array(-2, -2),
+"times": PackedFloat32Array(0.26666668, 1),
+"transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(699.53375, 876.88196), Vector2(300.0001, 845.00006)]
+"values": [Vector2(194, 94), Vector2(41, 94)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("ColorRect2:position")
+tracks/1/path = NodePath("%FriendsButton:position")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 1),
-"transitions": PackedFloat32Array(-2, -2),
+"times": PackedFloat32Array(0.36666667, 1),
+"transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(720.6644, 862.5718), Vector2(217.00003, 845.99994)]
+"values": [Vector2(194, 174), Vector2(41, 174)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
 tracks/2/enabled = true
-tracks/2/path = NodePath("ColorRect3:position")
+tracks/2/path = NodePath("%HistoryButton:position")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(0, 1),
-"transitions": PackedFloat32Array(-2, -2),
+"times": PackedFloat32Array(0.46666667, 1),
+"transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(822.59814, 862.9369), Vector2(440.00003, 813)]
+"values": [Vector2(194, 254), Vector2(41, 254)]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
 tracks/3/enabled = true
-tracks/3/path = NodePath("AccountButton:position")
+tracks/3/path = NodePath("Credits:position")
 tracks/3/interp = 1
 tracks/3/loop_wrap = true
 tracks/3/keys = {
 "times": PackedFloat32Array(0.56666666, 1),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(-198, 75), Vector2(-314, 75)]
+"values": [Vector2(194, 334), Vector2(41, 334)]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
 tracks/4/enabled = true
-tracks/4/path = NodePath("FriendsButton:position")
+tracks/4/path = NodePath("Feedback:position")
 tracks/4/interp = 1
 tracks/4/loop_wrap = true
 tracks/4/keys = {
-"times": PackedFloat32Array(0.6, 1),
+"times": PackedFloat32Array(0.6666667, 1),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(-198, 150), Vector2(-314, 150)]
+"values": [Vector2(194, 414), Vector2(41, 414)]
 }
 tracks/5/type = "value"
 tracks/5/imported = false
 tracks/5/enabled = true
-tracks/5/path = NodePath("HistoryButton:position")
+tracks/5/path = NodePath("%LogoutButton:position")
 tracks/5/interp = 1
 tracks/5/loop_wrap = true
 tracks/5/keys = {
-"times": PackedFloat32Array(0.6333333, 1),
+"times": PackedFloat32Array(0.76666665, 1),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(-198, 225), Vector2(-314, 225)]
+"values": [Vector2(194, 494), Vector2(41, 494)]
 }
 tracks/6/type = "value"
 tracks/6/imported = false
 tracks/6/enabled = true
-tracks/6/path = NodePath("Credits:position")
+tracks/6/path = NodePath("CloseButton:disabled")
 tracks/6/interp = 1
 tracks/6/loop_wrap = true
 tracks/6/keys = {
-"times": PackedFloat32Array(0.6666667, 1),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector2(-198, 300), Vector2(-314, 300)]
+"update": 1,
+"values": [true, false]
 }
 tracks/7/type = "value"
 tracks/7/imported = false
 tracks/7/enabled = true
-tracks/7/path = NodePath("Feedback:position")
+tracks/7/path = NodePath("AccountButton:disabled")
 tracks/7/interp = 1
 tracks/7/loop_wrap = true
 tracks/7/keys = {
-"times": PackedFloat32Array(0.7, 1),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector2(-198, 375), Vector2(-314, 375)]
+"update": 1,
+"values": [true, false]
 }
 tracks/8/type = "value"
 tracks/8/imported = false
 tracks/8/enabled = true
-tracks/8/path = NodePath("LogoutButton:position")
+tracks/8/path = NodePath("%FriendsButton:disabled")
 tracks/8/interp = 1
 tracks/8/loop_wrap = true
 tracks/8/keys = {
-"times": PackedFloat32Array(0.73333335, 1),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector2(-198, 450), Vector2(-314, 450)]
+"update": 1,
+"values": [true, false]
 }
 tracks/9/type = "value"
 tracks/9/imported = false
 tracks/9/enabled = true
-tracks/9/path = NodePath("AccountButton:modulate")
+tracks/9/path = NodePath("%HistoryButton:disabled")
 tracks/9/interp = 1
 tracks/9/loop_wrap = true
 tracks/9/keys = {
-"times": PackedFloat32Array(0.56666666, 1),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+"update": 1,
+"values": [true, false]
 }
 tracks/10/type = "value"
 tracks/10/imported = false
 tracks/10/enabled = true
-tracks/10/path = NodePath("FriendsButton:modulate")
+tracks/10/path = NodePath("Credits:disabled")
 tracks/10/interp = 1
 tracks/10/loop_wrap = true
 tracks/10/keys = {
-"times": PackedFloat32Array(0.6, 1),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+"update": 1,
+"values": [true, false]
 }
 tracks/11/type = "value"
 tracks/11/imported = false
 tracks/11/enabled = true
-tracks/11/path = NodePath("HistoryButton:modulate")
+tracks/11/path = NodePath("Feedback:disabled")
 tracks/11/interp = 1
 tracks/11/loop_wrap = true
 tracks/11/keys = {
-"times": PackedFloat32Array(0.6333333, 1),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+"update": 1,
+"values": [true, false]
 }
 tracks/12/type = "value"
 tracks/12/imported = false
 tracks/12/enabled = true
-tracks/12/path = NodePath("Credits:modulate")
+tracks/12/path = NodePath("%LogoutButton:disabled")
 tracks/12/interp = 1
 tracks/12/loop_wrap = true
 tracks/12/keys = {
-"times": PackedFloat32Array(0.6666667, 1),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+"update": 1,
+"values": [true, false]
 }
 tracks/13/type = "value"
 tracks/13/imported = false
 tracks/13/enabled = true
-tracks/13/path = NodePath("Feedback:modulate")
+tracks/13/path = NodePath("CloseButton:modulate")
 tracks/13/interp = 1
 tracks/13/loop_wrap = true
 tracks/13/keys = {
-"times": PackedFloat32Array(0.7, 1),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
 "values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
@@ -830,11 +830,11 @@ tracks/13/keys = {
 tracks/14/type = "value"
 tracks/14/imported = false
 tracks/14/enabled = true
-tracks/14/path = NodePath("LogoutButton:modulate")
+tracks/14/path = NodePath("AccountButton:modulate")
 tracks/14/interp = 1
 tracks/14/loop_wrap = true
 tracks/14/keys = {
-"times": PackedFloat32Array(0.73333335, 1),
+"times": PackedFloat32Array(0.26666668, 1),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
 "values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
@@ -842,23 +842,23 @@ tracks/14/keys = {
 tracks/15/type = "value"
 tracks/15/imported = false
 tracks/15/enabled = true
-tracks/15/path = NodePath("SettingsLabel:position")
+tracks/15/path = NodePath("%FriendsButton:modulate")
 tracks/15/interp = 1
 tracks/15/loop_wrap = true
 tracks/15/keys = {
-"times": PackedFloat32Array(0.0333, 1),
+"times": PackedFloat32Array(0.36666667, 1),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(-220, 16), Vector2(-314, 16)]
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
 }
 tracks/16/type = "value"
 tracks/16/imported = false
 tracks/16/enabled = true
-tracks/16/path = NodePath("SettingsLabel:modulate")
+tracks/16/path = NodePath("%HistoryButton:modulate")
 tracks/16/interp = 1
 tracks/16/loop_wrap = true
 tracks/16/keys = {
-"times": PackedFloat32Array(0, 1),
+"times": PackedFloat32Array(0.46666667, 1),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
 "values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
@@ -866,11 +866,11 @@ tracks/16/keys = {
 tracks/17/type = "value"
 tracks/17/imported = false
 tracks/17/enabled = true
-tracks/17/path = NodePath("CloseButton:modulate")
+tracks/17/path = NodePath("Credits:modulate")
 tracks/17/interp = 1
 tracks/17/loop_wrap = true
 tracks/17/keys = {
-"times": PackedFloat32Array(0, 1),
+"times": PackedFloat32Array(0.56666666, 1),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
 "values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
@@ -878,86 +878,86 @@ tracks/17/keys = {
 tracks/18/type = "value"
 tracks/18/imported = false
 tracks/18/enabled = true
-tracks/18/path = NodePath("%LogoutButton:disabled")
+tracks/18/path = NodePath("Feedback:modulate")
 tracks/18/interp = 1
 tracks/18/loop_wrap = true
 tracks/18/keys = {
-"times": PackedFloat32Array(0, 0.8666667),
+"times": PackedFloat32Array(0.6666667, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [true, false]
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
 }
 tracks/19/type = "value"
 tracks/19/imported = false
 tracks/19/enabled = true
-tracks/19/path = NodePath("CloseButton:disabled")
+tracks/19/path = NodePath("%LogoutButton:modulate")
 tracks/19/interp = 1
 tracks/19/loop_wrap = true
 tracks/19/keys = {
-"times": PackedFloat32Array(0, 0.8666667),
+"times": PackedFloat32Array(0.76666665, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [true, false]
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
 }
 tracks/20/type = "value"
 tracks/20/imported = false
 tracks/20/enabled = true
-tracks/20/path = NodePath("AccountButton:disabled")
+tracks/20/path = NodePath("ColorRect3:position")
 tracks/20/interp = 1
 tracks/20/loop_wrap = true
 tracks/20/keys = {
-"times": PackedFloat32Array(0, 0.9),
-"transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [true, false]
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(-2, -2),
+"update": 0,
+"values": [Vector2(1143, 851), Vector2(764, 851)]
 }
 tracks/21/type = "value"
 tracks/21/imported = false
 tracks/21/enabled = true
-tracks/21/path = NodePath("%FriendsButton:disabled")
+tracks/21/path = NodePath("ColorRect1:position")
 tracks/21/interp = 1
 tracks/21/loop_wrap = true
 tracks/21/keys = {
-"times": PackedFloat32Array(0, 0.8666667),
-"transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [true, false]
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(-2, -2),
+"update": 0,
+"values": [Vector2(1010.9999, 861.00006), Vector2(632.00006, 861.00006)]
 }
 tracks/22/type = "value"
 tracks/22/imported = false
 tracks/22/enabled = true
-tracks/22/path = NodePath("%HistoryButton:disabled")
+tracks/22/path = NodePath("ColorRect2:position")
 tracks/22/interp = 1
 tracks/22/loop_wrap = true
 tracks/22/keys = {
-"times": PackedFloat32Array(0, 0.8666667),
-"transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [true, false]
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(-2, -2),
+"update": 0,
+"values": [Vector2(1046, 849.0001), Vector2(568, 849.00006)]
 }
 tracks/23/type = "value"
 tracks/23/imported = false
 tracks/23/enabled = true
-tracks/23/path = NodePath("Credits:disabled")
+tracks/23/path = NodePath("SettingsLabel:modulate")
 tracks/23/interp = 1
 tracks/23/loop_wrap = true
 tracks/23/keys = {
-"times": PackedFloat32Array(0, 0.9),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [true, false]
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
 }
 tracks/24/type = "value"
 tracks/24/imported = false
 tracks/24/enabled = true
-tracks/24/path = NodePath("Feedback:disabled")
+tracks/24/path = NodePath("SettingsLabel:position")
 tracks/24/interp = 1
 tracks/24/loop_wrap = true
 tracks/24/keys = {
-"times": PackedFloat32Array(0, 0.9),
+"times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
-"update": 1,
-"values": [true, false]
+"update": 0,
+"values": [Vector2(202, 46), Vector2(44, 46)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_x2yvf"]
@@ -967,6 +967,7 @@ _data = {
 }
 
 [node name="MainMenu" type="Control" unique_id=126697270]
+clip_contents = true
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -1065,7 +1066,7 @@ custom_minimum_size = Vector2(200, 50)
 layout_mode = 0
 offset_left = 928.0
 offset_top = 465.0
-offset_right = 1128.0004
+offset_right = 1128.0002
 offset_bottom = 515.0
 text = "Leaderboard"
 
@@ -1077,7 +1078,7 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -217.0
-offset_right = -16.999634
+offset_right = -16.999756
 offset_bottom = 50.0
 grow_horizontal = 0
 text = "Settings"
@@ -1223,9 +1224,26 @@ anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -312.0
 grow_horizontal = 0
 grow_vertical = 2
 mouse_filter = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Settings" unique_id=767923969]
+libraries/ = SubResource("AnimationLibrary_x2yvf")
+
+[node name="SettingsLabel" type="Label" parent="Settings" unique_id=363387504]
+z_index = 2
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -268.0
+offset_top = 46.0
+offset_right = -117.0
+offset_bottom = 69.0
+grow_horizontal = 0
+text = "Settings"
 
 [node name="ColorRect1" type="ColorRect" parent="Settings" unique_id=834966925]
 layout_mode = 1
@@ -1233,10 +1251,10 @@ anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 699.53375
+offset_left = 387.53375
 offset_top = 876.88196
-offset_right = 1424.6494
-offset_bottom = 1233.8398
+offset_right = 1112.6501
+offset_bottom = 1233.8394
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
@@ -1249,10 +1267,10 @@ anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 720.6644
+offset_left = 408.66443
 offset_top = 862.5718
-offset_right = 1337.5874
-offset_bottom = 1219.5281
+offset_right = 1025.5972
+offset_bottom = 1219.5255
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
@@ -1264,60 +1282,45 @@ anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 822.59814
+offset_left = 510.59814
 offset_top = 862.9369
-offset_right = 1372.7102
-offset_bottom = 1219.8893
+offset_right = 1060.7156
+offset_bottom = 1219.8905
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
 mouse_filter = 2
 color = Color(0.23, 0.23, 0.23, 1)
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="Settings" unique_id=767923969]
-libraries/ = SubResource("AnimationLibrary_x2yvf")
-
-[node name="SettingsLabel" type="Label" parent="Settings" unique_id=363387504]
-modulate = Color(1, 1, 1, 0)
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 0.5
-offset_left = -314.0
-offset_top = 16.0
-offset_right = -196.0
-offset_bottom = 39.0
-grow_horizontal = 2
-text = "Settings"
-
 [node name="CloseButton" type="Button" parent="Settings" unique_id=176239284]
-modulate = Color(1, 1, 1, 0)
-layout_mode = 0
-offset_left = -71.0
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -59.0
 offset_top = 10.0
-offset_right = -53.0
-offset_bottom = 41.0
-disabled = true
+offset_right = -23.0
+offset_bottom = 46.0
+grow_horizontal = 0
 text = "X"
 
 [node name="AccountButton" type="Button" parent="Settings" unique_id=2040134603]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 0
-offset_left = -314.0
-offset_top = 75.0
-offset_right = -57.0
-offset_bottom = 135.0
-disabled = true
+offset_left = 41.0
+offset_top = 94.0
+offset_right = 271.00293
+offset_bottom = 154.0
 text = "Account"
 
 [node name="FriendsButton" type="Button" parent="Settings" unique_id=987842182]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 0
-offset_left = -314.0
-offset_top = 150.0
-offset_right = -56.999756
-offset_bottom = 210.0
-disabled = true
+offset_left = 41.0
+offset_top = 174.0
+offset_right = 271.0032
+offset_bottom = 234.0
 text = "Friends"
 
 [node name="Label" type="Label" parent="Settings/FriendsButton" unique_id=557679567]
@@ -1340,43 +1343,39 @@ vertical_alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 0
-offset_left = -314.0
-offset_top = 225.0
-offset_right = -56.999878
-offset_bottom = 285.0
-disabled = true
+offset_left = 41.0
+offset_top = 254.0
+offset_right = 271.0003
+offset_bottom = 314.0
 text = "History"
 
 [node name="Credits" type="Button" parent="Settings" unique_id=890477433]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 0
-offset_left = -314.0
-offset_top = 300.0
-offset_right = -57.0
-offset_bottom = 360.0
-disabled = true
+offset_left = 41.0
+offset_top = 334.0
+offset_right = 271.0027
+offset_bottom = 394.0
 text = "Credits
 "
 
 [node name="Feedback" type="Button" parent="Settings" unique_id=1245631093]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 0
-offset_left = -314.0
-offset_top = 375.0
-offset_right = -57.0
-offset_bottom = 435.0
-disabled = true
+offset_left = 41.0
+offset_top = 414.0
+offset_right = 271.00168
+offset_bottom = 474.0
 text = "Feedback"
 
 [node name="LogoutButton" type="Button" parent="Settings" unique_id=727218776]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 0
-offset_left = -314.0
-offset_top = 450.0
-offset_right = -57.0
-offset_bottom = 510.0
-disabled = true
+offset_left = 41.0
+offset_top = 494.0
+offset_right = 271.0022
+offset_bottom = 554.0
 text = "Logout"
 
 [node name="ChatBox" parent="." unique_id=975926982 instance=ExtResource("2_chat_box")]

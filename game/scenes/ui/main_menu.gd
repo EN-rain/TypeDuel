@@ -182,9 +182,7 @@ func _on_solo_play_pressed():
 	GameManager.is_solo = true
 	GameManager.is_matchmaking = false
 	GameManager.current_room = ""
-	$AnimationPlayer.play("outro")
-	await $AnimationPlayer.animation_finished
-	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
+	await _transition_with_outro(SCENE_CUSTOM_ROOM)
 
 func _on_custom_room_pressed():
 	print("Custom Room pressed")
@@ -192,9 +190,7 @@ func _on_custom_room_pressed():
 	GameManager.is_solo = false
 	GameManager.is_matchmaking = false
 	GameManager.current_room = ""
-	$AnimationPlayer.play("outro")
-	await $AnimationPlayer.animation_finished
-	get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
+	await _transition_with_outro(SCENE_CUSTOM_ROOM)
 
 func _on_join_pressed():
 	join_panel.visible = true
@@ -236,10 +232,7 @@ func _on_join_done(_result, req_code, _headers, body, http):
 		GameManager.is_host = false
 		GameManager.is_solo = false
 		GameManager.is_matchmaking = false
-		# Play outro only after successful join
-		$AnimationPlayer.play("outro")
-		await $AnimationPlayer.animation_finished
-		get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
+		await _transition_with_outro(SCENE_CUSTOM_ROOM)
 	else:
 		if json and json.has("message"):
 			join_error.text = json["message"]
@@ -301,7 +294,7 @@ func _on_matchmake_done(_result, code, _headers, body, http):
 			GameManager.is_host = false
 			GameManager.is_solo = false
 			GameManager.is_matchmaking = true
-			get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
+			await _transition_with_outro(SCENE_CUSTOM_ROOM)
 		else:
 			# Waiting for guest
 			matchmaking_code = json.code
@@ -331,10 +324,16 @@ func _on_poll_match_done(_result, code, _headers, body, http):
 			GameManager.is_host = true
 			GameManager.is_solo = false
 			GameManager.is_matchmaking = true
-			get_tree().change_scene_to_file(SCENE_CUSTOM_ROOM)
+			await _transition_with_outro(SCENE_CUSTOM_ROOM)
 
 func _on_leaderboard_pressed():
-	get_tree().change_scene_to_file(SCENE_LEADERBOARD)
+	await _transition_with_outro(SCENE_LEADERBOARD)
+
+func _transition_with_outro(scene_path: String) -> void:
+	if intro_anim_player != null and intro_anim_player.has_animation(&"outro"):
+		intro_anim_player.play(&"outro")
+		await intro_anim_player.animation_finished
+	get_tree().change_scene_to_file(scene_path)
 
 var is_settings_open := false
 
@@ -777,3 +776,5 @@ func _on_remove_friend(friend_id: int):
 func _on_close_button_pressed() -> void:
 	is_settings_open = false
 	$Settings/AnimationPlayer.play_backwards("slide_in")
+	await $Settings/AnimationPlayer.animation_finished
+	$Settings.hide()

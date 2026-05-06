@@ -107,7 +107,10 @@ func _deferred_init() -> void:
 	if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
 		$HUD/OwnSkillSelect/HBoxContainer/Skill2.pressed.connect(_on_skill_pressed.bind(2))
 	typing.load_sentences()
-	start_skill_phase()
+	# Delay the first skill phase announcement to let both clients load the scene
+	if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
+		await get_tree().create_timer(0.5).timeout
+	start_skill_phase(true if (not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host) else false)
 	_initialized = true
 
 func _role_tag() -> String:
@@ -524,14 +527,20 @@ func _resolve_and_advance(finish_mode: String) -> void:
 		chosen_skill_id = ""
 	var result = combat.resolve(finish_mode, chosen_skill_id, net.opp_progress, _server_first_finish_at_ms, current_round)
 	_update_bars()  # Reflect HP/mana changes from resolution immediately
-	anim.play_combat_anims(
+	
+	# Wait for combat animations to complete (including HUD animation backwards)
+	await anim.play_combat_anims(
 		chosen_skill_id,
 		net.opp_chosen_skill,
 		finish_mode
 	)
+	
 	if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
 		net.sync_hp()
-	await get_tree().create_timer(2.0).timeout
+	
+	# Small delay before showing skill select UI
+	await get_tree().create_timer(0.3).timeout
+	
 	if GameManager.is_solo:
 		start_skill_phase()
 	elif GameManager.is_host:
@@ -551,18 +560,33 @@ func _on_skill_pressed(skill_index: int) -> void:
 			chosen_skill_id    = skill
 			print("[Skill] Selected: %s (cost %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0)])
 			skill_select.hide()
-			if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host and _server_phase == "skill_select" and not _host_typing_phase_requested:
-				if _should_host_fast_forward():
-					_host_typing_phase_requested = true
-					net.set_phase("typing", max(1, _server_round_id))
+			# Sync skill choice immediately so opponent knows we picked
+			if not GameManager.is_solo and GameManager.current_room != "":
+				net.sync_progress_immediate(0, 1, 0, chosen_skill_id)
 		else:
 			print("[Skill] Not enough Mana for %s" % skill)
 
 func _should_host_fast_forward() -> bool:
-	if chosen_skill_id == "" and _can_pick_any_skill(): return false
+	# Only fast-forward if BOTH players have made their final choice (picked or can't pick)
+	var i_am_done = chosen_skill_id != "" or not _can_pick_any_skill()
+	if not i_am_done: return false
+	
+	# Check if opponent has synced their choice via progress updates
+	# Note: opp_chosen_skill is populated from room polls during skill_select phase
+	var opp_picked = net.opp_chosen_skill != ""
+	
+	# Also check if opponent CAN pick but hasn't yet
+	var opp_can_pick = false
 	for s_id in _opp_skills:
-		if SkillsManager.can_pick_skill(s_id, true): return false
-	return true
+		if SkillsManager.can_pick_skill(s_id, true):
+			opp_can_pick = true
+			break
+	
+	# Opponent is done if they picked OR they can't pick any skill
+	var opp_done = opp_picked or not opp_can_pick
+	
+	# Only fast-forward if opponent is also done
+	return opp_done
 
 # 
 # Pause menu

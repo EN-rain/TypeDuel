@@ -21,6 +21,7 @@ const SKILLS = [
 @onready var char_container   = $Characters/VBoxContainer
 @onready var skill_container  = $Skill/VBoxContainer
 @onready var countdown_timer_label = null  # Created dynamically if needed
+@onready var scene_anim_player = $AnimationPlayer
 
 @onready var _manual_passive_buttons = [
 	$Passive/HBoxContainer/VBoxContainer1/Passive1,
@@ -60,6 +61,11 @@ var _skill_buttons: Array     = []
 var _passive_buttons: Array   = []
 
 func _ready():
+	if scene_anim_player != null and scene_anim_player.has_animation(&"intro"):
+		scene_anim_player.stop()
+		scene_anim_player.seek(0.0, true)
+		scene_anim_player.play(&"intro")
+
 	my_user_id = GameManager.user_data.id
 	my_name    = GameManager.user_data.display_name
 	if my_name == "":
@@ -351,6 +357,10 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 
 	# 2. Check for game start
 	if json.get("status") == "started":
+		# Guard: only process game start once
+		if _launching:
+			return
+			
 		# Ensure opponent data is set before launching
 		if _opp_character == "":
 			if GameManager.is_host:
@@ -380,7 +390,7 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 			GameManager.match_start_time
 		])
 		
-		if is_inside_tree() and not _launching:
+		if is_inside_tree():
 			_launch_game_with_countdown()
 		return
 
@@ -518,7 +528,11 @@ func _on_back_pressed():
 		_delete_room()
 	else:
 		_leave_room()
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	if scene_anim_player != null and scene_anim_player.has_animation(&"intro"):
+		scene_anim_player.play_backwards(&"intro")
+		await scene_anim_player.animation_finished
+	if is_inside_tree():
+		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
 func _on_room_code_input(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -575,6 +589,11 @@ var _countdown_overlay: Control = null
 func _launch_game_with_countdown() -> void:
 	if _launching: return
 	_launching = true
+	
+	# Play outro animation (slides chat box up)
+	if scene_anim_player != null and scene_anim_player.has_animation(&"outro"):
+		scene_anim_player.play(&"outro")
+		await scene_anim_player.animation_finished
 	
 	# Create countdown overlay
 	_countdown_overlay = Control.new()
