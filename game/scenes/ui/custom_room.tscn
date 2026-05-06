@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://bwdxqk530p716"]
+[gd_scene format=3 uid="uid://bwdxqk530p716"]
 
 [ext_resource type="Script" uid="uid://cdsv6vd7esyby" path="res://scenes/ui/custom_room.gd" id="1_custom_room_script"]
 [ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
@@ -252,15 +252,13 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-modulate = Color(1, 1, 1, 0)
 script = ExtResource("1_custom_room_script")
 metadata/_edit_lock_ = true
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1167147991]
 libraries/ = SubResource("AnimationLibrary_custom_room")
 
 [node name="BackButton" type="Button" parent="." unique_id=1300449507]
-modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(100, 40)
 layout_mode = 0
 offset_left = 20.0
@@ -270,7 +268,6 @@ offset_bottom = 60.0
 text = "Back"
 
 [node name="StatusLabel" type="Label" parent="." unique_id=1720687791]
-modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -288,7 +285,6 @@ text = "Waiting for opponent..."
 horizontal_alignment = 1
 
 [node name="Player1Name" type="Label" parent="." unique_id=973437162]
-modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 0
 offset_left = 327.0
@@ -300,7 +296,6 @@ text = "You"
 horizontal_alignment = 1
 
 [node name="Player1Tag" type="Label" parent="." unique_id=363448244]
-modulate = Color(1, 1, 1, 0)
 layout_mode = 0
 offset_left = 326.0
 offset_top = 295.0
@@ -311,7 +306,6 @@ text = "Host"
 horizontal_alignment = 1
 
 [node name="Player2Name" type="Label" parent="." unique_id=1574955879]
-modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 0
 offset_left = 646.0
@@ -323,7 +317,6 @@ text = "---"
 horizontal_alignment = 1
 
 [node name="Player2Tag" type="Label" parent="." unique_id=594675752]
-modulate = Color(1, 1, 1, 0)
 layout_mode = 0
 offset_left = 647.0
 offset_top = 272.0
@@ -334,7 +327,6 @@ text = "Waiting..."
 horizontal_alignment = 1
 
 [node name="StartButton" type="Button" parent="." unique_id=1078626780]
-modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(200, 55)
 layout_mode = 1
 anchors_preset = 8
@@ -352,7 +344,6 @@ disabled = true
 text = "Start Game"
 
 [node name="VSLabel" type="Label" parent="." unique_id=1982737506]
-modulate = Color(1, 1, 1, 0)
 layout_mode = 0
 offset_left = 543.0
 offset_top = 345.0
@@ -363,7 +354,6 @@ text = "VS"
 vertical_alignment = 1
 
 [node name="RoomCodeLabel" type="Label" parent="." unique_id=650404980]
-modulate = Color(1, 1, 1, 0)
 layout_mode = 0
 offset_left = 426.0
 offset_top = 30.0
@@ -374,7 +364,6 @@ text = "YOUR ROOM CODE"
 horizontal_alignment = 1
 
 [node name="RoomCode" type="Label" parent="." unique_id=381480670]
-modulate = Color(1, 1, 1, 0)
 layout_mode = 0
 offset_left = 426.0
 offset_top = 52.0
@@ -389,10 +378,9 @@ layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -24.0
-offset_right = -160.0
-offset_bottom = 16.0
+offset_left = 23.0
+offset_right = 63.0
+offset_bottom = 40.0
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Characters" unique_id=20086058]
@@ -428,10 +416,10 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = 200.0
-offset_top = -20.0
-offset_right = 240.0
-offset_bottom = 20.0
+offset_left = -59.0
+offset_top = 4.0
+offset_right = -19.0
+offset_bottom = 44.0
 grow_horizontal = 0
 grow_vertical = 2
 
@@ -467,9 +455,9 @@ text = "Skill Name 3
 
 [node name="ChatBox" parent="." unique_id=1946247923 instance=ExtResource("2_chat_box")]
 layout_mode = 1
-offset_left = -300.0
+offset_left = 10.0
 offset_top = -50.0
-offset_right = 0.0
+offset_right = 310.0
 offset_bottom = -10.0
 
 [node name="Passive" type="Control" parent="." unique_id=1756940328]
@@ -480,8 +468,9 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
+offset_left = -307.0
 offset_top = -198.0
+offset_right = -307.0
 grow_horizontal = 0
 grow_vertical = 0
 

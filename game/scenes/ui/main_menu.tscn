@@ -2,18 +2,15 @@
 
 [ext_resource type="Script" uid="uid://cy5gpbn70ymb4" path="res://scenes/ui/main_menu.gd" id="1_menu_script"]
 [ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
-[ext_resource type="Texture2D" uid="uid://c1qfj3rwamvrn" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_m1kxf"]
+[ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_m1kxf"]
 [ext_resource type="PackedScene" uid="uid://bkqnn57tfo72j" path="res://scenes/ui/friends_panel.tscn" id="3_friends_panel"]
 [ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="3_x2yvf"]
 [ext_resource type="FontFile" uid="uid://bicshrxinrma8" path="res://assets/fonts/pixel_operator/PixelOperator-Bold.ttf" id="4_btxxm"]
-[ext_resource type="Texture2D" uid="uid://db5usllk3ufj3" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderA-Sheet.png" id="4_uhagc"]
-[ext_resource type="Texture2D" uid="uid://d3jct2xqj1e5l" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="4_wb0q5"]
+[ext_resource type="Texture2D" uid="uid://cfjp1slue2lno" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderA-Sheet.png" id="4_uhagc"]
+[ext_resource type="Texture2D" uid="uid://bqqanitehsl4m" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="4_wb0q5"]
 [ext_resource type="Texture2D" uid="uid://bc1v12vylyj80" path="res://assets/GUI/Fantasy-UI.png" id="5_q85j6"]
-[ext_resource type="Texture2D" uid="uid://mo71ggouyokq" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabA-Sheet.png" id="6_8g5eo"]
-[ext_resource type="Texture2D" uid="uid://c35t6o4pxl0v2" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250425closeButton-Sheet.png" id="11_7suek"]
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_m1kxf"]
-texture = ExtResource("2_m1kxf")
+[ext_resource type="Texture2D" uid="uid://dt4lthgpb54f" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabA-Sheet.png" id="6_8g5eo"]
+[ext_resource type="Texture2D" uid="uid://boglv4kufcbdp" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250425closeButton-Sheet.png" id="11_7suek"]
 
 [sub_resource type="Animation" id="Animation_intro"]
 resource_name = "intro"
@@ -889,14 +886,14 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu_script")
 
-[node name="Panel" type="Panel" parent="." unique_id=681612523]
+[node name="Bg" type="TextureRect" parent="." unique_id=1526408034]
 layout_mode = 1
-anchors_preset = -1
-anchor_right = 0.99700004
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 3.4559326
-offset_bottom = 6.0
-theme_override_styles/panel = SubResource("StyleBoxTexture_m1kxf")
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_m1kxf")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=2000000010]
 libraries/ = SubResource("AnimationLibrary_intro")
@@ -956,7 +953,7 @@ grow_horizontal = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 16
-text = "● 0 players online"
+text = "0 players online"
 horizontal_alignment = 1
 
 [node name="PlayOnlineButton" type="Button" parent="." unique_id=1504719380]
@@ -968,9 +965,9 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -254.72223
+offset_left = -289.72223
 offset_top = -124.0
-offset_right = 20.277954
+offset_right = -14.722046
 offset_bottom = -13.0
 grow_horizontal = 0
 grow_vertical = 0
@@ -987,10 +984,10 @@ text = "Play Online"
 [node name="JoinButton" type="Button" parent="." unique_id=893456260]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 711.9605
-offset_top = 534.0
-offset_right = 889.9607
-offset_bottom = 571.0
+offset_left = 673.0
+offset_top = 533.0
+offset_right = 851.0002
+offset_bottom = 570.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
@@ -1005,10 +1002,10 @@ text = "Join Button
 [node name="CreateRoomButton" type="Button" parent="." unique_id=895909165]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 711.9605
-offset_top = 580.0
-offset_right = 886.9614
-offset_bottom = 620.0
+offset_left = 670.9605
+offset_top = 587.0
+offset_right = 845.9614
+offset_bottom = 627.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
@@ -1022,11 +1019,18 @@ text = "Create Room"
 [node name="LeaderboardButton" type="Button" parent="." unique_id=1083918896]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
-layout_mode = 0
-offset_left = 920.3491
-offset_top = 465.0
-offset_right = 1158.3496
-offset_bottom = 515.0
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -267.0
+offset_top = -187.0
+offset_right = -28.999512
+offset_bottom = -137.0
+grow_horizontal = 0
+grow_vertical = 0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
@@ -1044,8 +1048,7 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -187.72223
-offset_right = 12.277954
+offset_left = -200.00018
 offset_bottom = 50.0
 grow_horizontal = 0
 theme_override_colors/font_color = Color(1, 1, 1, 1)

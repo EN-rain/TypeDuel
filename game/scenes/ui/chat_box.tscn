@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bycn2sw6cvv86" path="res://scenes/ui/chat_box.gd" id="1_script"]
 [ext_resource type="FontFile" uid="uid://bicshrxinrma8" path="res://assets/fonts/pixel_operator/PixelOperator-Bold.ttf" id="2_ttgj5"]
-[ext_resource type="Texture2D" uid="uid://rfvv3o4lhaev" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="3_8duet"]
-[ext_resource type="Texture2D" uid="uid://b6bhgbs50ye82" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabC-Sheet.png" id="4_8duet"]
+[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="3_8duet"]
+[ext_resource type="Texture2D" uid="uid://d2pef68okqu8n" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabC-Sheet.png" id="4_8duet"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ekf4m"]
 texture = ExtResource("3_8duet")
