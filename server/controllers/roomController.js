@@ -4,12 +4,70 @@ const rooms = {};
 
 const ROOM_TTL_MS = 10 * 60 * 1000; // rooms expire after 10 minutes
 
+// Realtime presence / disconnect handling
+// Two-stage detection: mark a player as "suspected offline" first, then forfeit only if it persists.
+// This reduces false-forfeits from transient stalls/background throttling.
+const ROOM_PRESENCE_SUSPECT_MS = 15000;
+const ROOM_PRESENCE_FORFEIT_MS = 35000;
+const ROOM_FORFEIT_DELETE_GRACE_MS = 30000; // keep forfeited rooms briefly so clients can read the result
+
 function _normalizeCode(code) {
     return String(code || '').toUpperCase();
 }
 
 function _actorId(req) {
     return req.user && req.user.id;
+}
+
+function _touchRoomPresence(room, actorId) {
+    const now = Date.now();
+    room.last_activity_at = now;
+    if (room.host_id == actorId) {
+        room.host_last_seen_at = now;
+        if (room.disconnect) room.disconnect.host_suspect_at = 0;
+    } else if (room.guest_id == actorId) {
+        room.guest_last_seen_at = now;
+        if (room.disconnect) room.disconnect.guest_suspect_at = 0;
+    }
+}
+
+function _maybeAutoForfeitRoom(room) {
+    if (!room || room.status !== 'started') return;
+    if (room.forfeit) return;
+    if (!room.host_id || !room.guest_id) return;
+
+    const now = Date.now();
+    const hostSeen = room.host_last_seen_at || room.last_activity_at || room.created_at || 0;
+    const guestSeen = room.guest_last_seen_at || room.last_activity_at || room.created_at || 0;
+
+    const hostSuspect = (now - hostSeen) > ROOM_PRESENCE_SUSPECT_MS;
+    const guestSuspect = (now - guestSeen) > ROOM_PRESENCE_SUSPECT_MS;
+    if (!hostSuspect && !guestSuspect) return;
+
+    if (!room.disconnect) {
+        room.disconnect = { host_suspect_at: 0, guest_suspect_at: 0 };
+    }
+    if (hostSuspect && !room.disconnect.host_suspect_at) room.disconnect.host_suspect_at = now;
+    if (guestSuspect && !room.disconnect.guest_suspect_at) room.disconnect.guest_suspect_at = now;
+
+    const hostForfeit = hostSuspect && (now - hostSeen) > ROOM_PRESENCE_FORFEIT_MS;
+    const guestForfeit = guestSuspect && (now - guestSeen) > ROOM_PRESENCE_FORFEIT_MS;
+    if (!hostForfeit && !guestForfeit) return;
+
+    let by = null;
+    if (hostForfeit && !guestForfeit) by = 'host';
+    else if (guestForfeit && !hostForfeit) by = 'guest';
+
+    let winner = null;
+    let loser = null;
+    if (by === 'host') { winner = 'guest'; loser = 'host'; }
+    else if (by === 'guest') { winner = 'host'; loser = 'guest'; }
+
+    room.forfeit = { at: now, by, winner, loser, reason: 'disconnect_timeout' };
+    room.status = 'finished';
+    room.phase = 'finished';
+    room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = now;
 }
 
 function _assertBodyUserMatchesActor(req, res) {
@@ -40,8 +98,10 @@ setInterval(() => {
     const now = Date.now();
     for (const code in rooms) {
         const room = rooms[code];
+        _maybeAutoForfeitRoom(room);
         const lastActivity = room.last_activity_at || room.created_at;
-        if (now - lastActivity > ROOM_IDLE_TTL_MS) {
+        const ttl = room.forfeit ? ROOM_FORFEIT_DELETE_GRACE_MS : ROOM_IDLE_TTL_MS;
+        if (now - lastActivity > ttl) {
             delete rooms[code];
         }
     }
@@ -92,6 +152,10 @@ const createRoom = (req, res) => {
         round_id:          0,
         host_hp:           0,
         guest_hp:          0,
+        host_last_seen_at: Date.now(),
+        guest_last_seen_at: 0,
+        forfeit:        null,
+        disconnect:     null,
         created_at:     Date.now(),
         last_activity_at: Date.now()
     };
@@ -123,7 +187,7 @@ const joinRoom = (req, res) => {
     room.guest_skills  = [];
     room.guest_passive = "";
     room.seq = (room.seq || 0) + 1;
-    room.last_activity_at = Date.now();
+    _touchRoomPresence(room, actorId);
     return res.json({ ok: true, room });
 };
 
@@ -141,6 +205,8 @@ const getRoomStatus = (req, res) => {
     if (room.host_id != actorId && room.guest_id != actorId) {
         return res.status(403).json({ message: 'Not in this room' });
     }
+    _maybeAutoForfeitRoom(room);
+    _touchRoomPresence(room, actorId);
     return res.json(roomSnapshot(room));
 };
 
@@ -153,12 +219,20 @@ const closeRoom = (req, res) => {
     if (room.host_id != actorId) {
         return res.status(403).json({ message: 'Only host may close the room' });
     }
+    if (room.status === 'started') {
+        room.forfeit = { at: Date.now(), by: 'host', winner: 'guest', loser: 'host', reason: 'leave' };
+        room.status = 'finished';
+        room.phase = 'finished';
+        room.seq = (room.seq || 0) + 1;
+        room.last_activity_at = Date.now();
+        return res.json({ ok: true, room: roomSnapshot(room) });
+    }
     delete rooms[code];
     return res.json({ ok: true });
 };
 
 // POST /api/rooms/:code/leave  (guest leaves the room)
-// Guest leaving during a started game counts as a forfeit: the room is deleted so the opponent sees 404.
+// Guest leaving during a started game counts as a forfeit.
 const leaveRoom = (req, res) => {
     const code = _normalizeCode(req.params.code);
     const room = rooms[code];
@@ -166,6 +240,14 @@ const leaveRoom = (req, res) => {
     const actorId = _actorId(req);
 
     if (room.host_id == actorId) {
+        if (room.status === 'started') {
+            room.forfeit = { at: Date.now(), by: 'host', winner: 'guest', loser: 'host', reason: 'leave' };
+            room.status = 'finished';
+            room.phase = 'finished';
+            room.seq = (room.seq || 0) + 1;
+            room.last_activity_at = Date.now();
+            return res.json({ ok: true, room: roomSnapshot(room) });
+        }
         delete rooms[code];
         return res.json({ ok: true });
     }
@@ -175,8 +257,12 @@ const leaveRoom = (req, res) => {
     }
 
     if (room.status === 'started') {
-        delete rooms[code];
-        return res.json({ ok: true });
+        room.forfeit = { at: Date.now(), by: 'guest', winner: 'host', loser: 'guest', reason: 'leave' };
+        room.status = 'finished';
+        room.phase = 'finished';
+        room.seq = (room.seq || 0) + 1;
+        room.last_activity_at = Date.now();
+        return res.json({ ok: true, room: roomSnapshot(room) });
     }
 
     room.guest_id = null;
@@ -189,7 +275,7 @@ const leaveRoom = (req, res) => {
     room.guest_mutations = [];
     room.guest_skill = "";
     room.seq = (room.seq || 0) + 1;
-    room.last_activity_at = Date.now();
+    _touchRoomPresence(room, actorId);
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
@@ -213,7 +299,7 @@ const matchmake = async (req, res) => {
             rooms[code].guest_skills   = [];
             rooms[code].guest_passive  = "";
             rooms[code].seq = (rooms[code].seq || 0) + 1;
-            rooms[code].last_activity_at = Date.now();
+            _touchRoomPresence(rooms[code], actorId);
             return res.json({ ok: true, role: 'guest', room: rooms[code] });
         }
     }
@@ -251,6 +337,10 @@ const matchmake = async (req, res) => {
         round_id:          0,
         host_hp:          0,
         guest_hp:         0,
+        host_last_seen_at: Date.now(),
+        guest_last_seen_at: 0,
+        forfeit:          null,
+        disconnect:       null,
         created_at:      Date.now(),
         last_activity_at: Date.now()
     };
@@ -306,7 +396,7 @@ const updateSelections = (req, res) => {
         return res.status(403).json({ message: 'Not in this room' });
     }
     room.seq = (room.seq || 0) + 1;
-    room.last_activity_at = Date.now(); // Fix #14: refresh idle timer
+    _touchRoomPresence(room, actorId); // Fix #14 + presence: refresh idle timer / last seen
     return res.json({ ok: true });
 };
 
@@ -325,8 +415,24 @@ const startRoomGame = (req, res) => {
     if (room.status === 'started') {
         return res.status(409).json({ message: 'Room already started' });
     }
+
+    // Server-side readiness validation (don’t rely only on client UI).
+    const hostReady =
+        !!room.host_character &&
+        Array.isArray(room.host_skills) && room.host_skills.length >= 2 &&
+        typeof room.host_passive === 'string' && room.host_passive !== '';
+    const guestReady =
+        !!room.guest_character &&
+        Array.isArray(room.guest_skills) && room.guest_skills.length >= 2 &&
+        typeof room.guest_passive === 'string' && room.guest_passive !== '';
+    if (!hostReady || !guestReady) {
+        return res.status(409).json({ message: 'Both players must pick character, 2 skills, and a passive before starting' });
+    }
+
     room.status = 'started';
     room.started_at = Date.now();
+    room.forfeit = null;
+    room.disconnect = { host_suspect_at: 0, guest_suspect_at: 0 };
 
     // Initialize authoritative phase/timers for round 1
     room.round_id = 1;
@@ -345,7 +451,7 @@ const startRoomGame = (req, res) => {
     room.host_hp = room.host_hp || 0;
     room.guest_hp = room.guest_hp || 0;
     room.seq = (room.seq || 0) + 1;
-    room.last_activity_at = Date.now();
+    _touchRoomPresence(room, actorId);
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
@@ -395,7 +501,7 @@ const updatePhase = (req, res) => {
     }
 
     room.seq = (room.seq || 0) + 1;
-    room.last_activity_at = Date.now(); // Fix #14: refresh idle timer
+    _touchRoomPresence(room, actorId); // Fix #14 + presence: refresh idle timer / last seen
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
@@ -441,7 +547,7 @@ const updateProgress = (req, res) => {
         console.log(`[rooms] ${code} progress host=${room.host_progress} guest=${room.guest_progress} first_finish_at=${room.first_finish_at} by=${room.first_finish_by}`);
     }
     room.seq = (room.seq || 0) + 1;
-    room.last_activity_at = Date.now(); // Fix #14: refresh idle timer
+    _touchRoomPresence(room, actorId); // + presence: refresh idle timer / last seen
     return res.json({ ok: true });
 };
 
@@ -467,7 +573,7 @@ const updateHP = (req, res) => {
     room.host_hp = hostHpNum;
     room.guest_hp = guestHpNum;
     room.seq = (room.seq || 0) + 1;
-    room.last_activity_at = Date.now(); // Fix #14: refresh idle timer
+    _touchRoomPresence(room, actorId); //presence: refresh idle timer / last seen
     if (process.env.LOG_ROOMS === 'true') {
         console.log(`[rooms] ${code} hp host=${room.host_hp} guest=${room.guest_hp}`);
     }

@@ -64,18 +64,32 @@ func _ready():
 	_create_connection_overlay()
 	_start_connection_watchdog()
 
+func set_connection_online(online: bool) -> void:
+	if online == is_online:
+		return
+	is_online = online
+	connection_status_changed.emit(is_online)
+	_toggle_connection_overlay(!is_online)
+
 func _start_connection_watchdog():
+	# Only run the watchdog when NOT in an active game — during gameplay the
+	# NetworkSync polls already confirm connectivity every 0.5s. Running a
+	# separate health-check on top creates a competing HTTP load that can make
+	# a stable connection appear to drop (server busy → health timeout → overlay).
 	while true:
-		await get_tree().create_timer(3.0).timeout
+		await get_tree().create_timer(8.0).timeout  # check every 8s, not 3s
+		# Skip the health check if the game scene is active — polls handle it
+		if get_tree().current_scene and get_tree().current_scene.name == "Game":
+			continue
 		_check_connection()
 
 func _check_connection():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_connection_check_completed.bind(http))
-	
-	# Set a short timeout for the connection check
-	http.timeout = 2.0
+	# 5s timeout — generous enough to survive a slow server response without
+	# false-positives, tight enough to detect a real outage quickly.
+	http.timeout = 5.0
 	var err = http.request(SERVER_URL + "/api/health")
 	if err != OK:
 		_on_connection_check_completed(HTTPRequest.RESULT_CANT_CONNECT, 0, [], PackedByteArray(), http)
@@ -85,10 +99,7 @@ func _on_connection_check_completed(result, response_code, _headers, _body, http
 		http_node.queue_free()
 		
 	var currently_online = (result == HTTPRequest.RESULT_SUCCESS and response_code == 200)
-	if currently_online != is_online:
-		is_online = currently_online
-		connection_status_changed.emit(is_online)
-		_toggle_connection_overlay(!is_online)
+	set_connection_online(currently_online)
 
 func _create_connection_overlay():
 	_connection_error_overlay = CanvasLayer.new()

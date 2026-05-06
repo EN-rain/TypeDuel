@@ -192,6 +192,36 @@ func show_opponent_forfeited_overlay(hud: Node) -> void:
 			timer = get_tree().create_timer(1.0)
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
+func show_match_ended_overlay(hud: Node, reason: String) -> void:
+	var overlay = Panel.new()
+	overlay.set_anchors_preset(Control.PRESET_CENTER)
+	overlay.custom_minimum_size = Vector2(420, 220)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	hud.add_child(overlay)
+
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 24; vbox.offset_top = 24
+	vbox.offset_right = -24; vbox.offset_bottom = -24
+	vbox.add_theme_constant_override("separation", 14)
+	overlay.add_child(vbox)
+
+	var msg = Label.new()
+	msg.text = "Match ended."
+	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	msg.add_theme_font_size_override("font_size", 24)
+	vbox.add_child(msg)
+
+	var detail = Label.new()
+	detail.text = "Reason: %s" % reason
+	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(detail)
+
+	var leave_btn = Button.new()
+	leave_btn.text = "Return to Main Menu"
+	leave_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn"))
+	vbox.add_child(leave_btn)
+
 # ─────────────────────────────────────────────
 #  Match history
 # ─────────────────────────────────────────────

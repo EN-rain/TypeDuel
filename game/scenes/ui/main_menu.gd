@@ -137,7 +137,7 @@ func _process(delta):
 		
 		if matchmaking_code != "":
 			poll_timer += delta
-			if poll_timer >= 2.0:
+			if poll_timer >= 1.0:
 				poll_timer = 0.0
 				_check_matchmaking_status()
 
@@ -279,6 +279,7 @@ func _on_play_online_pressed():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_matchmake_done.bind(http))
+	http.timeout = 5.0
 	var my_name = GameManager.user_data.display_name
 	if my_name == "":
 		my_name = GameManager.user_data.username
@@ -315,6 +316,7 @@ func _check_matchmaking_status():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_poll_match_done.bind(http))
+	http.timeout = 5.0
 	http.request(GameManager.SERVER_URL + "/api/rooms/" + matchmaking_code, GameManager.get_auth_headers())
 
 func _on_poll_match_done(_result, code, _headers, body, http):
@@ -422,6 +424,7 @@ func _refresh_friends_list():
 	http.request(GameManager.SERVER_URL + "/api/friends/" + str(GameManager.user_data.id) + "?t=" + str(Time.get_unix_time_from_system()), GameManager.get_auth_headers())
 
 func _on_friends_list_received(_result, code, _headers, body, http):
+	_friends_refresh_in_flight = false
 	if is_instance_valid(http):
 		http.queue_free()
 	if _check_auth_error(code): return

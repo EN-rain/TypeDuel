@@ -86,6 +86,10 @@ func _deferred_init() -> void:
 	typing.sentence_finished.connect(_on_sentence_finished)
 	net.room_polled.connect(_on_room_polled)
 	net.opponent_forfeited.connect(_on_opponent_forfeited)
+	if net.has_signal("you_forfeited"):
+		net.you_forfeited.connect(_on_you_forfeited)
+	if net.has_signal("match_ended"):
+		net.match_ended.connect(_on_match_ended)
 	HPManager.entity_died.connect(_on_entity_died)
 	if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
 		net.sync_hp()
@@ -434,6 +438,18 @@ func _on_opponent_forfeited() -> void:
 	_victory_shown = true
 	GameManager.current_room = ""
 	combat.show_opponent_forfeited_overlay($HUD)
+
+func _on_you_forfeited() -> void:
+	if _victory_shown: return
+	_victory_shown = true
+	GameManager.current_room = ""
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+func _on_match_ended(_reason: String) -> void:
+	if _victory_shown: return
+	_victory_shown = true
+	GameManager.current_room = ""
+	combat.show_match_ended_overlay($HUD, _reason)
 
 func _on_entity_died(entity: String) -> void:
 	if _victory_shown: return

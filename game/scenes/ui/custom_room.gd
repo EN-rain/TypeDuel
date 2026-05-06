@@ -2,7 +2,8 @@ extends Control
 
 
 
-const POLL_INTERVAL = 2.0
+const POLL_INTERVAL = 0.5
+const REQUEST_TIMEOUT_SEC = 5.0
 
 const CHARACTERS = ["Riven", "Zephon", "Liora"]
 const SKILLS = [
@@ -40,6 +41,7 @@ var my_name: String     = ""
 var poll_timer: float   = 0.0
 var guest_joined: bool  = false
 var _heartbeat_timer: float = 0.0
+var _poll_in_flight: bool = false
 
 # Opponent's last known selections (populated from poll)
 var _opp_character: String    = ""
@@ -200,6 +202,7 @@ func _send_heartbeat():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_heartbeat_done.bind(http))
+	http.timeout = REQUEST_TIMEOUT_SEC
 	var body = JSON.stringify({ "user_id": GameManager.user_data.id })
 	http.request(GameManager.SERVER_URL + "/api/game/heartbeat", GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
 
@@ -212,6 +215,7 @@ func _sync_selections():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_sync_done.bind(http))
+	http.timeout = REQUEST_TIMEOUT_SEC
 	var body = JSON.stringify({
 		"user_id":   my_user_id,
 		"character": GameManager.selected_character,
@@ -226,14 +230,21 @@ func _on_sync_done(_result, _code, _headers, _body, http: HTTPRequest):
 
 func _poll_room():
 	if room_code == "": return
+	if _poll_in_flight: return
+	_poll_in_flight = true
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_poll_done.bind(http))
-	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code, GameManager.get_auth_headers())
+	http.timeout = REQUEST_TIMEOUT_SEC
+	var err = http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code, GameManager.get_auth_headers())
+	if err != OK:
+		_poll_in_flight = false
+		if is_instance_valid(http): http.queue_free()
 
 func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if is_instance_valid(http):
 		http.queue_free()
+	_poll_in_flight = false
 	if code != 200:
 		# Matchmaking forfeits/room closes show up as 404; return to menu.
 		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled:
@@ -418,11 +429,17 @@ func _on_start_pressed():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_start_notified.bind(http))
+	http.timeout = REQUEST_TIMEOUT_SEC
 	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code + "/start", GameManager.get_auth_headers(), HTTPClient.METHOD_POST)
 
-func _on_start_notified(_result, _code, _headers, _body, http: HTTPRequest):
+func _on_start_notified(_result, code, _headers, body, http: HTTPRequest):
 	if is_instance_valid(http):
 		http.queue_free()
+	# Capture server start time so host can do correct opponent WPM estimation during resolution.
+	if code == 200:
+		var json = JSON.parse_string(body.get_string_from_utf8())
+		if json and json.get("room", null) != null:
+			GameManager.match_start_time = float(json.room.get("started_at", 0))
 	GameManager.opponent_character = _opp_character
 	GameManager.opponent_passive = _opp_passive
 	get_tree().change_scene_to_file("res://scenes/game/game.tscn")
@@ -446,6 +463,7 @@ func _delete_room():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
+	http.timeout = REQUEST_TIMEOUT_SEC
 	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code, GameManager.get_auth_headers(), HTTPClient.METHOD_DELETE)
 
 func _leave_room():
@@ -453,12 +471,14 @@ func _leave_room():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
+	http.timeout = REQUEST_TIMEOUT_SEC
 	http.request(GameManager.SERVER_URL + "/api/rooms/" + room_code + "/leave", GameManager.get_auth_headers(), HTTPClient.METHOD_POST)
 
 func _create_room():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_room_created.bind(http))
+	http.timeout = REQUEST_TIMEOUT_SEC
 	var body = JSON.stringify({
 		"user_id":      my_user_id,
 		"display_name": my_name,

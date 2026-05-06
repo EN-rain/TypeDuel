@@ -7,6 +7,8 @@
 
 signal room_polled(room: Dictionary)
 signal opponent_forfeited
+signal you_forfeited
+signal match_ended(reason: String)
 
 var SERVER: String:
 	get: return GameManager.SERVER_URL
@@ -29,6 +31,22 @@ var server_time_offset_ms: float      = 0.0
 var _best_time_sync_rtt_ms: float = INF
 var _last_room_seq: int = -1
 
+# Connection health (during gameplay)
+const POLL_TIMEOUT_SEC: float = 5.0
+const POLL_FAILS_TO_OFFLINE: int = 3
+var _poll_in_flight: bool = false
+var _poll_fail_streak: int = 0
+var _phase_retry_attempts: int = 0
+var _hp_retry_attempts: int = 0
+
+func _schedule_phase_retry(phase: String, round_id: int) -> void:
+	var delay = 0.5 * float(_phase_retry_attempts)
+	get_tree().create_timer(delay).timeout.connect(func(): set_phase(phase, round_id))
+
+func _schedule_hp_retry() -> void:
+	var delay = 0.5 * float(_hp_retry_attempts)
+	get_tree().create_timer(delay).timeout.connect(func(): sync_hp())
+
 # Opponent data (read by Game / TypingHandler)
 var opp_progress: float  = 0.0
 var opp_typos: int       = 0
@@ -46,6 +64,8 @@ func get_synced_server_time_ms() -> float:
 
 func poll(current_state_is_skill_select: bool) -> void:
 	if GameManager.current_room == "": return
+	if _poll_in_flight:
+		return
 	var now = Time.get_ticks_msec() / 1000.0
 	var interval = 0.15 if current_state_is_skill_select else poll_interval
 	if now - last_poll_time < interval: return
@@ -54,14 +74,37 @@ func poll(current_state_is_skill_select: bool) -> void:
 	var http = HTTPRequest.new()
 	add_child(http)
 	var sent_ms: float = Time.get_unix_time_from_system() * 1000.0
+	http.timeout = POLL_TIMEOUT_SEC
+	_poll_in_flight = true
 	http.request_completed.connect(_on_poll_done.bind(http, sent_ms))
-	http.request(SERVER + "/api/rooms/" + GameManager.current_room, GameManager.get_auth_headers())
+	var err = http.request(SERVER + "/api/rooms/" + GameManager.current_room, GameManager.get_auth_headers())
+	if err != OK:
+		_poll_in_flight = false
+		if is_instance_valid(http): http.queue_free()
+		_poll_fail_streak += 1
+		if _poll_fail_streak >= POLL_FAILS_TO_OFFLINE:
+			GameManager.set_connection_online(false)
 
-func _on_poll_done(_result, code, _headers, body, http, sent_ms: float):
+func _on_poll_done(result, code, _headers, body, http, sent_ms: float):
+	_poll_in_flight = false
 	if is_instance_valid(http): http.queue_free()
 
-	if code == 404 and not GameManager.is_solo:
-		opponent_forfeited.emit()
+	if result != HTTPRequest.RESULT_SUCCESS:
+		_poll_fail_streak += 1
+		if _poll_fail_streak >= POLL_FAILS_TO_OFFLINE:
+			GameManager.set_connection_online(false)
+		return
+
+	# A response (even 404) means the server is reachable.
+	_poll_fail_streak = 0
+	GameManager.set_connection_online(true)
+
+	if code == 404:
+		# Legacy behavior: room deleted. Treat as forfeit/termination.
+		if not GameManager.is_solo:
+			opponent_forfeited.emit()
+		return
+	if code != 200:
 		return
 
 	var recv_ms: float = Time.get_unix_time_from_system() * 1000.0
@@ -76,6 +119,25 @@ func _on_poll_done(_result, code, _headers, body, http, sent_ms: float):
 	if seq >= 0 and _last_room_seq >= 0 and seq < _last_room_seq:
 		return
 	if seq >= 0: _last_room_seq = seq
+
+	# Server-authoritative forfeit (room stays alive briefly so both clients converge)
+	var forfeit = json.get("forfeit", null)
+	if forfeit != null:
+		var reason = str(forfeit.get("reason", "forfeit"))
+		var winner = forfeit.get("winner", null)
+		var loser = forfeit.get("loser", null)
+
+		# If server can't determine a winner (e.g., both disconnected), end match without declaring forfeit.
+		if winner == null or loser == null:
+			match_ended.emit(reason)
+			return
+
+		var i_am_role = "host" if GameManager.is_host else "guest"
+		if String(loser) == i_am_role:
+			you_forfeited.emit()
+		else:
+			opponent_forfeited.emit()
+		return
 
 	_apply_time_sync(json, sent_ms, recv_ms)
 	_apply_phase(json)
@@ -160,6 +222,7 @@ func sync_progress(current_index: int, sentence_length: int, typos: int,
 
 	var http = HTTPRequest.new()
 	add_child(http)
+	http.timeout = POLL_TIMEOUT_SEC
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/progress",
 		GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, JSON.stringify(payload))
@@ -174,7 +237,16 @@ func set_phase(phase: String, round_id: int) -> void:
 	if round_id > 0: payload["round_id"] = round_id
 	var http = HTTPRequest.new()
 	add_child(http)
-	http.request_completed.connect(func(_r,_c,_h,_b): if is_instance_valid(http): http.queue_free())
+	http.timeout = POLL_TIMEOUT_SEC
+	http.request_completed.connect(func(result,_c,_h,_b):
+		if is_instance_valid(http): http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS:
+			if _phase_retry_attempts < 3:
+				_phase_retry_attempts += 1
+				_schedule_phase_retry(phase, round_id)
+			return
+		_phase_retry_attempts = 0
+	)
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/phase",
 		GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, JSON.stringify(payload))
 
@@ -188,7 +260,16 @@ func sync_hp() -> void:
 	}
 	var http := HTTPRequest.new()
 	add_child(http)
-	http.request_completed.connect(func(_r,_c,_h,_b): if is_instance_valid(http): http.queue_free())
+	http.timeout = POLL_TIMEOUT_SEC
+	http.request_completed.connect(func(result,_c,_h,_b):
+		if is_instance_valid(http): http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS:
+			if _hp_retry_attempts < 3:
+				_hp_retry_attempts += 1
+				_schedule_hp_retry()
+			return
+		_hp_retry_attempts = 0
+	)
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/hp",
 		GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, JSON.stringify(payload))
 
@@ -196,6 +277,7 @@ func delete_room() -> void:
 	if GameManager.current_room == "": return
 	var http = HTTPRequest.new()
 	add_child(http)
+	http.timeout = POLL_TIMEOUT_SEC
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
 	if GameManager.is_host:
 		http.request(SERVER + "/api/rooms/" + GameManager.current_room,
@@ -238,6 +320,7 @@ func sync_progress_with_queue(current_index: int, sentence_length: int, typos: i
 		payload["send_mutation"] = pending_mut
 	var http = HTTPRequest.new()
 	add_child(http)
+	http.timeout = POLL_TIMEOUT_SEC
 	# Re-queue mutation at front if request fails so it isn't lost
 	http.request_completed.connect(func(result,_c,_h,_b):
 		http.queue_free()
@@ -254,5 +337,6 @@ func sync_progress_immediate(current_index: int, sentence_length: int, typos: in
 	var payload: Dictionary = { "user_id": GameManager.user_data.id, "progress": prog, "typos": typos, "chosen_skill": chosen_skill }
 	var http = HTTPRequest.new()
 	add_child(http)
+	http.timeout = POLL_TIMEOUT_SEC
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/progress", GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, JSON.stringify(payload))
