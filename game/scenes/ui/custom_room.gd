@@ -1,7 +1,5 @@
 extends Control
 
-
-
 const POLL_INTERVAL = 0.5
 const REQUEST_TIMEOUT_SEC = 5.0
 
@@ -22,6 +20,7 @@ const SKILLS = [
 @onready var player1_tag      = $Player1Tag
 @onready var char_container   = $Characters/VBoxContainer
 @onready var skill_container  = $Skill/VBoxContainer
+@onready var countdown_timer_label = null  # Created dynamically if needed
 
 @onready var _manual_passive_buttons = [
 	$Passive/HBoxContainer/VBoxContainer1/Passive1,
@@ -53,6 +52,7 @@ var _matchmaking_deadline_unix_ms: float = 0.0
 var _matchmaking_forfeit_handled: bool = false
 var _matchmaking_start_sent: bool = false
 var _last_room_seq: int = -1
+var _last_server_now_ms: float = 0.0
 
 # Dynamically built button arrays
 var _char_buttons: Array      = []
@@ -101,6 +101,18 @@ func _ready():
 			start_button.hide()
 			start_button.disabled = true
 		status_label.text = "Searching for opponent..."
+		
+		# Create countdown timer label for matchmaking
+		countdown_timer_label = Label.new()
+		countdown_timer_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+		countdown_timer_label.offset_top = 50
+		countdown_timer_label.offset_left = -150
+		countdown_timer_label.offset_right = 150
+		countdown_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		countdown_timer_label.add_theme_font_size_override("font_size", 36)
+		countdown_timer_label.add_theme_color_override("font_color", Color.YELLOW)
+		countdown_timer_label.text = ""
+		add_child(countdown_timer_label)
 
 	# Click to copy
 	room_code_label.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -136,30 +148,53 @@ func _process_matchmaking_rules():
 
 	if not guest_joined:
 		status_label.text = "Searching for opponent..."
+		if countdown_timer_label:
+			countdown_timer_label.text = ""
 		return
 
-	var now_unix_ms: float = Time.get_unix_time_from_system() * 1000.0
+	# Prefer server time to avoid client clock drift and keep both players synced.
+	var now_unix_ms: float = _last_server_now_ms if _last_server_now_ms > 0.0 else (Time.get_unix_time_from_system() * 1000.0)
+	# If we don't have an authoritative deadline yet, fall back to a local one.
+	# This will be replaced as soon as the next poll returns matchmaking_deadline_at.
 	if _matchmaking_deadline_unix_ms <= 0.0:
 		_matchmaking_deadline_unix_ms = now_unix_ms + 15000.0
 
 	var my_ready = _is_me_ready()
 	var opp_ready = _is_opp_ready()
+	
+	# Auto-start when both ready
 	if my_ready and opp_ready:
+		status_label.text = "Both ready! Starting..."
 		if GameManager.is_host and not _matchmaking_start_sent:
 			_matchmaking_start_sent = true
 			_on_start_pressed()
+		if countdown_timer_label:
+			countdown_timer_label.text = "Starting..."
+			countdown_timer_label.modulate = Color.GREEN
 		return
 
 	var remaining_sec = max(0, int(ceil((_matchmaking_deadline_unix_ms - now_unix_ms) / 1000.0)))
+	
+	# Handle forfeit timeout
 	if remaining_sec <= 0:
 		_handle_matchmaking_forfeit(my_ready)
 		return
 
+	# Update countdown timer
+	if countdown_timer_label:
+		countdown_timer_label.text = "Time: %d seconds" % remaining_sec
+		if remaining_sec <= 5:
+			countdown_timer_label.modulate = Color.RED
+		elif remaining_sec <= 10:
+			countdown_timer_label.modulate = Color.ORANGE
+		else:
+			countdown_timer_label.modulate = Color.YELLOW
+
 	# Update status with countdown — only source of status text during matchmaking.
 	if my_ready and not opp_ready:
-		status_label.text = "Waiting opponent (%ds)..." % remaining_sec
+		status_label.text = "Waiting for opponent to choose..."
 	elif not my_ready:
-		status_label.text = "Choose character/skills (%ds)..." % remaining_sec
+		status_label.text = "Choose character, 2 skills, and passive!"
 
 func _is_me_ready() -> bool:
 	return GameManager.selected_character != "" and SkillsManager.selected_skills.size() >= 2 and SkillsManager.selected_passive != ""
@@ -256,6 +291,12 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		return
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if not json: return
+	var server_now = json.get("server_now", null)
+	if server_now != null:
+		_last_server_now_ms = float(server_now)
+	var mm_deadline = json.get("matchmaking_deadline_at", null)
+	if mm_deadline != null and float(mm_deadline) > 0.0:
+		_matchmaking_deadline_unix_ms = float(mm_deadline)
 	var seq = int(json.get("seq", -1))
 	if seq >= 0 and _last_room_seq >= 0 and seq < _last_room_seq:
 		return # ignore stale/out-of-order poll responses
@@ -310,11 +351,36 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 
 	# 2. Check for game start
 	if json.get("status") == "started":
+		# Ensure opponent data is set before launching
+		if _opp_character == "":
+			if GameManager.is_host:
+				var g_char = json.get("guest_character")
+				_opp_character = str(g_char) if g_char != null else ""
+			else:
+				var h_char = json.get("host_character")
+				_opp_character = str(h_char) if h_char != null else ""
+		
+		if _opp_passive == "":
+			if GameManager.is_host:
+				var g_passive = json.get("guest_passive")
+				_opp_passive = str(g_passive) if g_passive != null else ""
+			else:
+				var h_passive = json.get("host_passive")
+				_opp_passive = str(h_passive) if h_passive != null else ""
+		
 		GameManager.opponent_character = _opp_character
 		GameManager.opponent_passive = _opp_passive
 		GameManager.match_start_time = float(json.get("started_at", 0))
-		print("[Lobby] Starting game | Me: %s (%s) | Opp: %s (%s) | StartTime: %f" % [GameManager.selected_character, SkillsManager.selected_passive, GameManager.opponent_character, GameManager.opponent_passive, GameManager.match_start_time])
-		if is_inside_tree():
+		
+		print("[Lobby] Game started detected! | Me: %s (%s) | Opp: %s (%s) | StartTime: %f" % [
+			GameManager.selected_character, 
+			SkillsManager.selected_passive, 
+			GameManager.opponent_character, 
+			GameManager.opponent_passive, 
+			GameManager.match_start_time
+		])
+		
+		if is_inside_tree() and not _launching:
 			_launch_game_with_countdown()
 		return
 
@@ -501,11 +567,59 @@ func _generate_code() -> String:
 	for i in 6: code += CHARS[randi() % CHARS.length()]
 	return code
 
-## Transition directly to the game scene — no lobby countdown.
-## The 10s skill-select phase in the game scene serves as the "get ready" window.
+## Transition to game scene with a "Get Ready" countdown
+## Shows a 3-second countdown before launching the game
 var _launching: bool = false
+var _countdown_overlay: Control = null
+
 func _launch_game_with_countdown() -> void:
 	if _launching: return
 	_launching = true
+	
+	# Create countdown overlay
+	_countdown_overlay = Control.new()
+	_countdown_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_countdown_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_countdown_overlay)
+	
+	# Semi-transparent background
+	var bg = ColorRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0, 0, 0, 0.8)
+	_countdown_overlay.add_child(bg)
+	
+	# Countdown label
+	var label = Label.new()
+	label.set_anchors_preset(Control.PRESET_CENTER)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 120)
+	label.add_theme_color_override("font_color", Color.YELLOW)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 8)
+	_countdown_overlay.add_child(label)
+	
+	# "Get Ready" text
+	var ready_label = Label.new()
+	ready_label.set_anchors_preset(Control.PRESET_CENTER)
+	ready_label.offset_top = -150
+	ready_label.offset_bottom = -100
+	ready_label.offset_left = -200
+	ready_label.offset_right = 200
+	ready_label.text = "GET READY!"
+	ready_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ready_label.add_theme_font_size_override("font_size", 48)
+	ready_label.add_theme_color_override("font_color", Color.WHITE)
+	_countdown_overlay.add_child(ready_label)
+	
+	# Countdown from 3
+	for i in range(3, 0, -1):
+		label.text = str(i)
+		await get_tree().create_timer(1.0).timeout
+	
+	label.text = "GO!"
+	await get_tree().create_timer(0.5).timeout
+	
+	# Launch game
 	if is_inside_tree():
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn")

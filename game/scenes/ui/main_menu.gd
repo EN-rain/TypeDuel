@@ -343,12 +343,33 @@ func _on_settings_pressed():
 	$Settings.show()
 	$Settings/AnimationPlayer.play("slide_in")
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not is_settings_open:
 		return
+	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_on_close_button_pressed()
-		get_viewport().set_input_as_handled()
+		var mouse_pos = get_viewport().get_mouse_position()
+		
+		# Check if click is on friends button - don't close anything
+		var friends_btn_rect = Rect2(friends_button.global_position, friends_button.size)
+		if friends_btn_rect.has_point(mouse_pos):
+			return
+		
+		# If friends panel is open, check if click is outside friends panel
+		if is_friends_expanded:
+			var friends_rect = Rect2(friends_panel.global_position, friends_panel.size)
+			if not friends_rect.has_point(mouse_pos):
+				# Click outside friends panel - close friends only
+				_collapse_friends()
+				get_viewport().set_input_as_handled()
+			return
+		
+		# Friends is closed, check if click is outside settings panel
+		var settings_rect = Rect2($Settings.global_position, $Settings.size)
+		if not settings_rect.has_point(mouse_pos):
+			# Click outside settings - close settings
+			_on_close_button_pressed()
+			get_viewport().set_input_as_handled()
 
 func _on_logout_pressed():
 	# Notify server we're going offline

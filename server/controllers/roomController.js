@@ -127,6 +127,8 @@ const createRoom = (req, res) => {
     rooms[normalizedCode] = {
         code: normalizedCode,
         seq:            0,
+        matchmaking:    false,
+        matchmaking_deadline_at: 0,
         host_id:        actorId,
         host_name:      display_name || 'Player',
         host_character: null,
@@ -320,15 +322,27 @@ const matchmake = async (req, res) => {
     }
 
     for (const code in rooms) {
-        if (!rooms[code].guest_id && rooms[code].host_id !== actorId) {
-            rooms[code].guest_id       = actorId;
-            rooms[code].guest_name     = display_name || 'Player';
+        const room = rooms[code];
+        // Matchmaking must never place players into custom rooms.
+        if (!room || room.matchmaking !== true) continue;
+        if (room.status && room.status !== 'lobby') continue;
+        // Require host presence to be recent; prevents joining ghost rooms.
+        const hostSeen = room.host_last_seen_at || room.created_at || 0;
+        if ((Date.now() - hostSeen) > 15000) continue;
+        if (!room.guest_id && room.host_id !== actorId) {
+            rooms[code].guest_id        = actorId;
+            rooms[code].guest_name      = display_name || 'Player';
             rooms[code].guest_character = null;
-            rooms[code].guest_skills   = [];
-            rooms[code].guest_passive  = "";
+            rooms[code].guest_skills    = [];
+            rooms[code].guest_passive   = "";
+            // Authoritative matchmaking deadline: shared by both clients.
+            // Only set once, at the moment the match is formed.
+            if (!rooms[code].matchmaking_deadline_at || rooms[code].matchmaking_deadline_at <= 0) {
+                rooms[code].matchmaking_deadline_at = Date.now() + 15000;
+            }
             rooms[code].seq = (rooms[code].seq || 0) + 1;
             _touchRoomPresence(rooms[code], actorId);
-            return res.json({ ok: true, role: 'guest', room: rooms[code] });
+            return res.json({ ok: true, role: 'guest', room: roomSnapshot(rooms[code]) });
         }
     }
 
@@ -339,6 +353,8 @@ const matchmake = async (req, res) => {
     rooms[code] = {
         code,
         seq:             0,
+        matchmaking:     true,
+        matchmaking_deadline_at: 0,
         host_id:         actorId,
         host_name:       display_name || 'Player',
         host_character:  null,
@@ -349,6 +365,7 @@ const matchmake = async (req, res) => {
         guest_character: null,
         guest_skills:    [],
         guest_passive:   "",
+        status:          'lobby',
         host_progress:   0.0,
         guest_progress:  0.0,
         host_typos:      0,
