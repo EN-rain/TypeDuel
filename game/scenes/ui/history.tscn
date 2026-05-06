@@ -1,8 +1,23 @@
-[gd_scene load_steps=2 format=3 uid="uid://history_scene"]
+[gd_scene format=3 uid="uid://b0eqlypdkncxb"]
 
-[ext_resource type="Script" path="res://scenes/ui/history.gd" id="1_history_script"]
+[ext_resource type="Script" uid="uid://dvwtc7lpov13d" path="res://scenes/ui/history.gd" id="1_history_script"]
+[ext_resource type="Texture2D" uid="uid://c1qfj3rwamvrn" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_1uu6x"]
+[ext_resource type="Texture2D" uid="uid://caifls5dikm66" path="res://assets/GUI/scrolls/medium.png" id="3_4gugs"]
+[ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="4_yfkyo"]
+[ext_resource type="Texture2D" uid="uid://d3jct2xqj1e5l" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_hbfkw"]
 
-[node name="History" type="Control"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_smkmc"]
+texture = ExtResource("2_1uu6x")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vn15v"]
+texture = ExtResource("3_4gugs")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_k0c0w"]
+texture = ExtResource("5_hbfkw")
+expand_margin_left = 20.0
+expand_margin_right = 20.0
+
+[node name="History" type="Control" unique_id=1097765867]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +26,29 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_history_script")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="Background" type="Panel" parent="." unique_id=49453193]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.9990001
+anchor_bottom = 1.0
+offset_right = 0.15185547
+offset_bottom = 3.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_smkmc")
+
+[node name="Scroll" type="Panel" parent="." unique_id=1492218724]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.50600004
+anchor_top = 0.51500005
+anchor_right = 0.50600004
+anchor_bottom = 0.51500005
+offset_left = -430.91205
+offset_top = -546.72003
+offset_right = 431.08795
+offset_bottom = 443.27997
+theme_override_styles/panel = SubResource("StyleBoxTexture_vn15v")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=2089152147]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -26,33 +63,47 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="Title" type="Label" parent="VBoxContainer"]
+[node name="Title" type="Label" parent="VBoxContainer" unique_id=1383189016]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("4_yfkyo")
 theme_override_font_sizes/font_size = 48
 text = "Match History"
 horizontal_alignment = 1
 
-[node name="StatsLabel" type="Label" parent="VBoxContainer"]
+[node name="StatsLabel" type="Label" parent="VBoxContainer" unique_id=707499252]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("4_yfkyo")
+theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=880466746]
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="List" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
+[node name="List" type="VBoxContainer" parent="VBoxContainer/ScrollContainer" unique_id=94893270]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="BackButton" type="Button" parent="VBoxContainer"]
+[node name="BackButton" type="Button" parent="VBoxContainer" unique_id=1564959930]
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("4_yfkyo")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxTexture_k0c0w")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_k0c0w")
+theme_override_styles/hover = SubResource("StyleBoxTexture_k0c0w")
 text = "Back to Menu"
 
-[node name="HTTPRequest" type="HTTPRequest" parent="."]
+[node name="HTTPRequest" type="HTTPRequest" parent="." unique_id=878505745]
 
 [connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
