@@ -2,6 +2,24 @@
 
 [ext_resource type="Script" uid="uid://cdsv6vd7esyby" path="res://scenes/ui/custom_room.gd" id="1_custom_room_script"]
 [ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
+[ext_resource type="Texture2D" uid="uid://uyj6xjain5fk" path="res://assets/terrain/colosseum-bg.png" id="2_xghyf"]
+[ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="3_mqf87"]
+[ext_resource type="Texture2D" uid="uid://d166euwfpuobv" path="res://assets/sprites/character-idle.png" id="4_rndi5"]
+[ext_resource type="Texture2D" uid="uid://bsk2jmmskicy" path="res://assets/terrain/plains-bg.png" id="6_rndi5"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cvmnq"]
+texture = ExtResource("2_xghyf")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mqf87"]
+texture = ExtResource("4_rndi5")
+region_rect = Rect2(19.76231, 165.46713, 22.437195, 21.828049)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qkbvd"]
+texture = ExtResource("4_rndi5")
+region_rect = Rect2(19.858324, 165.8153, 22.120535, 21.437057)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ugbnh"]
+texture = ExtResource("6_rndi5")
 
 [node name="CustomRoom" type="Control" unique_id=508700511]
 layout_mode = 3
@@ -12,6 +30,15 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_custom_room_script")
 metadata/_edit_lock_ = true
+
+[node name="Background" type="Panel" parent="." unique_id=1752500405]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 4.0
+offset_bottom = 5.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_cvmnq")
 
 [node name="BackButton" type="Button" parent="." unique_id=1300449507]
 custom_minimum_size = Vector2(100, 40)
@@ -153,6 +180,10 @@ theme_override_constants/separation = 15
 [node name="Character1" type="Button" parent="Characters/VBoxContainer" unique_id=282563812]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_mqf87")
+theme_override_styles/normal = SubResource("StyleBoxTexture_mqf87")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_qkbvd")
+theme_override_styles/hover = SubResource("StyleBoxTexture_qkbvd")
 text = "PLAYER NAME 1"
 
 [node name="Character2" type="Button" parent="Characters/VBoxContainer" unique_id=1818998384]
@@ -239,6 +270,7 @@ layout_mode = 2
 [node name="Passive1" type="Button" parent="Passive/HBoxContainer/VBoxContainer1" unique_id=1461166331]
 custom_minimum_size = Vector2(70, 70)
 layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_ugbnh")
 
 [node name="Passive2" type="Button" parent="Passive/HBoxContainer/VBoxContainer1" unique_id=508508689]
 custom_minimum_size = Vector2(70, 70)
