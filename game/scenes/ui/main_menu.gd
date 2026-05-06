@@ -299,7 +299,10 @@ func _on_matchmake_done(_result, code, _headers, body, http):
 	if code == 200:
 		var json = JSON.parse_string(body.get_string_from_utf8())
 		if json.role == "guest":
-			# Found a match instantly
+			# Found a match instantly — stop polling to prevent duplicate transitions
+			is_matchmaking = false
+			matchmaking_label.hide()
+			matchmaking_time_label.hide()
 			GameManager.current_room = json.room.code
 			GameManager.is_host = false
 			GameManager.is_solo = false
@@ -329,7 +332,10 @@ func _on_poll_match_done(_result, code, _headers, body, http):
 	if code == 200:
 		var json = JSON.parse_string(body.get_string_from_utf8())
 		if json.guest_id:
-			# Guest joined!
+			# Guest joined — stop polling immediately to prevent duplicate transitions
+			is_matchmaking = false
+			matchmaking_label.hide()
+			matchmaking_time_label.hide()
 			GameManager.current_room = matchmaking_code
 			GameManager.is_host = true
 			GameManager.is_solo = false
@@ -349,8 +355,10 @@ func _on_leaderboard_pressed():
 func _transition_with_outro(scene_path: String) -> void:
 	if intro_anim_player != null and intro_anim_player.has_animation(&"outro"):
 		intro_anim_player.play(&"outro")
-		await intro_anim_player.animation_finished
-	get_tree().change_scene_to_file(scene_path)
+		var length = intro_anim_player.get_animation(&"outro").length
+		await get_tree().create_timer(length + 0.05).timeout
+	if is_inside_tree():
+		get_tree().change_scene_to_file(scene_path)
 
 var is_settings_open := false
 

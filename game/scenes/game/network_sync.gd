@@ -174,14 +174,16 @@ func _apply_opponent_data(room: Dictionary) -> void:
 	if GameManager.is_host:
 		opp_progress     = room.get("guest_progress", 0.0)
 		opp_typos        = room.get("guest_typos", 0)
-		opp_chosen_skill = str(room.get("guest_skill", ""))
+		var gs = room.get("guest_skill", null)
+		opp_chosen_skill = str(gs) if gs != null and gs != "" else ""
 		opp_mutations    = room.get("host_mutations", [])
 		var g_skills = room.get("guest_skills", null)
 		if g_skills != null and g_skills is Array: opp_skills = g_skills
 	else:
 		opp_progress     = room.get("host_progress", 0.0)
 		opp_typos        = room.get("host_typos", 0)
-		opp_chosen_skill = str(room.get("host_skill", ""))
+		var hs = room.get("host_skill", null)
+		opp_chosen_skill = str(hs) if hs != null and hs != "" else ""
 		opp_mutations    = room.get("guest_mutations", [])
 		var h_skills = room.get("host_skills", null)
 		if h_skills != null and h_skills is Array: opp_skills = h_skills

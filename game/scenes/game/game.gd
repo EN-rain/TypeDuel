@@ -33,6 +33,7 @@ var _server_first_finish_at_ms: float   = 0.0
 var _server_first_finish_by: String     = ""
 var _server_round_id: int               = 0
 var _last_resolved_round_id: int        = 0
+var _skill_phase_local_start_ms: float  = 0.0  # local time when skill phase began
 var _typing_go_at_ms: float             = 0.0
 var _local_first_finish_at_ms: float    = 0.0
 var _local_first_finish_by: String      = ""
@@ -146,6 +147,7 @@ func start_skill_phase(announce_phase: bool = false) -> void:
 	round_timer    = 60.0
 	_last_snap_fallback_log_ms = 0
 	net.opp_chosen_skill = ""
+	_skill_phase_local_start_ms = float(Time.get_ticks_msec())
 	_update_skill_buttons()
 	_log("[Phase] SKILL SELECT | mana=%d | skills=%s" % [SkillsManager.player_mana, str(SkillsManager.selected_skills)])
 	if _can_pick_any_skill():
@@ -232,10 +234,13 @@ func _process_skill_select(delta: float) -> void:
 			_log("[Net] Catching up to typing phase | round_id=%d" % _server_round_id)
 			start_typing_phase(false)
 			return
-		if _server_phase == "skill_select" and _server_phase_started_at_ms > 0.0:
+		if _server_phase == "skill_select" and _server_phase_started_at_ms > 0.0 and current_round > 1:
+			# Round 2+: use server time so both clients stay in sync
 			var elapsed = (_get_synced_ms() - _server_phase_started_at_ms) / 1000.0
 			skill_timer = max(0.0, 10.0 - elapsed)
 		else:
+			# Round 1: count down locally — server phase was announced during lobby
+			# countdown so elapsed would already be 3-4s, making timer start at 6-7s
 			skill_timer -= delta
 	else:
 		skill_timer -= delta
@@ -571,22 +576,27 @@ func _should_host_fast_forward() -> bool:
 	var i_am_done = chosen_skill_id != "" or not _can_pick_any_skill()
 	if not i_am_done: return false
 	
-	# Check if opponent has synced their choice via progress updates
-	# Note: opp_chosen_skill is populated from room polls during skill_select phase
-	var opp_picked = net.opp_chosen_skill != ""
+	# Wait at least 1.5s after skill phase starts before fast-forwarding.
+	# This gives the opponent time to sync their choice (poll interval is 0.5s).
+	var elapsed_ms = float(Time.get_ticks_msec()) - _skill_phase_local_start_ms
+	if elapsed_ms < 1500.0: return false
 	
-	# Also check if opponent CAN pick but hasn't yet
+	# Check if opponent has synced their choice via progress updates
+	var opp_picked = net.opp_chosen_skill != ""
+	if opp_picked: return true
+	
+	# If we don't know opponent's skills yet, we can't assume they can't pick — wait
+	if _opp_skills.is_empty(): return false
+	
+	# Check if opponent CAN pick any of their skills
 	var opp_can_pick = false
 	for s_id in _opp_skills:
 		if SkillsManager.can_pick_skill(s_id, true):
 			opp_can_pick = true
 			break
 	
-	# Opponent is done if they picked OR they can't pick any skill
-	var opp_done = opp_picked or not opp_can_pick
-	
-	# Only fast-forward if opponent is also done
-	return opp_done
+	# Only fast-forward if opponent can't pick anything either
+	return not opp_can_pick
 
 # 
 # Pause menu

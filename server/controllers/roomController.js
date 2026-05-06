@@ -304,6 +304,9 @@ const leaveRoom = (req, res) => {
     room.guest_typos = 0;
     room.guest_mutations = [];
     room.guest_skill = "";
+    if (room.matchmaking) {
+        room.matchmaking_deadline_at = 0;
+    }
     room.seq = (room.seq || 0) + 1;
     _touchRoomPresence(room, actorId);
     return res.json({ ok: true, room: roomSnapshot(room) });

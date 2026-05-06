@@ -880,6 +880,7 @@ anchor_right = 1.0
 offset_left = -533.0
 offset_bottom = 27.0
 grow_horizontal = 0
+fill_mode = 1
 
 [node name="OwnHp" type="ProgressBar" parent="HUD/Stats" unique_id=1306211794]
 layout_mode = 1
@@ -901,6 +902,7 @@ offset_left = -355.0
 offset_top = 31.0
 offset_bottom = 58.0
 grow_horizontal = 0
+fill_mode = 1
 
 [node name="Timer" type="Label" parent="HUD/Stats" unique_id=1405445]
 layout_mode = 1
