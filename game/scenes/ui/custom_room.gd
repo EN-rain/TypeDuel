@@ -100,6 +100,7 @@ func _ready():
 		if is_instance_valid(start_button):
 			start_button.hide()
 			start_button.disabled = true
+		status_label.text = "Searching for opponent..."
 
 	# Click to copy
 	room_code_label.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -131,8 +132,11 @@ func _process(delta: float):
 func _process_matchmaking_rules():
 	if not GameManager.is_matchmaking: return
 	if _matchmaking_forfeit_handled: return
-	if not guest_joined: return
 	if room_code == "": return
+
+	if not guest_joined:
+		status_label.text = "Searching for opponent..."
+		return
 
 	var now_unix_ms: float = Time.get_unix_time_from_system() * 1000.0
 	if _matchmaking_deadline_unix_ms <= 0.0:
@@ -151,7 +155,7 @@ func _process_matchmaking_rules():
 		_handle_matchmaking_forfeit(my_ready)
 		return
 
-	# Update status with countdown without fighting other status updates.
+	# Update status with countdown — only source of status text during matchmaking.
 	if my_ready and not opp_ready:
 		status_label.text = "Waiting opponent (%ds)..." % remaining_sec
 	elif not my_ready:
@@ -298,10 +302,11 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		_opp_passive = str(h_passive) if h_passive != null else ""
 		
 		var my_ready   = GameManager.selected_character != "" and SkillsManager.selected_skills.size() >= 2 and SkillsManager.selected_passive != ""
-		if my_ready:
-			status_label.text = "Waiting for host to start..."
-		else:
-			status_label.text = "Pick 1 character and 2 skills."
+		if not GameManager.is_matchmaking:
+			if my_ready:
+				status_label.text = "Waiting for host to start..."
+			else:
+				status_label.text = "Pick 1 character and 2 skills."
 
 	# 2. Check for game start
 	if json.get("status") == "started":
@@ -309,7 +314,8 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		GameManager.opponent_passive = _opp_passive
 		GameManager.match_start_time = float(json.get("started_at", 0))
 		print("[Lobby] Starting game | Me: %s (%s) | Opp: %s (%s) | StartTime: %f" % [GameManager.selected_character, SkillsManager.selected_passive, GameManager.opponent_character, GameManager.opponent_passive, GameManager.match_start_time])
-		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
+		if is_inside_tree():
+			_launch_game_with_countdown()
 		return
 
 # ── Dynamic UI setup ────────────────────────────────────────────────────────
@@ -400,6 +406,9 @@ func _check_start_ready():
 		else:
 			start_button.disabled = not (my_ready and opp_ready)
 
+	# During matchmaking, _process_matchmaking_rules owns the status label exclusively.
+	if GameManager.is_matchmaking: return
+
 	if not guest_joined:
 		status_label.text = "Waiting for opponent..."
 	elif not my_ready:
@@ -407,23 +416,16 @@ func _check_start_ready():
 	elif not opp_ready:
 		status_label.text = "Waiting for opponent to choose..."
 	else:
-		if GameManager.is_matchmaking:
-			status_label.text = "Both ready! Starting..."
-			if GameManager.is_host and not _matchmaking_start_sent:
-				_matchmaking_start_sent = true
-				_on_start_pressed()
-		else:
-			status_label.text = "Both ready! You can start."
+		status_label.text = "Both ready! You can start."
 
 # ── Navigation ───────────────────────────────────────────────────────────────
 
 func _on_start_pressed():
 	if GameManager.is_solo:
-		# Auto-generate an opponent for solo mode
 		GameManager.opponent_character = CHARACTERS[randi() % CHARACTERS.size()]
 		GameManager.opponent_passive = GameManager.PASSIVES[randi() % GameManager.PASSIVES.size()]["id"]
 		print("[Solo] Starting game against AI: %s (Passive: %s)" % [GameManager.opponent_character, GameManager.opponent_passive])
-		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
+		_launch_game_with_countdown()
 		return
 		
 	var http = HTTPRequest.new()
@@ -435,14 +437,13 @@ func _on_start_pressed():
 func _on_start_notified(_result, code, _headers, body, http: HTTPRequest):
 	if is_instance_valid(http):
 		http.queue_free()
-	# Capture server start time so host can do correct opponent WPM estimation during resolution.
 	if code == 200:
 		var json = JSON.parse_string(body.get_string_from_utf8())
 		if json and json.get("room", null) != null:
 			GameManager.match_start_time = float(json.room.get("started_at", 0))
 	GameManager.opponent_character = _opp_character
 	GameManager.opponent_passive = _opp_passive
-	get_tree().change_scene_to_file("res://scenes/game/game.tscn")
+	_launch_game_with_countdown()
 
 func _on_back_pressed():
 	if GameManager.is_solo:
@@ -499,3 +500,12 @@ func _generate_code() -> String:
 	var code = ""
 	for i in 6: code += CHARS[randi() % CHARS.length()]
 	return code
+
+## Transition directly to the game scene — no lobby countdown.
+## The 10s skill-select phase in the game scene serves as the "get ready" window.
+var _launching: bool = false
+func _launch_game_with_countdown() -> void:
+	if _launching: return
+	_launching = true
+	if is_inside_tree():
+		get_tree().change_scene_to_file("res://scenes/game/game.tscn")

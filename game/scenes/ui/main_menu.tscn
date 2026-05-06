@@ -572,6 +572,90 @@ tracks/17/keys = {
 "update": 0,
 "values": [Color(1, 1, 1, 0)]
 }
+tracks/18/type = "value"
+tracks/18/imported = false
+tracks/18/enabled = true
+tracks/18/path = NodePath("%LogoutButton:disabled")
+tracks/18/interp = 1
+tracks/18/loop_wrap = true
+tracks/18/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/19/type = "value"
+tracks/19/imported = false
+tracks/19/enabled = true
+tracks/19/path = NodePath("CloseButton:disabled")
+tracks/19/interp = 1
+tracks/19/loop_wrap = true
+tracks/19/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/20/type = "value"
+tracks/20/imported = false
+tracks/20/enabled = true
+tracks/20/path = NodePath("AccountButton:disabled")
+tracks/20/interp = 1
+tracks/20/loop_wrap = true
+tracks/20/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/21/type = "value"
+tracks/21/imported = false
+tracks/21/enabled = true
+tracks/21/path = NodePath("%FriendsButton:disabled")
+tracks/21/interp = 1
+tracks/21/loop_wrap = true
+tracks/21/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/22/type = "value"
+tracks/22/imported = false
+tracks/22/enabled = true
+tracks/22/path = NodePath("%HistoryButton:disabled")
+tracks/22/interp = 1
+tracks/22/loop_wrap = true
+tracks/22/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/23/type = "value"
+tracks/23/imported = false
+tracks/23/enabled = true
+tracks/23/path = NodePath("Credits:disabled")
+tracks/23/interp = 1
+tracks/23/loop_wrap = true
+tracks/23/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/24/type = "value"
+tracks/24/imported = false
+tracks/24/enabled = true
+tracks/24/path = NodePath("Feedback:disabled")
+tracks/24/interp = 1
+tracks/24/loop_wrap = true
+tracks/24/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
 
 [sub_resource type="Animation" id="Animation_m1kxf"]
 resource_name = "slide_in"
@@ -791,6 +875,90 @@ tracks/17/keys = {
 "update": 0,
 "values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
 }
+tracks/18/type = "value"
+tracks/18/imported = false
+tracks/18/enabled = true
+tracks/18/path = NodePath("%LogoutButton:disabled")
+tracks/18/interp = 1
+tracks/18/loop_wrap = true
+tracks/18/keys = {
+"times": PackedFloat32Array(0, 0.8666667),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+tracks/19/type = "value"
+tracks/19/imported = false
+tracks/19/enabled = true
+tracks/19/path = NodePath("CloseButton:disabled")
+tracks/19/interp = 1
+tracks/19/loop_wrap = true
+tracks/19/keys = {
+"times": PackedFloat32Array(0, 0.8666667),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+tracks/20/type = "value"
+tracks/20/imported = false
+tracks/20/enabled = true
+tracks/20/path = NodePath("AccountButton:disabled")
+tracks/20/interp = 1
+tracks/20/loop_wrap = true
+tracks/20/keys = {
+"times": PackedFloat32Array(0, 0.9),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+tracks/21/type = "value"
+tracks/21/imported = false
+tracks/21/enabled = true
+tracks/21/path = NodePath("%FriendsButton:disabled")
+tracks/21/interp = 1
+tracks/21/loop_wrap = true
+tracks/21/keys = {
+"times": PackedFloat32Array(0, 0.8666667),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+tracks/22/type = "value"
+tracks/22/imported = false
+tracks/22/enabled = true
+tracks/22/path = NodePath("%HistoryButton:disabled")
+tracks/22/interp = 1
+tracks/22/loop_wrap = true
+tracks/22/keys = {
+"times": PackedFloat32Array(0, 0.8666667),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+tracks/23/type = "value"
+tracks/23/imported = false
+tracks/23/enabled = true
+tracks/23/path = NodePath("Credits:disabled")
+tracks/23/interp = 1
+tracks/23/loop_wrap = true
+tracks/23/keys = {
+"times": PackedFloat32Array(0, 0.9),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+tracks/24/type = "value"
+tracks/24/imported = false
+tracks/24/enabled = true
+tracks/24/path = NodePath("Feedback:disabled")
+tracks/24/interp = 1
+tracks/24/loop_wrap = true
+tracks/24/keys = {
+"times": PackedFloat32Array(0, 0.9),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_x2yvf"]
 _data = {
@@ -799,7 +967,6 @@ _data = {
 }
 
 [node name="MainMenu" type="Control" unique_id=126697270]
-modulate = Color(1, 1, 1, 0)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -814,7 +981,6 @@ libraries/ = SubResource("AnimationLibrary_intro")
 
 [node name="Greeting" type="Label" parent="." unique_id=1598912125]
 unique_name_in_owner = true
-modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -830,7 +996,6 @@ Welcome to"
 horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="." unique_id=977881426]
-modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -846,7 +1011,6 @@ horizontal_alignment = 1
 
 [node name="OnlineCount" type="Label" parent="." unique_id=793664029]
 unique_name_in_owner = true
-modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -868,9 +1032,9 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -76.640015
+offset_left = -284.0
 offset_top = -124.0
-offset_right = 198.36023
+offset_right = -8.999756
 offset_bottom = -13.0
 grow_horizontal = 0
 grow_vertical = 0
@@ -879,9 +1043,9 @@ text = "Play Online"
 [node name="JoinButton" type="Button" parent="." unique_id=893456260]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 936.36
+offset_left = 729.0
 offset_top = 554.0
-offset_right = 1067.3599
+offset_right = 859.9999
 offset_bottom = 591.0
 text = "Join button
 "
@@ -889,9 +1053,9 @@ text = "Join button
 [node name="CreateRoomButton" type="Button" parent="." unique_id=895909165]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 930.36
+offset_left = 723.0
 offset_top = 596.0
-offset_right = 1074.3599
+offset_right = 866.9999
 offset_bottom = 636.0
 text = "Create Room"
 
@@ -899,9 +1063,9 @@ text = "Create Room"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 0
-offset_left = 1135.36
+offset_left = 928.0
 offset_top = 465.0
-offset_right = 1335.3604
+offset_right = 1128.0004
 offset_bottom = 515.0
 text = "Leaderboard"
 
@@ -912,8 +1076,8 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -9.640015
-offset_right = 190.36035
+offset_left = -217.0
+offset_right = -16.999634
 offset_bottom = 50.0
 grow_horizontal = 0
 text = "Settings"
@@ -1087,8 +1251,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 720.6644
 offset_top = 862.5718
-offset_right = 1337.5869
-offset_bottom = 1219.5288
+offset_right = 1337.5874
+offset_bottom = 1219.5281
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
@@ -1103,7 +1267,7 @@ anchor_bottom = 1.0
 offset_left = 822.59814
 offset_top = 862.9369
 offset_right = 1372.7102
-offset_bottom = 1219.8895
+offset_bottom = 1219.8893
 grow_horizontal = 0
 grow_vertical = 2
 rotation = -2.9338984
@@ -1112,15 +1276,6 @@ color = Color(0.23, 0.23, 0.23, 1)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Settings" unique_id=767923969]
 libraries/ = SubResource("AnimationLibrary_x2yvf")
-
-[node name="CloseButton" type="Button" parent="Settings" unique_id=176239284]
-modulate = Color(1, 1, 1, 0)
-layout_mode = 0
-offset_left = -71.0
-offset_top = 10.0
-offset_right = -53.0
-offset_bottom = 41.0
-text = "X"
 
 [node name="SettingsLabel" type="Label" parent="Settings" unique_id=363387504]
 modulate = Color(1, 1, 1, 0)
@@ -1134,6 +1289,16 @@ offset_bottom = 39.0
 grow_horizontal = 2
 text = "Settings"
 
+[node name="CloseButton" type="Button" parent="Settings" unique_id=176239284]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+offset_left = -71.0
+offset_top = 10.0
+offset_right = -53.0
+offset_bottom = 41.0
+disabled = true
+text = "X"
+
 [node name="AccountButton" type="Button" parent="Settings" unique_id=2040134603]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 0
@@ -1141,6 +1306,7 @@ offset_left = -314.0
 offset_top = 75.0
 offset_right = -57.0
 offset_bottom = 135.0
+disabled = true
 text = "Account"
 
 [node name="FriendsButton" type="Button" parent="Settings" unique_id=987842182]
@@ -1151,6 +1317,7 @@ offset_left = -314.0
 offset_top = 150.0
 offset_right = -56.999756
 offset_bottom = 210.0
+disabled = true
 text = "Friends"
 
 [node name="Label" type="Label" parent="Settings/FriendsButton" unique_id=557679567]
@@ -1177,6 +1344,7 @@ offset_left = -314.0
 offset_top = 225.0
 offset_right = -56.999878
 offset_bottom = 285.0
+disabled = true
 text = "History"
 
 [node name="Credits" type="Button" parent="Settings" unique_id=890477433]
@@ -1186,6 +1354,7 @@ offset_left = -314.0
 offset_top = 300.0
 offset_right = -57.0
 offset_bottom = 360.0
+disabled = true
 text = "Credits
 "
 
@@ -1196,7 +1365,8 @@ offset_left = -314.0
 offset_top = 375.0
 offset_right = -57.0
 offset_bottom = 435.0
-text = "FeedBAck"
+disabled = true
+text = "Feedback"
 
 [node name="LogoutButton" type="Button" parent="Settings" unique_id=727218776]
 unique_name_in_owner = true
@@ -1206,13 +1376,14 @@ offset_left = -314.0
 offset_top = 450.0
 offset_right = -57.0
 offset_bottom = 510.0
+disabled = true
 text = "Logout"
 
 [node name="ChatBox" parent="." unique_id=975926982 instance=ExtResource("2_chat_box")]
 unique_name_in_owner = true
 layout_mode = 1
-offset_left = -197.36
-offset_right = 102.64
+offset_left = 10.0
+offset_right = 310.0
 
 [connection signal="pressed" from="PlayOnlineButton" to="." method="_on_play_online_pressed"]
 [connection signal="pressed" from="JoinButton" to="." method="_on_join_pressed"]
@@ -1222,5 +1393,9 @@ offset_right = 102.64
 [connection signal="pressed" from="JoinPanel/CancelBtn" to="." method="_on_cancel_join_pressed"]
 [connection signal="pressed" from="JoinPanel/SubmitBtn" to="." method="_on_submit_join_pressed"]
 [connection signal="pressed" from="Settings/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="Settings/AccountButton" to="." method="_on_account_pressed"]
 [connection signal="pressed" from="Settings/FriendsButton" to="." method="_on_friends_pressed"]
+[connection signal="pressed" from="Settings/HistoryButton" to="." method="_on_history_pressed"]
+[connection signal="pressed" from="Settings/Credits" to="." method="_on_credits_pressed"]
+[connection signal="pressed" from="Settings/Feedback" to="." method="_on_feedback_pressed"]
 [connection signal="pressed" from="Settings/LogoutButton" to="." method="_on_logout_pressed"]

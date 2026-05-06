@@ -1,15 +1,15 @@
-[gd_scene load_steps=2 format=3 uid="uid://048ktjm1jtjm"]
+[gd_scene load_steps=2 format=3 uid="uid://feedback_scene"]
 
-[ext_resource type="Script" path="res://scenes/ui/credits.gd" id="1_credits_script"]
+[ext_resource type="Script" path="res://scenes/ui/feedback.gd" id="1_feedback_script"]
 
-[node name="Credits" type="Control" unique_id=1793764414]
+[node name="Feedback" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_credits_script")
+script = ExtResource("1_feedback_script")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -38,21 +38,29 @@ theme_override_constants/separation = 20
 [node name="Title" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "Credits"
+text = "Feedback"
 horizontal_alignment = 1
 
-[node name="Content" type="Label" parent="VBoxContainer"]
+[node name="DescLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Type Duel
-
-Developed with Godot 4
-
-Art: Legacy-Fantasy High Forest
-Font: Default Godot
-Sound: TBD"
+text = "Share your thoughts, bug reports, or suggestions:"
 horizontal_alignment = 1
 autowrap_mode = 2
+
+[node name="FeedbackInput" type="TextEdit" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+placeholder_text = "Type your feedback here..."
+wrap_mode = 2
+
+[node name="SendButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Send Feedback"
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
 
 [node name="BackButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 50)
@@ -60,4 +68,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Back to Menu"
 
+[node name="HTTPRequest" type="HTTPRequest" parent="."]
+
+[connection signal="pressed" from="VBoxContainer/SendButton" to="." method="_on_send_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

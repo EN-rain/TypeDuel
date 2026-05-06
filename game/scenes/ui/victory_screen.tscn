@@ -38,6 +38,12 @@ theme_override_font_sizes/font_size = 64
 text = "VICTORY!"
 horizontal_alignment = 1
 
+[node name="RematchStatusLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = ""
+horizontal_alignment = 1
+
 [node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20

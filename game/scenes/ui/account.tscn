@@ -1,9 +1,9 @@
-[gd_scene format=3 uid="uid://xwrhkkjr2s8c"]
+[gd_scene format=3 uid="uid://bsts6cp4wqcmj"]
 
-[ext_resource type="Script" path="res://scenes/ui/settings.gd" id="1_settings_script"]
+[ext_resource type="Script" path="res://scenes/ui/account.gd" id="1_settings_script"]
 [ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="2_7pacj"]
 
-[node name="Settings" type="Control" unique_id=1832984600]
+[node name="Account" type="Control" unique_id=1832984600]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -62,7 +62,7 @@ theme_override_constants/separation = 20
 [node name="Title" type="Label" parent="VBoxContainer" unique_id=2117485580]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "Settings"
+text = "Account"
 horizontal_alignment = 1
 
 [node name="ChangePFPButton" type="Button" parent="VBoxContainer" unique_id=1638788306]

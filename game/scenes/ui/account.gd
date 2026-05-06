@@ -28,7 +28,7 @@ func load_current_pfp():
 		return
 	
 	# Prevent the scene's placeholder texture from flashing while we fetch the real avatar.
-	# (The PFP TextureRect has a default texture set in `settings.tscn`.)
+	# (The PFP TextureRect has a default texture set in `account.tscn`.)
 	pfp_rect.texture = null
 		
 	var url = GameManager.SERVER_URL + "/uploads/" + icon

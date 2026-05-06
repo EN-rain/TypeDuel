@@ -49,8 +49,8 @@ func toggle_skill(skill_name: String) -> void:
 	skill_activated.emit(skill_name)
 
 func reset_match() -> void:
-	player_mana         = 0
-	opponent_mana       = 0
+	player_mana         = 2
+	opponent_mana       = 2
 	player_win_streak   = 0
 	opponent_win_streak = 0
 	liora_heal_total     = 0.0
@@ -122,25 +122,11 @@ func resolve_round(
 	# ── Timeout: nobody finished (60s) ────────────────
 	if finish_mode == "no_attack":
 		player_hp_delta -= 5.0
-		if chosen_skill != "":
-			var refund: int = int(SKILL_COSTS.get(chosen_skill, 0))
-			if actor_role == "player":
-				player_mana = min(10, player_mana + refund)
-			else:
-				opponent_mana = min(10, opponent_mana + refund)
-			combat_log.append("[Timeout] 60s expired! Mana refunded +%d" % refund)
 		combat_log.append("[Timeout] -5HP. No damage dealt.")
 		return _result(0.0, -5.0, 0.0, combat_log)
 
 	# ── DNF: Failed to finish within opponent's 10s snap ──
 	if finish_mode == "dnf":
-		if chosen_skill != "":
-			var refund: int = int(SKILL_COSTS.get(chosen_skill, 0))
-			if actor_role == "player":
-				player_mana = min(10, player_mana + refund)
-			else:
-				opponent_mana = min(10, opponent_mana + refund)
-			combat_log.append("[DNF] Missed 10s snap! Mana refunded +%d" % refund)
 		combat_log.append("[DNF] Actor did not finish. 0 DMG.")
 		return _result(0.0, 0.0, 0.0, combat_log)
 
@@ -269,29 +255,30 @@ func _quickslash(wpm_mod: float, typo_penalty: float, won: bool, full_power: boo
 ## 🌪️ Whiplash (2 Mana) — Accuracy-based
 func _whiplash(acc_mod: float, typo_penalty: float, won: bool, full_power: bool, base: float, combat_log: Array, actor_role: String) -> float:
 	var dmg := maxf(0.0, ceil(base * (1.0 + acc_mod) - typo_penalty))
+	# Streak from the loser's perspective (the one being hit).
+	var loser_streak = opponent_win_streak if actor_role == "player" else player_win_streak
 
 	if won:
-		# Opponent streak punish (once only — tracked externally if needed)
-		if opponent_win_streak >= 1 and not full_power:
+		# ×2.0 bonus when the loser had a win streak (Whiplash punishes streaks)
+		if loser_streak >= 1 and not full_power:
 			dmg = ceil(dmg * 2.0)
-			combat_log.append("[Whiplash] Win + opp streak → ×2.0 = %.0f" % dmg)
+			combat_log.append("[Whiplash] Win + loser streak → ×2.0 = %.0f" % dmg)
 		else:
 			dmg = ceil(dmg * 1.15)
 			combat_log.append("[Whiplash] Win → ×1.15 = %.0f" % dmg)
-		
-		# Actor wins -> Target loses 1 Mana
+
+		# Actor wins → target loses 1 Mana (2 on full_power)
 		if actor_role == "player":
 			opponent_mana = max(0, opponent_mana - 1)
 			if full_power: opponent_mana = max(0, opponent_mana - 1)
 		else:
 			player_mana = max(0, player_mana - 1)
 			if full_power: player_mana = max(0, player_mana - 1)
-			
-		combat_log.append("[Whiplash] Target lost Mana")
+		combat_log.append("[Whiplash] Target lost %d Mana" % (2 if full_power else 1))
 	else:
 		dmg = ceil(dmg * 0.85)
 		combat_log.append("[Whiplash] Lose → ×0.85 = %.0f" % dmg)
-		# Actor loses -> Actor loses 1 Mana
+		# Actor loses → actor loses 1 Mana
 		if actor_role == "player":
 			player_mana = max(0, player_mana - 1)
 		else:

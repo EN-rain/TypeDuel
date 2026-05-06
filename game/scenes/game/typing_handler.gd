@@ -26,6 +26,7 @@ var typos_count: int         = 0
 var total_keystrokes: int    = 0
 var typos_in_current_word: int = 0
 var _perfect_words_streak: int = 0
+var _final_wpm: int          = -1  # locked when sentence finishes; -1 = still typing
 
 # Queued mutations to send to opponent
 var queued_mutations: Array  = []
@@ -67,6 +68,7 @@ func _reset_typing_state() -> void:
 	total_keystrokes       = 0
 	typos_in_current_word  = 0
 	_perfect_words_streak  = 0
+	_final_wpm             = -1
 	queued_mutations.clear()
 	set_meta("jumble_triggered_this_round", false)
 	if accuracy_warning: accuracy_warning.hide()
@@ -77,6 +79,8 @@ func _reset_typing_state() -> void:
 # ─────────────────────────────────────────────
 
 func get_wpm() -> int:
+	# Return the locked final WPM once the sentence is done — never drops after finishing.
+	if _final_wpm >= 0: return _final_wpm
 	if not is_typing or sentence_start_time <= 0: return 0
 	var elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
 	if elapsed_min <= 0: return 0
@@ -172,6 +176,11 @@ func _check_sentence_complete() -> void:
 		var cur_wpm = (float(current_index) / 5.0) / elapsed_min if elapsed_min > 0 else 0.0
 		SkillsManager.on_accurate_word(cur_wpm)
 
+	# Lock WPM at the exact moment of completion — prevents it from dropping after finishing.
+	if sentence_start_time > 0:
+		var elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
+		_final_wpm = int((float(current_index) / 5.0) / elapsed_min) if elapsed_min > 0 else 0
+
 	var correct_letters = total_keystrokes - typos_count
 	var required = int(ceil(float(target_sentence.length()) * 0.6))
 	if correct_letters < required:
@@ -222,11 +231,14 @@ func apply_mutation(mut: Dictionary) -> void:
 			set_meta("stutter_effect2_pending", true)
 			set_meta("passive_highlight_word", words[w_idx].split(" ")[0])
 		"reversal":
-			var full = " ".join(words)
+			# Reverse one random unstarted word in place — the word stays in position
+			# but its characters are reversed, making it harder to type.
+			var w_idx = randi() % words.size()
+			var w = words[w_idx]
 			var rev = ""
-			for i in range(full.length() - 1, -1, -1):
-				rev += full[i]
-			words = [rev]
+			for ci in range(w.length() - 1, -1, -1):
+				rev += w[ci]
+			words[w_idx] = rev
 		"phantom":
 			if words.size() >= 2:
 				var i1 = randi() % words.size()

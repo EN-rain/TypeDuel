@@ -35,10 +35,6 @@ const SKILL_ANIM_NAME = {
 var p1: Node = null
 var p2: Node = null
 
-# State for frame-perfect hits
-var _p1_dmg_to_take: float = 0.0
-var _p2_dmg_to_take: float = 0.0
-
 # ─────────────────────────────────────────────
 #  Sprite helpers
 # ─────────────────────────────────────────────
@@ -126,79 +122,105 @@ func attack_anim_for(char_name: String, skill_id: String) -> String:
 #  Combat animations
 # ─────────────────────────────────────────────
 
-func play_combat_anims(skill_id: String, player_damage_dealt: float, opp_skill_id: String = "", opp_damage_dealt: float = 0.0) -> void:
+func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode: String = "") -> void:
 	var my_char: String = GameManager.selected_character
 	var opp_char: String = GameManager.opponent_character
-	
+
+	# Yield one frame so the scene tree is fully settled before playing animations.
+	await get_tree().process_frame
+
 	var hud_anim: AnimationPlayer = null
 	if get_parent() and get_parent().has_node("HUD/Animation/AnimationPlayer"):
 		hud_anim = get_parent().get_node("HUD/Animation/AnimationPlayer")
 
-	# 1. Play "skill_extra" HUD animation if any skill is used
-	if (skill_id != "" or opp_skill_id != "") and hud_anim:
-		if hud_anim.has_animation("skill_extra"):
-			hud_anim.play("skill_extra")
-			await hud_anim.animation_finished
+	var player_has_skill: bool = skill_id != ""
+	var opp_has_skill:    bool = opp_skill_id != ""
+	var any_skill:        bool = player_has_skill or opp_has_skill
 
-	# Store damage to know if hit reactions should trigger during frames
-	_p2_dmg_to_take = player_damage_dealt
-	_p1_dmg_to_take = opp_damage_dealt
+	# ── HUD "anim" forward — only when at least one skill fires ──────────
+	if any_skill and hud_anim and hud_anim.has_animation("anim"):
+		hud_anim.play("anim")
+		await hud_anim.animation_finished
 
-	# 2. Play Player's Attack (if any)
-	if skill_id != "":
-		var attack_anim: String = attack_anim_for(my_char, skill_id)
-		var sprite = get_visual(p1)
-		var target_marker = p2.get_node_or_null("Marker2D") if p2 else null
-		
-		if skill_id != "quickslash" and target_marker and sprite:
-			sprite.global_position = target_marker.global_position
-			
-		safe_play_anim(p1, attack_anim)
-	elif player_damage_dealt > 0:
-		safe_play_anim(p1, "quickslash")
-		
-	# 3. Play Opponent's Attack (if any)
-	if opp_skill_id != "":
-		var opp_attack_anim: String = attack_anim_for(opp_char, opp_skill_id)
-		var opp_sprite = get_visual(p2)
-		var target_marker = p1.get_node_or_null("Marker2D") if p1 else null
-		
-		if opp_skill_id != "quickslash" and target_marker and opp_sprite:
-			opp_sprite.global_position = target_marker.global_position
-			
-		safe_play_anim(p2, opp_attack_anim)
-	elif opp_damage_dealt > 0:
-		safe_play_anim(p2, "quickslash")
+	# ── Determine sequencing from finish_mode ────────────────────────────
+	# player_won  → player attacks first, then opponent (if they have a skill)
+	# opp_won     → opponent attacks first, then player (if they have a skill)
+	# simultaneous (no_attack / "") → timeout penalty, no skill anims
+	var player_won:    bool = finish_mode in ["buff", "full_power", "tie"]
+	var simultaneous:  bool = finish_mode == "no_attack" or finish_mode == ""
 
-	# 4. Handle Responses (Impact)
-	# Impact is handled via signals (trigger_hit) in player.gd.
-	
-	# Wait for the longest possible attack animation to finish
-	var wait_time = 0.5 # Default for quickslash/fallback
-	if skill_id == "whiplash" or opp_skill_id == "whiplash":
-		wait_time = 1.0
-	elif skill_id != "" or opp_skill_id != "":
-		wait_time = 0.8
-		
-	await get_tree().create_timer(wait_time).timeout
-	
-	# 5. Restore Idles and Reset Positions
+	if simultaneous:
+		# Timeout: both take the penalty hit at the same time, no skill anims.
+		await get_tree().create_timer(0.15).timeout
+		_on_self_penalty()
+		await get_tree().create_timer(0.4).timeout
+
+	elif player_won:
+		# ── Winner (player) attacks first ────────────────────────────────
+		if player_has_skill:
+			var atk = attack_anim_for(my_char, skill_id)
+			var sprite = get_visual(p1)
+			var marker = p2.get_node_or_null("Marker2D") if p2 else null
+			if skill_id != "quickslash" and marker and sprite:
+				sprite.global_position = marker.global_position
+			safe_play_anim(p1, atk)
+			var wait = 1.0 if skill_id == "whiplash" else 0.8
+			await get_tree().create_timer(wait).timeout
+			# Reset player position after their attack
+			var s1 = get_visual(p1)
+			if s1: s1.position = Vector2.ZERO
+
+		# ── Loser (opponent) retaliates after (if they have a skill) ─────
+		if opp_has_skill:
+			var opp_atk = attack_anim_for(opp_char, opp_skill_id)
+			var opp_sprite = get_visual(p2)
+			var marker = p1.get_node_or_null("Marker2D") if p1 else null
+			if opp_skill_id != "quickslash" and marker and opp_sprite:
+				opp_sprite.global_position = marker.global_position
+			safe_play_anim(p2, opp_atk)
+			var wait = 1.0 if opp_skill_id == "whiplash" else 0.8
+			await get_tree().create_timer(wait).timeout
+			# Reset opponent position after their attack
+			var s2 = get_visual(p2)
+			if s2: s2.position = Vector2.ZERO
+
+	else:
+		# ── Winner (opponent) attacks first ──────────────────────────────
+		if opp_has_skill:
+			var opp_atk = attack_anim_for(opp_char, opp_skill_id)
+			var opp_sprite = get_visual(p2)
+			var marker = p1.get_node_or_null("Marker2D") if p1 else null
+			if opp_skill_id != "quickslash" and marker and opp_sprite:
+				opp_sprite.global_position = marker.global_position
+			safe_play_anim(p2, opp_atk)
+			var wait = 1.0 if opp_skill_id == "whiplash" else 0.8
+			await get_tree().create_timer(wait).timeout
+			var s2 = get_visual(p2)
+			if s2: s2.position = Vector2.ZERO
+
+		# ── Loser (player) retaliates after (if they have a skill) ───────
+		if player_has_skill:
+			var atk = attack_anim_for(my_char, skill_id)
+			var sprite = get_visual(p1)
+			var marker = p2.get_node_or_null("Marker2D") if p2 else null
+			if skill_id != "quickslash" and marker and sprite:
+				sprite.global_position = marker.global_position
+			safe_play_anim(p1, atk)
+			var wait = 1.0 if skill_id == "whiplash" else 0.8
+			await get_tree().create_timer(wait).timeout
+			var s1 = get_visual(p1)
+			if s1: s1.position = Vector2.ZERO
+
+	# ── Restore idles ─────────────────────────────────────────────────────
 	restore_idle_after(p1, my_char, 0.1)
 	restore_idle_after(p2, opp_char, 0.1)
-	
-	# Reset local sprite positions (teleport back)
-	var s1 = get_visual(p1)
-	var s2 = get_visual(p2)
-	if s1: s1.position = Vector2.ZERO
-	if s2: s2.position = Vector2.ZERO
-	
+
 	_check_death_final()
-	
-	# 6. Reverse "skill_extra"
-	if (skill_id != "" or opp_skill_id != "") and hud_anim:
-		if hud_anim.has_animation("skill_extra"):
-			hud_anim.play_backwards("skill_extra")
-			await hud_anim.animation_finished
+
+	# ── HUD "anim" backwards — only when at least one skill fired ─────────
+	if any_skill and hud_anim and hud_anim.has_animation("anim"):
+		hud_anim.play_backwards("anim")
+		await hud_anim.animation_finished
 
 func play_death_anim(entity: String) -> void:
 	var my_char:  String = GameManager.selected_character
@@ -259,26 +281,46 @@ func spawn_players(parent: Node) -> void:
 		parent.add_child(p2)
 
 func _on_p1_hit() -> void:
-	if _p2_dmg_to_take > 0:
-		var opp_char: String = GameManager.opponent_character
-		spawn_blood_particles(p2.global_position)
-		if HPManager.opponent_hp <= 0:
-			safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
-		else:
-			safe_play_anim(p2, str(CHARACTER_HURT_ANIM.get(opp_char, "hurt")))
-			fade_out_in(p2)
-			restore_idle_after(p2, opp_char, 0.4) # Return to idle after hurt
+	var opp_char: String = GameManager.opponent_character
+	spawn_blood_particles(p2.global_position)
+	if HPManager.opponent_hp <= 0:
+		safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
+	else:
+		safe_play_anim(p2, str(CHARACTER_HURT_ANIM.get(opp_char, "hurt")))
+		fade_out_in(p2)
+		restore_idle_after(p2, opp_char, 0.4)
 
 func _on_p2_hit() -> void:
-	if _p1_dmg_to_take > 0:
-		var my_char: String = GameManager.selected_character
-		spawn_blood_particles(p1.global_position)
-		if HPManager.player_hp <= 0:
-			safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
-		else:
-			safe_play_anim(p1, str(CHARACTER_HURT_ANIM.get(my_char, "hurt")))
-			fade_out_in(p1)
-			restore_idle_after(p1, my_char, 0.4) # Return to idle after hurt
+	var my_char: String = GameManager.selected_character
+	spawn_blood_particles(p1.global_position)
+	if HPManager.player_hp <= 0:
+		safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
+	else:
+		safe_play_anim(p1, str(CHARACTER_HURT_ANIM.get(my_char, "hurt")))
+		fade_out_in(p1)
+		restore_idle_after(p1, my_char, 0.4)
+
+## Timeout penalty (-5 HP to both, no attacker).
+## Both characters take the hit simultaneously — hurt anim + blood on each.
+func _on_self_penalty() -> void:
+	var my_char:  String = GameManager.selected_character
+	var opp_char: String = GameManager.opponent_character
+	# Player side
+	spawn_blood_particles(p1.global_position)
+	if HPManager.player_hp <= 0:
+		safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
+	else:
+		safe_play_anim(p1, str(CHARACTER_HURT_ANIM.get(my_char, "hurt")))
+		fade_out_in(p1)
+		restore_idle_after(p1, my_char, 0.4)
+	# Opponent side
+	spawn_blood_particles(p2.global_position)
+	if HPManager.opponent_hp <= 0:
+		safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
+	else:
+		safe_play_anim(p2, str(CHARACTER_HURT_ANIM.get(opp_char, "hurt")))
+		fade_out_in(p2)
+		restore_idle_after(p2, opp_char, 0.4)
 
 func spawn_blood_particles(pos: Vector2) -> void:
 	var particles = CPUParticles2D.new()

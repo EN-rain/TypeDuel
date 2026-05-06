@@ -41,8 +41,9 @@ var current_target_username: String = ""
 var _pending_sent: Array = [] # Array of {room_key, username, text}
 
 func _ready():
-	# Start with panel off-screen to the left
+	# Start with panel off-screen to the left and hidden
 	chat_panel.position.x = -chat_panel.size.x - 20
+	chat_panel.hide()
 	
 	# Tab buttons
 	global_btn.pressed.connect(_switch_tab.bind("global"))
@@ -50,8 +51,8 @@ func _ready():
 	friend_btn.pressed.connect(_switch_tab.bind("friends"))
 	_update_tab_visuals()
 	
-	# Clicking the design-only fake input expands the panel
-	fake_input.focus_entered.connect(_expand_panel)
+	# Use gui_input or a dedicated Button instead of focus_entered to avoid toggle loops
+	fake_input.gui_input.connect(_on_fake_input_gui_input)
 	
 	# Real input logic
 	real_input.text_submitted.connect(_on_send_pressed)
@@ -68,6 +69,11 @@ func _ready():
 	if room_id != "" and room_id != "global":
 		_fetch_messages("local")
 	
+func _on_fake_input_gui_input(event: InputEvent):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if not is_expanded:
+			_expand_panel()
+
 func _input(event):
 	# Collapse if clicking outside the panel while expanded
 	if event is InputEventMouseButton and event.pressed and is_expanded:
@@ -75,7 +81,8 @@ func _input(event):
 		var fake_rect = fake_input.get_global_rect()
 		
 		if not panel_rect.has_point(event.global_position) and not fake_rect.has_point(event.global_position):
-			_collapse_panel()
+			# Use call_deferred to avoid conflict with the click event that might be triggering a reopen
+			_collapse_panel.call_deferred()
 
 func _process(delta):
 	poll_timer += delta
@@ -133,6 +140,10 @@ func _rebuild_chat_view():
 func _expand_panel():
 	if is_expanded: return
 	is_expanded = true
+	chat_panel.show()
+	
+	# Force process to update transform so mouse filters work correctly
+	chat_panel.set_process_unhandled_input(true)
 	
 	var tween = create_tween()
 	if current_tab == "global" and room_id != "" and room_id != "global":
@@ -154,6 +165,9 @@ func _collapse_panel():
 	
 	var tween = create_tween()
 	tween.tween_property(chat_panel, "position:x", -chat_panel.size.x - 20, panel_slide_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.finished.connect(func(): 
+		chat_panel.hide()
+	)
 
 func _fetch_messages(room_name: String):
 	if room_name == "": return

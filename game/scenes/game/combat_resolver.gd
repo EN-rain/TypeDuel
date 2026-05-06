@@ -21,11 +21,18 @@ func resolve(finish_mode: String, chosen_skill: String, enemy_typing_progress: f
 		server_first_finish_at_ms: float, current_round: int) -> Dictionary:
 
 	var sentence_length = typing_handler.target_sentence.length()
-	var elapsed_ms: float = float(Time.get_ticks_msec() - typing_handler.sentence_start_time)
-	var safe_elapsed_ms: float = max(250.0, elapsed_ms)
-	var time_elapsed_min: float = safe_elapsed_ms / 60000.0
 	var words: float = float(sentence_length) / 5.0
-	var wpm: int = clamp(int(words / time_elapsed_min) if time_elapsed_min > 0.0 else 0, 0, 250)
+
+	# Use the locked final WPM if available (captured at the exact finish moment).
+	# Fall back to calculating from elapsed time only if the sentence wasn't completed.
+	var wpm: int
+	if typing_handler._final_wpm >= 0:
+		wpm = typing_handler._final_wpm
+	else:
+		var elapsed_ms: float = float(Time.get_ticks_msec() - typing_handler.sentence_start_time)
+		var safe_elapsed_ms: float = max(250.0, elapsed_ms)
+		var time_elapsed_min: float = safe_elapsed_ms / 60000.0
+		wpm = clamp(int(words / time_elapsed_min) if time_elapsed_min > 0.0 else 0, 0, 250)
 
 	var accuracy = typing_handler.get_accuracy()
 	var typos    = typing_handler.typos_count
@@ -75,7 +82,11 @@ func _mirror_finish_mode(fm: String) -> String:
 
 func _estimate_opp_wpm(opp_finish_mode: String, words: float, server_first_finish_at_ms: float) -> int:
 	if opp_finish_mode in ["buff", "tie"]:
-		var start_ms = GameManager.match_start_time
+		# Use typing_started_at as the baseline — match_start_time includes skill select
+		# and would massively underestimate WPM.
+		var start_ms = network_sync.server_typing_started_at_ms
+		if start_ms <= 0:
+			start_ms = GameManager.match_start_time  # fallback only
 		var finish_ms = server_first_finish_at_ms if server_first_finish_at_ms > 0 else float(Time.get_unix_time_from_system() * 1000.0)
 		var dur_min = (finish_ms - start_ms) / 60000.0
 		return clamp(int(words / dur_min) if dur_min > 0.0 else 0, 0, 250)
@@ -141,7 +152,8 @@ func show_victory(entity: String, hud: Node) -> void:
 	await get_tree().create_timer(0.6).timeout
 
 	var victory_scene = load("res://scenes/ui/victory_screen.tscn").instantiate()
-	get_tree().paused = true
+	# Don't pause the game - victory screen needs to poll for rematch status
+	get_tree().paused = false
 	victory_scene.process_mode = Node.PROCESS_MODE_ALWAYS
 	hud.add_child(victory_scene)
 
@@ -228,13 +240,10 @@ func show_match_ended_overlay(hud: Node, reason: String) -> void:
 
 func _save_match_history(won: bool) -> void:
 	if GameManager.user_data.id == 0: return
-	var wpm = 0.0
+	# Use the locked final WPM if available (most accurate — captured at finish moment).
+	# Fall back to calculating from sentence_length / elapsed if still typing (shouldn't happen).
+	var wpm = float(typing_handler.get_wpm())
 	var accuracy = typing_handler.get_accuracy()
-	var time_elapsed_min = 0.0
-	if typing_handler.is_typing and typing_handler.sentence_start_time > 0:
-		time_elapsed_min = (Time.get_ticks_msec() - typing_handler.sentence_start_time) / 60000.0
-	if time_elapsed_min > 0:
-		wpm = (float(typing_handler.total_keystrokes) / 5.0) / time_elapsed_min
 	wpm      = clampf(wpm if is_finite(wpm) else 0.0, 0.0, 250.0)
 	accuracy = clampf(accuracy if is_finite(accuracy) else 0.0, 0.0, 100.0)
 

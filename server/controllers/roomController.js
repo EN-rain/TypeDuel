@@ -157,6 +157,9 @@ const createRoom = (req, res) => {
         guest_hp:          0,
         host_last_seen_at: Date.now(),
         guest_last_seen_at: 0,
+        // Rematch tracking
+        host_wants_rematch: false,
+        guest_wants_rematch: false,
         forfeit:        null,
         disconnect:     null,
         created_at:     Date.now(),
@@ -605,4 +608,69 @@ const updateHP = (req, res) => {
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
-module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom, matchmake, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP };
+// PATCH /api/rooms/:code/rematch - Mark that a player wants to rematch
+const updateRematch = (req, res) => {
+    const code = _normalizeCode(req.params.code);
+    const room = rooms[code];
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+    
+    const actorId = _actorId(req);
+    if (room.host_id != actorId && room.guest_id != actorId) {
+        return res.status(403).json({ message: 'Not in this room' });
+    }
+    
+    if (!_assertBodyUserMatchesActor(req, res)) return;
+    
+    const wantsRematch = req.body.wants_rematch === true;
+    
+    if (room.host_id == actorId) {
+        room.host_wants_rematch = wantsRematch;
+    } else if (room.guest_id == actorId) {
+        room.guest_wants_rematch = wantsRematch;
+    }
+    
+    // If both want rematch, reset the room to lobby state
+    if (room.host_wants_rematch && room.guest_wants_rematch) {
+        // Reset game state but keep players
+        room.status = 'lobby';
+        room.phase = 'lobby';
+        room.phase_started_at = null;
+        room.typing_started_at = null;
+        room.first_finish_at = null;
+        room.first_finish_by = null;
+        room.round_id = 0;
+        
+        // Clear selections
+        room.host_character = null;
+        room.host_skills = [];
+        room.host_passive = "";
+        room.host_skill = "";
+        room.host_progress = 0.0;
+        room.host_typos = 0;
+        room.host_mutations = [];
+        room.host_hp = 100;
+        
+        room.guest_character = null;
+        room.guest_skills = [];
+        room.guest_passive = "";
+        room.guest_skill = "";
+        room.guest_progress = 0.0;
+        room.guest_typos = 0;
+        room.guest_mutations = [];
+        room.guest_hp = 100;
+        
+        // Reset rematch flags
+        room.host_wants_rematch = false;
+        room.guest_wants_rematch = false;
+        
+        // Clear forfeit if any
+        room.forfeit = null;
+    }
+    
+    room.seq = (room.seq || 0) + 1;
+    _touchRoomPresence(room, actorId);
+    
+    return res.json({ ok: true, room: roomSnapshot(room) });
+};
+
+module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom, matchmake, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP, updateRematch };

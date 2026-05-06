@@ -79,7 +79,6 @@ func _ready():
 	friends_panel.get_node("%ReqBtn").pressed.connect(_on_req_btn_pressed)
 	friends_dimmer.pressed.connect(_collapse_friends)
 	
-	%HistoryButton.pressed.connect(_on_history_pressed)
 	
 	_setup_chat()
 
@@ -337,9 +336,19 @@ func _on_poll_match_done(_result, code, _headers, body, http):
 func _on_leaderboard_pressed():
 	get_tree().change_scene_to_file(SCENE_LEADERBOARD)
 
+var is_settings_open := false
+
 func _on_settings_pressed():
+	is_settings_open = true
 	$Settings.show()
 	$Settings/AnimationPlayer.play("slide_in")
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_settings_open:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_on_close_button_pressed()
+		get_viewport().set_input_as_handled()
 
 func _on_logout_pressed():
 	# Notify server we're going offline
@@ -372,6 +381,15 @@ func _on_friends_pressed():
 
 func _on_history_pressed():
 	get_tree().change_scene_to_file("res://scenes/ui/history.tscn")
+
+func _on_account_pressed():
+	get_tree().change_scene_to_file("res://scenes/ui/account.tscn")
+
+func _on_credits_pressed():
+	get_tree().change_scene_to_file("res://scenes/ui/credits.tscn")
+
+func _on_feedback_pressed():
+	get_tree().change_scene_to_file("res://scenes/ui/feedback.tscn")
 
 func _expand_friends():
 	is_friends_expanded = true
@@ -736,4 +754,5 @@ func _on_remove_friend(friend_id: int):
 
 
 func _on_close_button_pressed() -> void:
+	is_settings_open = false
 	$Settings/AnimationPlayer.play_backwards("slide_in")
