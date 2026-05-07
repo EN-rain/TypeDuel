@@ -70,23 +70,6 @@ theme_override_font_sizes/font_size = 32
 text = "Credits"
 horizontal_alignment = 1
 
-[node name="Content" type="Label" parent="VBoxContainer" unique_id=1411759527]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("3_pqmjv")
-theme_override_font_sizes/font_size = 18
-text = "Type Duel
-
-Developed with Godot 4
-
-Art: Legacy-Fantasy High Forest
-Font: Default Godot
-Sound: TBD"
-horizontal_alignment = 1
-autowrap_mode = 2
-
 [node name="Dev" type="Label" parent="VBoxContainer" unique_id=309617851]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -94,7 +77,10 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 6
 theme_override_fonts/font = ExtResource("3_pqmjv")
 theme_override_font_sizes/font_size = 24
-text = "Developers"
+text = "Type Duel
+Developed with Godot 4
+
+Developers"
 horizontal_alignment = 1
 
 [node name="Developer" type="Label" parent="VBoxContainer" unique_id=394167502]
@@ -107,6 +93,22 @@ theme_override_font_sizes/font_size = 24
 text = "Edrian C. Nieves
 Joshua Ian G. Cadiz"
 horizontal_alignment = 1
+
+[node name="Content" type="Label" parent="VBoxContainer" unique_id=1411759527]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_pqmjv")
+theme_override_font_sizes/font_size = 18
+text = "Other Credits:
+Tiny RPG - Mana Soul GUI by tiopalada
+
+Universal LPC Spritesheet Generator by bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+
+opengameart.org"
+horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="BackButton" type="Button" parent="VBoxContainer" unique_id=1826654064]
 custom_minimum_size = Vector2(0, 50)
