@@ -6,6 +6,10 @@ extends Control
 @onready var http_request = $HTTPRequest
 
 func _ready():
+	# Fade in UI content only
+	$VBoxContainer.modulate.a = 0.0
+	var tween = create_tween()
+	tween.tween_property($VBoxContainer, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	http_request.request_completed.connect(_on_request_completed)
 
 func _on_send_button_pressed():

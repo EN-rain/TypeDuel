@@ -1,0 +1,200 @@
+[gd_scene format=3 uid="uid://bmf4vwr5kirwa"]
+
+[sub_resource type="Animation" id="Animation_ayp64"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ColorRect1:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1450.5471, -197.45428)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("ColorRect2:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1521.5347, -173.09607)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("ColorRect3:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1645.781, -226.25311)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("ColorRect4:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1776.1726, -281)]
+}
+
+[sub_resource type="Animation" id="Animation_877pj"]
+resource_name = "transition"
+step = 0.03
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ColorRect1:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(-0.008333334, 0, 1),
+"transitions": PackedFloat32Array(-2, 1, -2),
+"update": 0,
+"values": [Vector2(-662.4529, -197.45428), Vector2(-834, -394), Vector2(1450.5471, -197.45428)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("ColorRect2:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.49979937, 0.5, 0.50245976),
+"transitions": PackedFloat32Array(-0.5, 1, -0.5, 1),
+"update": 0,
+"values": [Vector2(-577, -635), Vector2(1536, -337), Vector2(1521.5347, -173.09607), Vector2(1569.0001, -346)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("ColorRect3:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(-0.008333334, 0.96666664),
+"transitions": PackedFloat32Array(-0.5, -0.5),
+"update": 0,
+"values": [Vector2(-467.219, -226.25311), Vector2(1645.781, -226.25311)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("ColorRect4:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(-0.008333334, 0, 0.8),
+"transitions": PackedFloat32Array(-0.5, 1, -0.5),
+"update": 0,
+"values": [Vector2(-336.8274, -281), Vector2(-330.99854, -281), Vector2(1776.1726, -281)]
+}
+tracks/4/type = "method"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("..")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0.38664556),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_do_scene_change"
+}]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ayp64"]
+_data = {
+&"RESET": SubResource("Animation_ayp64"),
+&"transition": SubResource("Animation_877pj")
+}
+
+[node name="Transition" type="Control" unique_id=1347036154]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=150149867]
+libraries/ = SubResource("AnimationLibrary_ayp64")
+
+[node name="ColorRect1" type="ColorRect" parent="." unique_id=642367684]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 298.54712
+offset_top = -521.4543
+offset_right = 1181.5908
+offset_bottom = 863.3843
+grow_horizontal = 0
+grow_vertical = 2
+rotation = 0.31415927
+color = Color(0.32212296, 0.2721211, 0.7177608, 1)
+
+[node name="ColorRect2" type="ColorRect" parent="." unique_id=1472453465]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 369.53467
+offset_top = -497.09607
+offset_right = 985.65234
+offset_bottom = 1017.7938
+grow_horizontal = 0
+grow_vertical = 2
+rotation = 0.31415927
+color = Color(1, 0.43, 0.43, 1)
+
+[node name="ColorRect3" type="ColorRect" parent="." unique_id=1680689077]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 493.781
+offset_top = -550.2531
+offset_right = 1098.6792
+offset_bottom = 465.60022
+grow_horizontal = 0
+grow_vertical = 2
+rotation = 0.31415927
+color = Color(0.5910364, 0.65055186, 0.84996295, 1)
+
+[node name="ColorRect4" type="ColorRect" parent="." unique_id=1349918725]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 624.1726
+offset_top = -605.0
+offset_right = 1155.2009
+offset_bottom = 409.1529
+grow_horizontal = 0
+grow_vertical = 2
+rotation = 0.31415927
+color = Color(0.26292354, 0.7254354, 0.70339155, 1)

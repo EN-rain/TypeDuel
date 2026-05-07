@@ -118,7 +118,7 @@ function _makeMatchmakingRoom(code, hostId, hostName, guestId, guestName) {
         code,
         seq:             0,
         matchmaking:     true,
-        matchmaking_deadline_at: Date.now() + 15000,
+        matchmaking_deadline_at: Date.now() + 60000,
         host_id:         hostId,
         host_name:       hostName,
         host_character:  null,

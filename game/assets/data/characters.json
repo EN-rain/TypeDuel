@@ -1,0 +1,25 @@
+{
+  "characters": [
+    {
+      "name": "Riven",
+      "hp": 85,
+      "base_dmg": 22,
+      "innate": "Bloodlust",
+      "description": "Every round she deals damage she loses 3HP. Win 2 consecutive rounds to pause self-damage and reset the streak."
+    },
+    {
+      "name": "Liora",
+      "hp": 100,
+      "base_dmg": 16,
+      "innate": "Grace",
+      "description": "Every round accuracy above 95% heals 3HP. Capped at 15HP total per match."
+    },
+    {
+      "name": "Zephon",
+      "hp": 85,
+      "base_dmg": 20,
+      "innate": "Overdrive",
+      "description": "When Mana reaches 9 or higher, gain +5 bonus damage to your attack."
+    }
+  ]
+}

@@ -1,9 +1,29 @@
 [gd_scene format=3 uid="uid://cw6ya0kyka2o7"]
 
 [ext_resource type="Script" uid="uid://bycn2sw6cvv86" path="res://scenes/ui/chat_box.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://hcq5v2df66mt" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoul9SlicesA-Sheet.png" id="2_ekf4m"]
 [ext_resource type="FontFile" uid="uid://bicshrxinrma8" path="res://assets/fonts/pixel_operator/PixelOperator-Bold.ttf" id="2_ttgj5"]
 [ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="3_8duet"]
 [ext_resource type="Texture2D" uid="uid://d2pef68okqu8n" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabC-Sheet.png" id="4_8duet"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.6)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fake_input"]
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 0.8)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_chatbg"]
+texture = ExtResource("2_ekf4m")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ekf4m"]
 texture = ExtResource("3_8duet")
@@ -57,6 +77,10 @@ offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
 focus_mode = 1
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.6)
+theme_override_styles/normal = SubResource("StyleBoxFlat_fake_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_fake_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_fake_input")
 placeholder_text = "No messages yet..."
 editable = false
 context_menu_enabled = false
@@ -68,11 +92,13 @@ drag_and_drop_selection_enabled = false
 
 [node name="ChatPanel" type="Panel" parent="." unique_id=1299220153]
 unique_name_in_owner = true
+texture_filter = 1
 layout_mode = 0
-offset_left = -433.0
+offset_left = -451.0
 offset_top = -608.0
-offset_right = -6.0
+offset_right = -24.0
 offset_bottom = 40.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_chatbg")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ChatPanel" unique_id=1562125884]
 layout_mode = 1
@@ -80,9 +106,9 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 10.0
-offset_top = 10.0
+offset_top = 46.0
 offset_right = -10.0
-offset_bottom = -10.0
+offset_bottom = -54.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -144,7 +170,15 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="MessagesVBox" type="VBoxContainer" parent="ChatPanel/VBoxContainer/ContentHBox/ScrollContainer" unique_id=1475129079]
+[node name="MessagesMargin" type="MarginContainer" parent="ChatPanel/VBoxContainer/ContentHBox/ScrollContainer" unique_id=1129583244]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="MessagesVBox" type="VBoxContainer" parent="ChatPanel/VBoxContainer/ContentHBox/ScrollContainer/MessagesMargin" unique_id=1475129079]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -157,10 +191,14 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxFlat_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_input")
 placeholder_text = "Type message..."
 
 [node name="SendButton" type="Button" parent="ChatPanel/VBoxContainer/InputHBox" unique_id=1634010114]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)

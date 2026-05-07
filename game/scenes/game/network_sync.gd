@@ -272,9 +272,12 @@ func set_phase(phase: String, round_id: int) -> void:
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/phase",
 		GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, JSON.stringify(payload))
 
+var _hp_sync_sent_at_ms: float = 0.0  # timestamp of last sync_hp call
+
 func sync_hp() -> void:
 	if GameManager.current_room == "" or GameManager.user_data.id == 0: return
 	if GameManager.is_solo or not GameManager.is_host: return
+	_hp_sync_sent_at_ms = Time.get_ticks_msec()
 	var payload: Dictionary = {
 		"user_id":  GameManager.user_data.id,
 		"host_hp":  HPManager.player_hp,
@@ -318,6 +321,11 @@ func apply_hp_from_room(room: Dictionary) -> void:
 	var guest_hp: float = float(room.get("guest_hp", 0))
 	# Skip only if the server has never written HP (both 0 = before first sync_hp call).
 	if host_hp == 0 and guest_hp == 0: return
+	# Host: ignore polls for 1.5s after sending sync_hp to avoid stale overwrites
+	if GameManager.is_host and _hp_sync_sent_at_ms > 0:
+		var ms_since_sync = Time.get_ticks_msec() - _hp_sync_sent_at_ms
+		if ms_since_sync < 1500:
+			return
 	if GameManager.is_host:
 		if abs(HPManager.player_hp   - host_hp)  > 0.01:
 			print("[HPSync] HOST player_hp: %.0f → %.0f" % [HPManager.player_hp, host_hp])

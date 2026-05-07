@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://dlj5pcdj40ece"]
+[gd_scene format=3 uid="uid://dobbtxmcr2uv1"]
 
-[ext_resource type="Script" path="res://scenes/ui/feedback.gd" id="1_feedback_script"]
+[ext_resource type="Script" uid="uid://dt2jffk7y5kd4" path="res://scenes/ui/feedback.gd" id="1_feedback_script"]
 [ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="2_ay7y4"]
-[ext_resource type="Texture2D" uid="uid://c1qfj3rwamvrn" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_pp8x5"]
+[ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_pp8x5"]
 [ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="3_pp8x5"]
-[ext_resource type="Texture2D" uid="uid://rfvv3o4lhaev" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_vq46c"]
-[ext_resource type="Texture2D" uid="uid://d3jct2xqj1e5l" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_3lw1g"]
+[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_vq46c"]
+[ext_resource type="Texture2D" uid="uid://bqqanitehsl4m" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_3lw1g"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vuj66"]
 texture = ExtResource("4_vq46c")
@@ -91,6 +91,7 @@ text = "Send Feedback"
 
 [node name="StatusLabel" type="Label" parent="VBoxContainer" unique_id=535636411]
 layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
 horizontal_alignment = 1
 
 [node name="BackButton" type="Button" parent="VBoxContainer" unique_id=246756668]

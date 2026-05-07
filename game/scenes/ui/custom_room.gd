@@ -625,11 +625,7 @@ func _leave_and_menu():
 	else:
 		_leave_room()
 
-	if scene_anim_player != null and scene_anim_player.has_animation(&"intro"):
-		scene_anim_player.play_backwards(&"intro")
-		await scene_anim_player.animation_finished
-	if is_inside_tree():
-		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	TransitionManager.back("res://scenes/ui/main_menu.tscn")
 
 func _on_room_code_input(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -776,11 +772,10 @@ func _launch_game_with_countdown() -> void:
 	
 	label.text = "GO!"
 	print("[Lobby][%s] GO! Transitioning to game scene..." % role)
-	await get_tree().create_timer(0.4).timeout
-	
+
 	if is_inside_tree() and not _matchmaking_forfeit_handled and not _opponent_left_lobby:
 		print("[Lobby][%s] Changing to game scene" % role)
-		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
+		TransitionManager.to_game("res://scenes/game/game.tscn")
 	else:
 		print("[Lobby][%s] Cannot change scene - not in tree or opponent left" % role)
 

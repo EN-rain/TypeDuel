@@ -103,15 +103,14 @@ func restore_idle_after(node: Node, char_name: String, seconds: float) -> void:
 	if not is_instance_valid(node): return
 	var idle_anim: String = str(CHARACTER_IDLE_ANIM.get(char_name, "idle"))
 	
-	# Unique ID for this specific call to prevent multiple hits from clashing
 	var call_id = Time.get_ticks_msec() + randi()
 	node.set_meta("last_idle_call", call_id)
 	
 	await get_tree().create_timer(seconds).timeout
 	
 	if not is_instance_valid(node): return
-	
-	# Only proceed if no newer restore_idle_after has been called since
+	# Don't restore idle if death has been played — character should stay dead
+	if _death_played: return
 	if node.get_meta("last_idle_call") == call_id:
 		safe_play_anim(node, idle_anim)
 
@@ -147,6 +146,7 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 	await get_tree().process_frame
 
 	_in_combat_sequence = true
+	_death_played = false  # reset for this combat sequence
 
 	var hud_anim: AnimationPlayer = null
 	if get_parent() and get_parent().has_node("HUD/Animation/AnimationPlayer"):
@@ -259,6 +259,9 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 		hud_anim.speed_scale = 1.0
 
 func play_death_anim(entity: String) -> void:
+	# Skip if death was already triggered by the hit callback
+	if _death_played: return
+	_death_played = true
 	var my_char:  String = GameManager.selected_character
 	var opp_char: String = GameManager.opponent_character
 	if entity == "player":
@@ -378,28 +381,37 @@ func spawn_players(parent: Node) -> void:
 		parent.add_child(p2)
 
 var _in_combat_sequence: bool = false
+var _death_played: bool = false  # prevents death animation from playing multiple times per round
 
 func _on_p1_hit() -> void:
 	var opp_char: String = GameManager.opponent_character
 	spawn_blood_particles(p2.global_position)
-	if HPManager.opponent_hp <= 0:
-		safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
+	if HPManager.opponent_hp <= 0 and not _death_played:
+		_death_played = true
+		safe_play_anim(p2, str(CHARACTER_HURT_ANIM.get(opp_char, "hurt")))
+		fade_out_in(p2)
+		get_tree().create_timer(0.35).timeout.connect(func():
+			if is_instance_valid(p2): safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
+		)
 	else:
 		safe_play_anim(p2, str(CHARACTER_HURT_ANIM.get(opp_char, "hurt")))
 		fade_out_in(p2)
-		# Only restore idle if not in a managed combat sequence
 		if not _in_combat_sequence:
 			restore_idle_after(p2, opp_char, 0.4)
 
 func _on_p2_hit() -> void:
 	var my_char: String = GameManager.selected_character
 	spawn_blood_particles(p1.global_position)
-	if HPManager.player_hp <= 0:
-		safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
+	if HPManager.player_hp <= 0 and not _death_played:
+		_death_played = true
+		safe_play_anim(p1, str(CHARACTER_HURT_ANIM.get(my_char, "hurt")))
+		fade_out_in(p1)
+		get_tree().create_timer(0.35).timeout.connect(func():
+			if is_instance_valid(p1): safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
+		)
 	else:
 		safe_play_anim(p1, str(CHARACTER_HURT_ANIM.get(my_char, "hurt")))
 		fade_out_in(p1)
-		# Only restore idle if not in a managed combat sequence
 		if not _in_combat_sequence:
 			restore_idle_after(p1, my_char, 0.4)
 
@@ -451,13 +463,16 @@ func spawn_blood_particles(pos: Vector2) -> void:
 	)
 
 func _check_death_final() -> void:
-	# Fallback if death is needed but no hit was triggered
-	if HPManager.opponent_hp <= 0:
-		var opp_char: String = GameManager.opponent_character
-		safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
-	if HPManager.player_hp <= 0:
-		var my_char: String = GameManager.selected_character
-		safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
+	# Fallback if death is needed but no hit was triggered — only play once
+	if not _death_played:
+		if HPManager.opponent_hp <= 0:
+			_death_played = true
+			var opp_char: String = GameManager.opponent_character
+			safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
+		elif HPManager.player_hp <= 0:
+			_death_played = true
+			var my_char: String = GameManager.selected_character
+			safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
 
 # ─────────────────────────────────────────────
 #  Passive popup

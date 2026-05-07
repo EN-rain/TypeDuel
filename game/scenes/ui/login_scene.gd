@@ -46,17 +46,21 @@ func _on_mode_selected(login):
 	confirm_password_input.visible = !is_login_mode
 	error_label.text = ""
 
+func _set_label(text: String, color: Color = Color(0, 0, 0, 1)) -> void:
+	error_label.text = text
+	error_label.add_theme_color_override("font_color", color)
+
 func _on_confirm_pressed():
 	var username = username_input.text
 	var password = password_input.text
 	var confirm_password = confirm_password_input.text
 	
 	if username == "" or password == "":
-		error_label.text = "Fields required"
+		_set_label("Fields required")
 		return
 		
 	if !is_login_mode and password != confirm_password:
-		error_label.text = "Passwords do not match"
+		_set_label("Passwords do not match")
 		return
 	
 	var endpoint = "/login" if is_login_mode else "/register"
@@ -65,7 +69,7 @@ func _on_confirm_pressed():
 	
 	http_request.request(BASE_URL + endpoint, headers, HTTPClient.METHOD_POST, body)
 	confirm_button.disabled = true
-	error_label.text = "..."
+	_set_label("...")
 
 func _on_request_completed(_result, response_code, _headers, body):
 	confirm_button.disabled = false
@@ -73,13 +77,13 @@ func _on_request_completed(_result, response_code, _headers, body):
 	var response = JSON.parse_string(body_string)
 	
 	if response == null:
-		error_label.text = "Server error (Non-JSON response)"
+		_set_label("Server error (Non-JSON response)")
 		print("Raw Body: ", body_string)
 		return
 	
 	if response_code in [200, 201]:
 		if is_login_mode:
-			error_label.text = "Success!"
+			_set_label("Success!", Color(0.1, 0.55, 0.1, 1))
 			# Store user data in global GameManager
 			GameManager.user_data.id = response.user.id
 			GameManager.user_data.username = response.user.username
@@ -90,10 +94,10 @@ func _on_request_completed(_result, response_code, _headers, body):
 			# Transition to Main Menu with fade out
 			_fade_out_and_transition("res://scenes/ui/main_menu.tscn")
 		else:
-			error_label.text = "Registered! Please login."
+			_set_label("Registered! Please login.", Color(0.1, 0.55, 0.1, 1))
 			_on_mode_selected(true)
 	else:
-		error_label.text = response.message if response and response.has("message") else "Failed"
+		_set_label(response.message if response and response.has("message") else "Failed")
 
 func _fade_out_and_transition(scene_path: String):
 	var tween = create_tween()

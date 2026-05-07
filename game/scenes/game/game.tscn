@@ -1,12 +1,12 @@
 [gd_scene format=4 uid="uid://0o7jtm5hk7k2"]
 
 [ext_resource type="Script" uid="uid://bmsqrto3isa4a" path="res://scenes/game/game.gd" id="1_game_gd"]
-[ext_resource type="Texture2D" uid="uid://dbamtkwlahpin" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png" id="3_lakwo"]
-[ext_resource type="Texture2D" uid="uid://knxiuy7qi2cg" path="res://assets/GUI/colosseum-bg.png" id="6_bdhmt"]
-[ext_resource type="Script" path="res://scenes/game/animation_controller.gd" id="10_anim_ctrl"]
-[ext_resource type="Script" path="res://scenes/game/network_sync.gd" id="11_net_sync"]
-[ext_resource type="Script" path="res://scenes/game/typing_handler.gd" id="12_typing"]
-[ext_resource type="Script" path="res://scenes/game/combat_resolver.gd" id="13_combat"]
+[ext_resource type="Texture2D" uid="uid://cru6ltepkd3fr" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png" id="3_lakwo"]
+[ext_resource type="Texture2D" uid="uid://ic0is52jbtpd" path="res://assets/GUI/colosseum-bg.png" id="6_bdhmt"]
+[ext_resource type="Script" uid="uid://dmr300ctl4yd8" path="res://scenes/game/animation_controller.gd" id="10_anim_ctrl"]
+[ext_resource type="Script" uid="uid://dmd8luvc1i657" path="res://scenes/game/network_sync.gd" id="11_net_sync"]
+[ext_resource type="Script" uid="uid://frxg518kays6" path="res://scenes/game/typing_handler.gd" id="12_typing"]
+[ext_resource type="Script" uid="uid://b3ewd1idjqdkb" path="res://scenes/game/combat_resolver.gd" id="13_combat"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_blue"]
 bg_color = Color(0, 0.46, 1, 1)
@@ -889,12 +889,44 @@ offset_bottom = 27.0
 grow_horizontal = 0
 theme_override_styles/fill = SubResource("StyleBoxFlat_green")
 fill_mode = 1
+show_percentage = false
+
+[node name="EnemyHpLabel" type="Label" parent="HUD/Stats/EnemyHp" unique_id=425371071]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+text = "100"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="OwnHp" type="ProgressBar" parent="HUD/Stats" unique_id=1306211794]
 layout_mode = 1
 offset_right = 533.0
 offset_bottom = 27.0
 theme_override_styles/fill = SubResource("StyleBoxFlat_green")
+show_percentage = false
+
+[node name="OwnHpLabel" type="Label" parent="HUD/Stats/OwnHp" unique_id=1306211795]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+text = "100"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="OwnMana" type="ProgressBar" parent="HUD/Stats" unique_id=1277922458]
 layout_mode = 0
@@ -902,6 +934,22 @@ offset_top = 29.0
 offset_right = 355.0
 offset_bottom = 56.0
 theme_override_styles/fill = SubResource("StyleBoxFlat_blue")
+show_percentage = false
+
+[node name="OwnManaLabel" type="Label" parent="HUD/Stats/OwnMana" unique_id=1277922459]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="EnemyMana" type="ProgressBar" parent="HUD/Stats" unique_id=1493488631]
 layout_mode = 1
@@ -914,6 +962,22 @@ offset_bottom = 58.0
 grow_horizontal = 0
 theme_override_styles/fill = SubResource("StyleBoxFlat_blue")
 fill_mode = 1
+show_percentage = false
+
+[node name="EnemyManaLabel" type="Label" parent="HUD/Stats/EnemyMana" unique_id=1493488632]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Timer" type="Label" parent="HUD/Stats" unique_id=1405445]
 layout_mode = 1
@@ -1025,13 +1089,11 @@ color = Color(0, 0, 0, 1)
 
 [node name="Background" type="TextureRect" parent="TileMap" unique_id=1159814342]
 z_index = -1
-anchors_preset = -1
-anchor_right = 0.9990001
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -2.0
-offset_top = -158.0
-offset_right = -1.8481445
-offset_bottom = 95.0
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("6_bdhmt")
 
 [node name="Ground" type="TileMapLayer" parent="TileMap" unique_id=1474410182]

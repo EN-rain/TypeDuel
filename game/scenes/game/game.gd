@@ -163,10 +163,8 @@ func start_skill_phase(announce_phase: bool = false) -> void:
 	# _update_skill_buttons() already handles enable/disable based on affordability.
 	_update_skill_buttons()
 	
-	if _can_pick_any_skill():
-		skill_select.show()
-	else:
-		skill_select.hide()
+	# Always show skill buttons — disabled state communicates affordability, not visibility
+	skill_select.show()
 	countdown_label.show()
 	typing_label.hide()
 	if stats_label:     stats_label.hide()
@@ -223,23 +221,30 @@ func _update_skill_buttons() -> void:
 		var s1 = SkillsManager.selected_skills[0]
 		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1"):
 			var btn1 = $HUD/OwnSkillSelect/HBoxContainer/Skill1
-			btn1.text = "%s (%dM)" % [s1.capitalize(), SkillsManager.SKILL_COSTS.get(s1, 0)]
-			var was_disabled = btn1.disabled
-			btn1.disabled = not SkillsManager.can_pick_skill(s1) or chosen_skill_id != ""
-			if was_disabled != btn1.disabled:
+			var new_text = "%s (%dM)" % [s1.capitalize(), SkillsManager.SKILL_COSTS.get(s1, 0)]
+			if btn1.text != new_text: btn1.text = new_text
+			var should_disable = not SkillsManager.can_pick_skill(s1) or chosen_skill_id != ""
+			if btn1.disabled != should_disable:
+				btn1.disabled = should_disable
+				# Smooth visual feedback: fade opacity instead of hard enable/disable flash
+				var tween = create_tween()
+				tween.tween_property(btn1, "modulate:a", 0.4 if should_disable else 1.0, 0.15)
 				_log("[SkillBtn] Skill1 '%s' disabled=%s | mana=%d cost=%d chosen='%s'" % [
-					s1, btn1.disabled, SkillsManager.player_mana,
+					s1, should_disable, SkillsManager.player_mana,
 					SkillsManager.SKILL_COSTS.get(s1, 0), chosen_skill_id])
 	if SkillsManager.selected_skills.size() > 1:
 		var s2 = SkillsManager.selected_skills[1]
 		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
 			var btn2 = $HUD/OwnSkillSelect/HBoxContainer/Skill2
-			btn2.text = "%s (%dM)" % [s2.capitalize(), SkillsManager.SKILL_COSTS.get(s2, 0)]
-			var was_disabled = btn2.disabled
-			btn2.disabled = not SkillsManager.can_pick_skill(s2) or chosen_skill_id != ""
-			if was_disabled != btn2.disabled:
+			var new_text = "%s (%dM)" % [s2.capitalize(), SkillsManager.SKILL_COSTS.get(s2, 0)]
+			if btn2.text != new_text: btn2.text = new_text
+			var should_disable = not SkillsManager.can_pick_skill(s2) or chosen_skill_id != ""
+			if btn2.disabled != should_disable:
+				btn2.disabled = should_disable
+				var tween = create_tween()
+				tween.tween_property(btn2, "modulate:a", 0.4 if should_disable else 1.0, 0.15)
 				_log("[SkillBtn] Skill2 '%s' disabled=%s | mana=%d cost=%d chosen='%s'" % [
-					s2, btn2.disabled, SkillsManager.player_mana,
+					s2, should_disable, SkillsManager.player_mana,
 					SkillsManager.SKILL_COSTS.get(s2, 0), chosen_skill_id])
 
 # 
@@ -282,8 +287,7 @@ func _process_skill_select(delta: float) -> void:
 			start_typing_phase()
 	else:
 		if GameManager.is_solo or GameManager.current_room == "":
-			if not _can_pick_any_skill() and chosen_skill_id == "":
-				start_typing_phase()
+			pass  # Solo: wait for timer — buttons stay visible even if unaffordable
 		elif GameManager.is_host and _server_phase == "skill_select" and not _host_typing_phase_requested:
 			if _should_host_fast_forward():
 				# Message already logged in _should_host_fast_forward()
@@ -391,10 +395,26 @@ func _set_countdown(text: String) -> void:
 		countdown_label.text = text
 
 func _update_bars() -> void:
-	if hp_bar_own:   hp_bar_own.max_value   = HPManager.player_max_hp;   hp_bar_own.value   = HPManager.player_hp
-	if hp_bar_opp:   hp_bar_opp.max_value   = HPManager.opponent_max_hp; hp_bar_opp.value   = HPManager.opponent_hp
-	if mana_bar_own: mana_bar_own.max_value  = 10; mana_bar_own.value  = SkillsManager.player_mana
-	if mana_bar_opp: mana_bar_opp.max_value  = 10; mana_bar_opp.value  = SkillsManager.opponent_mana
+	if hp_bar_own:
+		hp_bar_own.max_value = HPManager.player_max_hp
+		hp_bar_own.value     = HPManager.player_hp
+		var lbl = hp_bar_own.get_node_or_null("OwnHpLabel")
+		if lbl: lbl.text = "%d" % int(HPManager.player_hp)
+	if hp_bar_opp:
+		hp_bar_opp.max_value = HPManager.opponent_max_hp
+		hp_bar_opp.value     = HPManager.opponent_hp
+		var lbl = hp_bar_opp.get_node_or_null("EnemyHpLabel")
+		if lbl: lbl.text = "%d" % int(HPManager.opponent_hp)
+	if mana_bar_own:
+		mana_bar_own.max_value = 10
+		mana_bar_own.value     = SkillsManager.player_mana
+		var lbl = mana_bar_own.get_node_or_null("OwnManaLabel")
+		if lbl: lbl.text = "%d" % SkillsManager.player_mana
+	if mana_bar_opp:
+		mana_bar_opp.max_value = 10
+		mana_bar_opp.value     = SkillsManager.opponent_mana
+		var lbl = mana_bar_opp.get_node_or_null("EnemyManaLabel")
+		if lbl: lbl.text = "%d" % SkillsManager.opponent_mana
 
 func _update_stats_hud() -> void:
 	if stats_label:
@@ -537,8 +557,9 @@ func _on_room_polled(room: Dictionary) -> void:
 		if i_finished:
 			_log("[Round] Enemy finished AFTER we finished")
 		else:
-			SkillsManager.on_opponent_finish_first()
-			_log("[Decision] ✓ Opponent finished FIRST → +2 Mana to opponent (now %d)" % SkillsManager.opponent_mana)
+			# Don't add +2 locally — the opponent already added it and synced to server.
+			# The server value will arrive via the next poll and update opponent_mana correctly.
+			_log("[Decision] ✓ Opponent finished FIRST (mana synced from server)")
 			snap_active = true
 	_opp_skills = net.opp_skills
 
@@ -725,8 +746,7 @@ func _on_skill_pressed(skill_index: int) -> void:
 				$HUD/OwnSkillSelect/HBoxContainer/Skill1.disabled = true
 			if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
 				$HUD/OwnSkillSelect/HBoxContainer/Skill2.disabled = true
-			
-			skill_select.hide()
+			# Don't hide the panel — keep buttons visible so player can see their choice
 			# Sync skill choice immediately so opponent knows we picked
 			if not GameManager.is_solo and GameManager.current_room != "":
 				net.sync_progress_immediate(0, 1, 0, chosen_skill_id)

@@ -142,6 +142,11 @@ func _expand_panel():
 	is_expanded = true
 	chat_panel.show()
 	
+	# Fade out fake_input as panel slides in
+	var fade_out = create_tween()
+	fade_out.tween_property(fake_input, "modulate:a", 0.0, panel_slide_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	fade_out.finished.connect(func(): fake_input.hide(); fake_input.modulate.a = 1.0)
+	
 	# Force process to update transform so mouse filters work correctly
 	chat_panel.set_process_unhandled_input(true)
 	
@@ -151,7 +156,6 @@ func _expand_panel():
 	
 	tween.tween_property(chat_panel, "position:x", 0, panel_slide_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
-	
 	real_input.grab_focus()
 	fake_input.release_focus()
 	
@@ -165,8 +169,13 @@ func _collapse_panel():
 	
 	var tween = create_tween()
 	tween.tween_property(chat_panel, "position:x", -chat_panel.size.x - 20, panel_slide_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tween.finished.connect(func(): 
+	tween.finished.connect(func():
 		chat_panel.hide()
+		# Fade fake_input back in
+		fake_input.modulate.a = 0.0
+		fake_input.show()
+		var fade_in = create_tween()
+		fade_in.tween_property(fake_input, "modulate:a", 1.0, panel_slide_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	)
 
 func _fetch_messages(room_name: String):

@@ -15,20 +15,18 @@ run/main_scene="res://scenes/ui/login_scene.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
-[display]
-
-window/size/viewport_width=1152
-window/size/viewport_height=648
-window/size/resizable=true
-window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
-
 [autoload]
 
 GameManager="*res://scripts/autoload/GameManager.gd"
 SkillsManager="*res://scripts/autoload/SkillsManager.gd"
 HPManager="*res://scripts/autoload/HPManager.gd"
 ManaManager="*res://scripts/autoload/ManaManager.gd"
+TransitionManager="*res://scripts/autoload/TransitionManager.gd"
+
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [physics]
 

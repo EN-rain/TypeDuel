@@ -148,7 +148,8 @@ func _log_result(result: Dictionary, finish_mode: String, chosen_skill: String) 
 		# Apply player's own HP delta and damage dealt
 		display_player_hp += result.player_hp_delta
 		display_opp_hp += result.opp_hp_delta
-		if result.player_damage > 0:
+		# Only subtract damage if we actually dealt it (not DNF, not no_attack)
+		if result.player_damage > 0 and finish_mode not in ["dnf", "no_attack"]:
 			display_opp_hp -= result.player_damage
 		# Clamp to valid range
 		display_player_hp = clampf(display_player_hp, 0, HPManager.player_max_hp)

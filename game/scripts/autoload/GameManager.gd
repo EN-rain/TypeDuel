@@ -66,11 +66,14 @@ func _ready():
 	_start_connection_watchdog()
 
 func _create_persistent_background():
-	# Keeps the background visible between scene transitions so there's no black flash
+	# Keeps the background visible between scene transitions so there's no black flash.
+	# Hidden during the game scene which has its own background.
 	var bg_layer = CanvasLayer.new()
+	bg_layer.name = "PersistentBackground"
 	bg_layer.layer = -100  # render behind everything
 	add_child(bg_layer)
 	var bg_rect = TextureRect.new()
+	bg_rect.name = "BgRect"
 	bg_rect.texture = load("res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png")
 	bg_rect.layout_mode = 1
 	bg_rect.anchors_preset = 15  # full rect
@@ -80,6 +83,8 @@ func _create_persistent_background():
 	bg_rect.grow_vertical = 2
 	bg_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	bg_layer.add_child(bg_rect)
+	# Listen for scene changes to hide/show based on active scene
+	get_tree().root.child_entered_tree.connect(_on_scene_changed)
 
 func set_connection_online(online: bool) -> void:
 	if online == is_online:
@@ -87,6 +92,16 @@ func set_connection_online(online: bool) -> void:
 	is_online = online
 	connection_status_changed.emit(is_online)
 	_toggle_connection_overlay(!is_online)
+
+func _on_scene_changed(node: Node) -> void:
+	# Hide the persistent background in scenes that have their own background.
+	# Show it in all other UI scenes to prevent black flashes between transitions.
+	var bg_layer = get_node_or_null("PersistentBackground")
+	if bg_layer == null: return
+	var scene_name = node.name if node else ""
+	# These scenes have their own backgrounds — hide the persistent one
+	var has_own_bg = scene_name in ["Game", "CustomRoom"]
+	bg_layer.visible = not has_own_bg
 
 func _start_connection_watchdog():
 	# Only run the watchdog when NOT in an active game — during gameplay the

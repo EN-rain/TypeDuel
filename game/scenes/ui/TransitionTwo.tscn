@@ -55,7 +55,6 @@ tracks/3/keys = {
 
 [sub_resource type="Animation" id="Animation_intro"]
 resource_name = "intro"
-loop_mode = 2
 step = 0.03
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -154,37 +153,13 @@ tracks/7/keys = {
 "values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
 }
 
-[sub_resource type="Animation" id="Animation_loading"]
-resource_name = "loading"
-length = 0.9
-loop_mode = 2
-step = 0.05
-
-[sub_resource type="Animation" id="Animation_7cx8b"]
-resource_name = "outro"
-step = 0.03
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("RevealMask/TransitionContent/CenterBG/ColorRect:size")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(1152, 648)]
-}
-
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_main"]
 _data = {
 &"RESET": SubResource("Animation_reset"),
-&"intro": SubResource("Animation_intro"),
-&"loading": SubResource("Animation_loading"),
-&"outro": SubResource("Animation_7cx8b")
+&"intro": SubResource("Animation_intro")
 }
 
-[node name="OutroSceneOne" type="Control" unique_id=1581311148]
+[node name="TransitionTwo" type="Control" unique_id=1581311148]
 clip_contents = true
 layout_mode = 3
 anchors_preset = 15
@@ -195,7 +170,6 @@ grow_vertical = 2
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=240114090]
 libraries/ = SubResource("AnimationLibrary_main")
-autoplay = &"loading"
 
 [node name="RevealMask" type="Control" parent="." unique_id=451839072]
 clip_contents = true
@@ -241,9 +215,9 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
+offset_left = -600.0
 offset_top = -20.0
-offset_right = 20.0
+offset_right = 600.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -267,9 +241,9 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
+offset_left = -600.0
 offset_top = -20.0
-offset_right = 20.0
+offset_right = 600.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2

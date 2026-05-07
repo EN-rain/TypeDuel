@@ -24,6 +24,8 @@ const TEXT_PLAYERS_ONLINE    = "● %d players online"
 @onready var matchmaking_label       = %MatchmakingLabel
 @onready var matchmaking_time_label  = %MatchmakingTime
 @onready var play_online_btn         = %PlayOnlineButton
+@onready var join_btn                = %JoinButton
+@onready var create_room_btn         = %CreateRoomButton
 @onready var friends_button          = %FriendsButton
 @onready var friends_dimmer          = %FriendsDimmer
 @onready var friends_panel           = %FriendsPanel
@@ -45,7 +47,12 @@ var _last_friends_render_signature: String = ""
 var _avatar_texture_cache: Dictionary = {}
 
 func _enter_tree():
-	pass
+	# Seek animation to t=0 before first frame so nodes start invisible — prevents blink
+	if has_node("AnimationPlayer"):
+		var ap = get_node("AnimationPlayer")
+		if ap.has_animation(&"intro"):
+			ap.stop()
+			ap.seek(0.0, true)
 
 func _ready():
 
@@ -90,8 +97,6 @@ func _play_intro_animation():
 	if intro_anim_player == null:
 		return
 	if intro_anim_player.has_animation(&"intro"):
-		intro_anim_player.stop()
-		intro_anim_player.seek(0.0, true)
 		intro_anim_player.play(&"intro")
 
 func _setup_chat():
@@ -202,7 +207,7 @@ func _on_custom_room_pressed():
 	GameManager.is_solo = false
 	GameManager.is_matchmaking = false
 	GameManager.current_room = ""
-	await _transition_with_outro(SCENE_CUSTOM_ROOM)
+	_transition_to_room(SCENE_CUSTOM_ROOM)
 
 func _on_join_pressed():
 	join_panel.modulate.a = 0.0
@@ -270,6 +275,21 @@ func _on_join_done(_result, req_code, _headers, body, http):
 		else:
 			join_error.text = "Failed to join room."
 
+func _set_room_buttons_enabled(enabled: bool) -> void:
+	var alpha = 1.0 if enabled else 0.5
+	for btn in [join_btn, create_room_btn]:
+		if not is_instance_valid(btn): continue
+		btn.disabled = not enabled
+		btn.modulate.a = alpha
+		if not enabled:
+			# Copy the normal StyleBox into the disabled slot so texture stays visible
+			var normal_style = btn.get_theme_stylebox("normal")
+			if normal_style:
+				btn.add_theme_stylebox_override("disabled", normal_style)
+		else:
+			# Remove the override so the theme's disabled style is restored
+			btn.remove_theme_stylebox_override("disabled")
+
 func _on_play_online_pressed():
 	if not is_matchmaking and GameManager.is_matchmaking_penalized():
 		matchmaking_label.text = "Penalty active. Wait %ds." % GameManager.get_matchmaking_penalty_remaining_sec()
@@ -285,6 +305,7 @@ func _on_play_online_pressed():
 		matchmaking_time_label.hide()
 		play_online_btn.text = "Play Online"
 		matchmaking_code = ""
+		_set_room_buttons_enabled(true)
 		var http_leave = HTTPRequest.new()
 		add_child(http_leave)
 		http_leave.request_completed.connect(func(_r,_c,_h,_b): http_leave.queue_free())
@@ -301,6 +322,7 @@ func _on_play_online_pressed():
 	matchmaking_label.show()
 	matchmaking_time_label.show()
 	play_online_btn.text = TEXT_CANCEL_MATCHMAKE
+	_set_room_buttons_enabled(false)
 	
 	_send_matchmake_request()
 
@@ -336,7 +358,7 @@ func _on_matchmake_done(_result, code, _headers, body, http):
 			GameManager.is_host = false
 			GameManager.is_solo = false
 			GameManager.is_matchmaking = true
-			await _transition_with_outro(SCENE_CUSTOM_ROOM)
+			_transition_to_room(SCENE_CUSTOM_ROOM)
 		elif json.get("role") == "waiting":
 			# In queue — poll /queue/status until matched
 			print("[Matchmaking] In queue, waiting for opponent...")
@@ -346,11 +368,13 @@ func _on_matchmake_done(_result, code, _headers, body, http):
 		is_matchmaking = false
 		matchmaking_label.text = "Penalty active. Please wait."
 		play_online_btn.text = TEXT_PLAY_ONLINE
+		_set_room_buttons_enabled(true)
 	else:
 		print("[Matchmaking] Request failed (code=%d)" % code)
 		is_matchmaking = false
 		matchmaking_label.text = TEXT_MATCHMAKE_FAILED
 		play_online_btn.text = TEXT_PLAY_ONLINE
+		_set_room_buttons_enabled(true)
 
 func _check_matchmaking_status():
 	var http = HTTPRequest.new()
@@ -376,7 +400,7 @@ func _on_poll_match_done(_result, code, _headers, body, http):
 			GameManager.is_host = (json.get("role") == "host")
 			GameManager.is_solo = false
 			GameManager.is_matchmaking = true
-			await _transition_with_outro(SCENE_CUSTOM_ROOM)
+			_transition_to_room(SCENE_CUSTOM_ROOM)
 		elif json.get("in_queue") == false:
 			# Server evicted us from queue (stale) — re-queue
 			print("[Matchmaking] Evicted from queue, re-queuing...")
@@ -388,6 +412,7 @@ func _on_poll_match_done(_result, code, _headers, body, http):
 		is_matchmaking = false
 		matchmaking_label.text = TEXT_MATCHMAKE_FAILED
 		play_online_btn.text = TEXT_PLAY_ONLINE
+		_set_room_buttons_enabled(true)
 
 func _on_leaderboard_pressed():
 	# Play settings slide-out AND main menu outro simultaneously
@@ -406,6 +431,11 @@ func _transition_with_outro(scene_path: String) -> void:
 		await get_tree().create_timer(length + 0.05).timeout
 	if is_inside_tree():
 		get_tree().change_scene_to_file(scene_path)
+
+var _pending_scene: String = ""
+
+func _transition_to_room(scene_path: String) -> void:
+	TransitionManager.to(scene_path)
 
 var is_settings_open := false
 
@@ -516,6 +546,13 @@ func _on_credits_pressed():
 	get_tree().change_scene_to_file("res://scenes/ui/credits.tscn")
 
 func _on_feedback_pressed():
+	# Play settings slide-out AND main menu outro simultaneously
+	is_settings_open = false
+	$Settings/AnimationPlayer.play_backwards("slide_in")
+	if intro_anim_player != null and intro_anim_player.has_animation(&"outro"):
+		intro_anim_player.play(&"outro")
+	await $Settings/AnimationPlayer.animation_finished
+	$Settings.hide()
 	get_tree().change_scene_to_file("res://scenes/ui/feedback.tscn")
 
 func _expand_friends():
