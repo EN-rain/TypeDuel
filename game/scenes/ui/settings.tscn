@@ -1,7 +1,45 @@
-[gd_scene format=3 uid="uid://xwrhkkjr2s8c"]
+[gd_scene format=3 uid="uid://bsts6cp4wqcmj"]
 
-[ext_resource type="Script" path="res://scenes/ui/settings.gd" id="1_settings_script"]
+[ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="1_ob3hf"]
+[ext_resource type="Texture2D" uid="uid://db5usllk3ufj3" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderA-Sheet.png" id="2_4xk3x"]
 [ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="2_7pacj"]
+[ext_resource type="Texture2D" uid="uid://dekw8dbcmnkrx" path="res://assets/GUI/FREE RPG SKILL ICONS 32x32/Gold Skill Border.png" id="4_jw8st"]
+[ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="5_d4m38"]
+[ext_resource type="Texture2D" uid="uid://d3jct2xqj1e5l" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="6_mn4ci"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_2vpyc"]
+texture = ExtResource("2_4xk3x")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_n58ha"]
+texture = ExtResource("4_jw8st")
+region_rect = Rect2(1.8285294, 1.7561426, 40.61555, 40.513733)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ofdip"]
+texture = ExtResource("6_mn4ci")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b0ygv"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7d8i4"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
 
 [node name="Settings" type="Control" unique_id=1832984600]
 layout_mode = 3
@@ -10,7 +48,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_settings_script")
 
 [node name="Background" type="ColorRect" parent="." unique_id=2000821137]
 layout_mode = 1
@@ -26,6 +63,13 @@ custom_minimum_size = Vector2(0, 50)
 layout_mode = 1
 offset_right = 300.0
 offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("1_ob3hf")
+theme_override_styles/normal = SubResource("StyleBoxTexture_2vpyc")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_2vpyc")
+theme_override_styles/hover = SubResource("StyleBoxTexture_2vpyc")
 text = "Back to Menu"
 
 [node name="PFP" type="TextureRect" parent="." unique_id=645872083]
@@ -44,6 +88,19 @@ expand_mode = 1
 stretch_mode = 6
 metadata/_edit_use_anchors_ = true
 
+[node name="Scroll" type="Panel" parent="." unique_id=501327382]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.56600004
+anchor_top = 0.15900001
+anchor_right = 0.845
+anchor_bottom = 0.66
+offset_left = 13.967957
+offset_top = 18.967995
+offset_right = -12.440063
+offset_bottom = -15.680023
+theme_override_styles/panel = SubResource("StyleBoxTexture_n58ha")
+
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=26434344]
 layout_mode = 1
 anchors_preset = 8
@@ -61,34 +118,55 @@ theme_override_constants/separation = 20
 
 [node name="Title" type="Label" parent="VBoxContainer" unique_id=2117485580]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("5_d4m38")
 theme_override_font_sizes/font_size = 32
 text = "Settings"
 horizontal_alignment = 1
 
 [node name="ChangePFPButton" type="Button" parent="VBoxContainer" unique_id=1638788306]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("1_ob3hf")
 text = "Change Profile Picture"
 
 [node name="DisplayNameLabel" type="Label" parent="VBoxContainer" unique_id=1477476892]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("1_ob3hf")
 text = "In-game Name:"
 
 [node name="DisplayNameInput" type="LineEdit" parent="VBoxContainer" unique_id=1310931705]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("1_ob3hf")
 placeholder_text = "Enter in-game name"
 
 [node name="PasswordLabel" type="Label" parent="VBoxContainer" unique_id=885569531]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("1_ob3hf")
 text = "Change Password:"
 
 [node name="PasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=1072349181]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("1_ob3hf")
 placeholder_text = "New password"
 secret = true
 
 [node name="SaveButton" type="Button" parent="VBoxContainer" unique_id=1321472439]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("1_ob3hf")
+theme_override_styles/normal = SubResource("StyleBoxTexture_ofdip")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_b0ygv")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7d8i4")
 text = "Save Changes"
 
 [node name="StatusLabel" type="Label" parent="VBoxContainer" unique_id=1819294478]
