@@ -73,14 +73,16 @@ func init_game():
 
 func set_hp(entity: String, value: float):
 	if entity == "player":
+		var was_alive = player_hp > 0
 		player_hp = clamp(value, 0, player_max_hp)
 		hp_changed.emit("player", player_hp, player_max_hp)
-		if player_hp <= 0:
+		if player_hp <= 0 and was_alive:
 			entity_died.emit("player")
 	elif entity == "opponent":
+		var was_alive = opponent_hp > 0
 		opponent_hp = clamp(value, 0, opponent_max_hp)
 		hp_changed.emit("opponent", opponent_hp, opponent_max_hp)
-		if opponent_hp <= 0:
+		if opponent_hp <= 0 and was_alive:
 			entity_died.emit("opponent")
 
 func take_damage(entity: String, amount: float):

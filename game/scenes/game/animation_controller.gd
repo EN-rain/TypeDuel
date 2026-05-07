@@ -109,8 +109,10 @@ func restore_idle_after(node: Node, char_name: String, seconds: float) -> void:
 	await get_tree().create_timer(seconds).timeout
 	
 	if not is_instance_valid(node): return
-	# Don't restore idle if death has been played — character should stay dead
-	if _death_played: return
+	# Don't restore idle if this character's death animation has played
+	var is_p1 = (node == p1)
+	if is_p1 and _p1_death_played: return
+	if not is_p1 and _p2_death_played: return
 	if node.get_meta("last_idle_call") == call_id:
 		safe_play_anim(node, idle_anim)
 
@@ -152,9 +154,11 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 	await get_tree().process_frame
 	print("[AnimController] Starting combat sequence | skill='%s' opp='%s' mode='%s'" % [skill_id, opp_skill_id, finish_mode])
 	_in_combat_sequence = true
-	# Only reset _death_played if nobody has died yet — once death plays it must not be overwritten
-	if HPManager.player_hp > 0 and HPManager.opponent_hp > 0:
-		_death_played = false
+	# Only reset per-character death flags if that character is still alive
+	if HPManager.player_hp > 0:
+		_p1_death_played = false
+	if HPManager.opponent_hp > 0:
+		_p2_death_played = false
 
 	var hud_anim: AnimationPlayer = null
 	if get_parent() and get_parent().has_node("HUD/Animation/AnimationPlayer"):
@@ -288,15 +292,43 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 		hud_anim.speed_scale = 1.0
 
 func play_death_anim(entity: String) -> void:
-	# Skip if death was already triggered by the hit callback
-	if _death_played: return
-	_death_played = true
+	play_death_anim_and_get_duration(entity)
+
+## Plays the death animation for the given entity and returns the total wait time
+## the caller should observe before showing the victory screen.
+## If the hit callback already triggered the death sequence (hurt → death),
+## we return the remaining time so the caller still waits for it to finish.
+func play_death_anim_and_get_duration(entity: String) -> float:
 	var my_char:  String = GameManager.selected_character
 	var opp_char: String = GameManager.opponent_character
+
+	var node: Node
+	var char_name: String
+	var already_played: bool
+
 	if entity == "player":
-		safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
+		node = p1; char_name = my_char; already_played = _p1_death_played
 	else:
-		safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
+		node = p2; char_name = opp_char; already_played = _p2_death_played
+
+	var death_anim: String = str(CHARACTER_DEATH_ANIM.get(char_name, "death"))
+
+	if not already_played:
+		# Death wasn't triggered by a hit callback — play it now directly
+		if entity == "player": _p1_death_played = true
+		else:                  _p2_death_played = true
+		safe_play_anim(node, death_anim)
+
+	# Return the death animation length so the caller can wait for it
+	var anim_player = get_anim_player(node)
+	if anim_player != null and anim_player.has_animation(death_anim):
+		var death_len: float = anim_player.get_animation(death_anim).length
+		if already_played:
+			# Hit callback played hurt (0.35s) then death — estimate remaining time
+			# conservatively so we never cut it short
+			return death_len + 0.35
+		return death_len
+	return 0.6  # fallback if animation metadata unavailable
 
 # ─────────────────────────────────────────────
 #  Spawning
@@ -410,13 +442,14 @@ func spawn_players(parent: Node) -> void:
 		parent.add_child(p2)
 
 var _in_combat_sequence: bool = false
-var _death_played: bool = false  # prevents death animation from playing multiple times per round
+var _p1_death_played: bool = false  # p1 (player) death animation played
+var _p2_death_played: bool = false  # p2 (opponent) death animation played
 
 func _on_p1_hit() -> void:
 	var opp_char: String = GameManager.opponent_character
 	spawn_blood_particles(p2.global_position)
-	if HPManager.opponent_hp <= 0 and not _death_played:
-		_death_played = true
+	if HPManager.opponent_hp <= 0 and not _p2_death_played:
+		_p2_death_played = true
 		safe_play_anim(p2, str(CHARACTER_HURT_ANIM.get(opp_char, "hurt")))
 		fade_out_in(p2)
 		get_tree().create_timer(0.35).timeout.connect(func():
@@ -431,8 +464,8 @@ func _on_p1_hit() -> void:
 func _on_p2_hit() -> void:
 	var my_char: String = GameManager.selected_character
 	spawn_blood_particles(p1.global_position)
-	if HPManager.player_hp <= 0 and not _death_played:
-		_death_played = true
+	if HPManager.player_hp <= 0 and not _p1_death_played:
+		_p1_death_played = true
 		safe_play_anim(p1, str(CHARACTER_HURT_ANIM.get(my_char, "hurt")))
 		fade_out_in(p1)
 		get_tree().create_timer(0.35).timeout.connect(func():
@@ -451,7 +484,8 @@ func _on_self_penalty() -> void:
 	var opp_char: String = GameManager.opponent_character
 	# Player side
 	spawn_blood_particles(p1.global_position)
-	if HPManager.player_hp <= 0:
+	if HPManager.player_hp <= 0 and not _p1_death_played:
+		_p1_death_played = true
 		safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
 	else:
 		safe_play_anim(p1, str(CHARACTER_HURT_ANIM.get(my_char, "hurt")))
@@ -459,7 +493,8 @@ func _on_self_penalty() -> void:
 		restore_idle_after(p1, my_char, 0.4)
 	# Opponent side
 	spawn_blood_particles(p2.global_position)
-	if HPManager.opponent_hp <= 0:
+	if HPManager.opponent_hp <= 0 and not _p2_death_played:
+		_p2_death_played = true
 		safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
 	else:
 		safe_play_anim(p2, str(CHARACTER_HURT_ANIM.get(opp_char, "hurt")))
@@ -492,16 +527,15 @@ func spawn_blood_particles(pos: Vector2) -> void:
 	)
 
 func _check_death_final() -> void:
-	# Fallback if death is needed but no hit was triggered — only play once
-	if not _death_played:
-		if HPManager.opponent_hp <= 0:
-			_death_played = true
-			var opp_char: String = GameManager.opponent_character
-			safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
-		elif HPManager.player_hp <= 0:
-			_death_played = true
-			var my_char: String = GameManager.selected_character
-			safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
+	# Fallback if death is needed but no hit was triggered — only play once per character
+	if HPManager.opponent_hp <= 0 and not _p2_death_played:
+		_p2_death_played = true
+		var opp_char: String = GameManager.opponent_character
+		safe_play_anim(p2, str(CHARACTER_DEATH_ANIM.get(opp_char, "death")))
+	if HPManager.player_hp <= 0 and not _p1_death_played:
+		_p1_death_played = true
+		var my_char: String = GameManager.selected_character
+		safe_play_anim(p1, str(CHARACTER_DEATH_ANIM.get(my_char, "death")))
 
 # ─────────────────────────────────────────────
 #  Passive popup

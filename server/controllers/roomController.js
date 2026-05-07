@@ -96,7 +96,7 @@ const { isMatchmakingPenalized, setMatchmakingPenalty } = require('./gameControl
 // use last_activity_at for TTL so long games are not evicted mid-match
 const ROOM_IDLE_TTL_MS = 10 * 60 * 1000; // evict only if idle for 10 minutes
 
-// ── Matchmaking queue ────────────────────────────────────────────────────────
+// â”€â”€ Matchmaking queue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Simple in-memory queue. Entries: { user_id, display_name, queued_at }
 // Players are removed when matched, when they cancel, or after 60s stale timeout.
 const matchmakingQueue = [];
@@ -182,7 +182,7 @@ function _makeMatchmakingRoom(code, hostId, hostName, guestId, guestName) {
     };
 }
 
-// POST /api/rooms/queue/leave — remove player from matchmaking queue
+// POST /api/rooms/queue/leave â€” remove player from matchmaking queue
 const leaveQueue = (req, res) => {
     if (!_assertBodyUserMatchesActor(req, res)) return;
     const actorId = _actorId(req);
@@ -194,7 +194,7 @@ const leaveQueue = (req, res) => {
     return res.json({ ok: true });
 };
 
-// GET /api/rooms/queue/status — poll for match result
+// GET /api/rooms/queue/status â€” poll for match result
 const queueStatus = (req, res) => {
     const actorId = _actorId(req);
     // Check if this player has been matched into a room
@@ -343,7 +343,7 @@ const getRoomStatus = (req, res) => {
 
 // DELETE /api/rooms/:code  (host closes the room)
 // Behaviour by game mode:
-//   - Lobby (not yet started): room is deleted silently. No forfeit, no penalty — applies to
+//   - Lobby (not yet started): room is deleted silently. No forfeit, no penalty â€” applies to
 //     both custom rooms and matchmaking lobbies.
 //   - Started (in-game): recorded as a host forfeit so the guest sees the result. The
 //     matchmaking penalty is applied client-side only when GameManager.is_matchmaking is true;
@@ -357,7 +357,7 @@ const closeRoom = (req, res) => {
         return res.status(403).json({ message: 'Only host may close the room' });
     }
     if (room.status === 'started') {
-        // In-game forfeit — guest wins. Penalty (if any) is applied by the client only for
+        // In-game forfeit â€” guest wins. Penalty (if any) is applied by the client only for
         // matchmaking mode; custom-room hosts are not penalized.
         room.forfeit = { at: Date.now(), by: 'host', winner: 'guest', loser: 'host', reason: 'leave' };
         room.status = 'finished';
@@ -374,8 +374,8 @@ const closeRoom = (req, res) => {
 // POST /api/rooms/:code/leave  (either player leaves the room)
 // Behaviour by game mode:
 //   - Lobby (not yet started):
-//       Host leaving  → room is deleted silently. No forfeit, no penalty.
-//       Guest leaving → guest slot is cleared; room stays alive for the host. No forfeit, no penalty.
+//       Host leaving  â†’ room is deleted silently. No forfeit, no penalty.
+//       Guest leaving â†’ guest slot is cleared; room stays alive for the host. No forfeit, no penalty.
 //       This applies to BOTH custom rooms and matchmaking lobbies.
 //   - Started (in-game): recorded as a forfeit so the remaining player sees the result.
 //       The matchmaking penalty is applied client-side only when GameManager.is_matchmaking is
@@ -388,7 +388,7 @@ const leaveRoom = (req, res) => {
 
     if (room.host_id == actorId) {
         if (room.status === 'started') {
-            // In-game forfeit — guest wins.
+            // In-game forfeit â€” guest wins.
             room.forfeit = { at: Date.now(), by: 'host', winner: 'guest', loser: 'host', reason: 'leave' };
             room.status = 'finished';
             room.phase = 'finished';
@@ -396,7 +396,7 @@ const leaveRoom = (req, res) => {
             room.last_activity_at = Date.now();
             return res.json({ ok: true, room: roomSnapshot(room) });
         }
-        // Lobby: host is leaving their own room — delete it silently. No forfeit, no penalty.
+        // Lobby: host is leaving their own room â€” delete it silently. No forfeit, no penalty.
         delete rooms[code];
         return res.json({ ok: true });
     }
@@ -406,7 +406,7 @@ const leaveRoom = (req, res) => {
     }
 
     if (room.status === 'started') {
-        // In-game forfeit — host wins.
+        // In-game forfeit â€” host wins.
         room.forfeit = { at: Date.now(), by: 'guest', winner: 'host', loser: 'guest', reason: 'leave' };
         room.status = 'finished';
         room.phase = 'finished';
@@ -415,7 +415,7 @@ const leaveRoom = (req, res) => {
         return res.json({ ok: true, room: roomSnapshot(room) });
     }
 
-    // Lobby: guest is leaving — clear their slot so the host can accept a new guest.
+    // Lobby: guest is leaving â€” clear their slot so the host can accept a new guest.
     // Room stays alive. No forfeit, no penalty.
 
     room.guest_id = null;
@@ -467,7 +467,7 @@ const matchmake = async (req, res) => {
     // Check if there's already someone waiting
     const opponent = matchmakingQueue.find(e => e.user_id != actorId);
     if (opponent) {
-        // Match found — remove opponent from queue and create a room
+        // Match found â€” remove opponent from queue and create a room
         matchmakingQueue.splice(matchmakingQueue.indexOf(opponent), 1);
 
         const code = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -476,11 +476,11 @@ const matchmake = async (req, res) => {
             if (rooms[c].host_id === actorId || rooms[c].host_id === opponent.user_id) delete rooms[c];
         }
         rooms[code] = _makeMatchmakingRoom(code, opponent.user_id, opponent.display_name, actorId, display_name || 'Player');
-        console.log(`[Matchmaking] Matched ${opponent.user_id} (host) vs ${actorId} (guest) → room ${code}`);
+        console.log(`[Matchmaking] Matched ${opponent.user_id} (host) vs ${actorId} (guest) â†’ room ${code}`);
         return res.json({ ok: true, role: 'guest', room: roomSnapshot(rooms[code]) });
     }
 
-    // No opponent yet — add to queue and return waiting status
+    // No opponent yet â€” add to queue and return waiting status
     matchmakingQueue.push({ user_id: actorId, display_name: display_name || 'Player', queued_at: Date.now() });
     console.log(`[Matchmaking] ${actorId} added to queue (queue size: ${matchmakingQueue.length})`);
     return res.json({ ok: true, role: 'waiting' });
@@ -557,7 +557,7 @@ const startRoomGame = (req, res) => {
         return res.json({ ok: true, already_started: true, room: roomSnapshot(room) });
     }
 
-    // Server-side readiness validation (don’t rely only on client UI).
+    // Server-side readiness validation (donâ€™t rely only on client UI).
     const hostReady =
         !!room.host_character &&
         Array.isArray(room.host_skills) && room.host_skills.length >= 2 &&
@@ -804,9 +804,9 @@ const updateRematch = (req, res) => {
         // Reset game state but keep players
         room.status = 'lobby';
         room.phase = 'lobby';
-        room.phase_started_at = null;
-        room.typing_started_at = null;
-        room.first_finish_at = null;
+        room.phase_started_at = 0;
+        room.typing_started_at = 0;
+        room.first_finish_at = 0;
         room.first_finish_by = null;
         room.round_id = 0;
         
@@ -837,6 +837,7 @@ const updateRematch = (req, res) => {
         
         // Clear forfeit if any
         room.forfeit = null;
+        room.disconnect = null;
     }
     
     room.seq = (room.seq || 0) + 1;
@@ -849,7 +850,7 @@ module.exports = {
     createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom,
     matchmake, leaveQueue, queueStatus, listRooms,
     updateSelections, startRoomGame, updatePhase, updateProgress, updateHP, updateRematch,
-    // Shared state for socket handler — same in-memory store, no duplication
+    // Shared state for socket handler â€” same in-memory store, no duplication
     rooms,
     _enterTypingPhase,
     roomSnapshot,

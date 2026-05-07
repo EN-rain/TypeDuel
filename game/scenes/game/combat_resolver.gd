@@ -180,11 +180,12 @@ func _log_result(result: Dictionary, finish_mode: String, chosen_skill: String) 
 # ─────────────────────────────────────────────
 
 func show_victory(entity: String, hud: Node) -> void:
-	anim_controller.play_death_anim(entity)
-	await get_tree().create_timer(0.6).timeout
+	var death_wait: float = anim_controller.play_death_anim_and_get_duration(entity)
+	# Wait for the full death animation to finish before showing the result screen.
+	# Minimum 0.6s so the hurt→death transition is always visible.
+	await get_tree().create_timer(maxf(death_wait, 0.6)).timeout
 
 	var victory_scene = load("res://scenes/ui/victory_screen.tscn").instantiate()
-	# Don't pause the game - victory screen needs to poll for rematch status
 	get_tree().paused = false
 	victory_scene.process_mode = Node.PROCESS_MODE_ALWAYS
 	hud.add_child(victory_scene)
