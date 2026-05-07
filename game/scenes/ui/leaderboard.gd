@@ -36,6 +36,7 @@ func _on_request_completed(result, response_code, headers, body):
 		child.queue_free()
 		
 	# Populate list
+	var font = load("res://assets/fonts/pixel_operator/PixelOperator-Bold.ttf")
 	var rank = 1
 	for entry in data:
 		var row = HBoxContainer.new()
@@ -44,18 +45,39 @@ func _on_request_completed(result, response_code, headers, body):
 		var rank_lbl = Label.new()
 		rank_lbl.custom_minimum_size = Vector2(50, 0)
 		rank_lbl.text = str(rank)
+		rank_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		rank_lbl.add_theme_font_override("font", font)
+		rank_lbl.add_theme_font_size_override("font_size", 18)
+		rank_lbl.add_theme_color_override("font_color", Color.WHITE)
+		rank_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
+		rank_lbl.add_theme_constant_override("outline_size", 3)
 		
 		var name_lbl = Label.new()
 		name_lbl.custom_minimum_size = Vector2(200, 0)
 		name_lbl.text = entry.username
+		name_lbl.add_theme_font_override("font", font)
+		name_lbl.add_theme_font_size_override("font_size", 18)
+		name_lbl.add_theme_color_override("font_color", Color.WHITE)
+		name_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
+		name_lbl.add_theme_constant_override("outline_size", 3)
 		
 		var wins_lbl = Label.new()
 		wins_lbl.custom_minimum_size = Vector2(80, 0)
 		wins_lbl.text = str(entry.wins)
+		wins_lbl.add_theme_font_override("font", font)
+		wins_lbl.add_theme_font_size_override("font_size", 18)
+		wins_lbl.add_theme_color_override("font_color", Color.WHITE)
+		wins_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
+		wins_lbl.add_theme_constant_override("outline_size", 3)
 		
 		var wpm_lbl = Label.new()
 		wpm_lbl.custom_minimum_size = Vector2(80, 0)
 		wpm_lbl.text = str(snapped(entry.wpm, 0.1))
+		wpm_lbl.add_theme_font_override("font", font)
+		wpm_lbl.add_theme_font_size_override("font_size", 18)
+		wpm_lbl.add_theme_color_override("font_color", Color.WHITE)
+		wpm_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
+		wpm_lbl.add_theme_constant_override("outline_size", 3)
 		
 		row.add_child(rank_lbl)
 		row.add_child(name_lbl)

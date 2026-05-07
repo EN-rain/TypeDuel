@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://l4n0qfe1anng"]
 
-[ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="1_7cx8b"]
+[ext_resource type="Texture2D" uid="uid://bkla1a7hqvneg" path="res://assets/GUI/game-logo.png" id="1_lgt6b"]
+[ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="2_vurnu"]
 
 [sub_resource type="Animation" id="Animation_reset"]
 length = 0.001
@@ -52,9 +53,22 @@ tracks/3/keys = {
 "update": 0,
 "values": [Color(1, 1, 1, 1)]
 }
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("RevealMask/TransitionContent/Icon/TextureRect/Title:modulate")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
 
 [sub_resource type="Animation" id="Animation_intro"]
 resource_name = "intro"
+loop_mode = 2
 step = 0.03
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -152,6 +166,18 @@ tracks/7/keys = {
 "update": 0,
 "values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
 }
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("RevealMask/TransitionContent/Icon/TextureRect/Title:modulate")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_main"]
 _data = {
@@ -199,6 +225,7 @@ layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 grow_horizontal = 2
+color = Color(0.7019608, 0.88235295, 0.9607843, 1)
 
 [node name="TopBar" type="Control" parent="RevealMask/TransitionContent" unique_id=2000000011]
 layout_mode = 1
@@ -215,13 +242,13 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -600.0
+offset_left = -20.0
 offset_top = -20.0
-offset_right = 600.0
+offset_right = 20.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.12, 0.12, 0.12, 1)
+color = Color(0.4627451, 0.7764706, 0.90588236, 1)
 
 [node name="BottomBar" type="Control" parent="RevealMask/TransitionContent" unique_id=2000000013]
 layout_mode = 1
@@ -241,13 +268,13 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -600.0
+offset_left = -20.0
 offset_top = -20.0
-offset_right = 600.0
+offset_right = 20.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.12, 0.12, 0.12, 1)
+color = Color(0.4627451, 0.7764706, 0.90588236, 1)
 
 [node name="Icon" type="Control" parent="RevealMask/TransitionContent" unique_id=1219294203]
 layout_mode = 1
@@ -270,7 +297,26 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("1_7cx8b")
+texture = ExtResource("1_lgt6b")
+expand_mode = 1
+
+[node name="Title" type="Label" parent="RevealMask/TransitionContent/Icon/TextureRect" unique_id=121452970]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -282.0
+offset_top = 235.0
+offset_right = 246.0
+offset_bottom = 323.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("2_vurnu")
+theme_override_font_sizes/font_size = 64
+text = "Type Duel"
+horizontal_alignment = 1
 
 [node name="Loading" type="Control" parent="RevealMask/TransitionContent" unique_id=451839067]
 layout_mode = 1

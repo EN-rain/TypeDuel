@@ -149,7 +149,7 @@ offset_bottom = 863.3843
 grow_horizontal = 0
 grow_vertical = 2
 rotation = 0.31415927
-color = Color(0.32212296, 0.2721211, 0.7177608, 1)
+color = Color(0.7019608, 0.88235295, 0.9607843, 1)
 
 [node name="ColorRect2" type="ColorRect" parent="." unique_id=1472453465]
 layout_mode = 1
@@ -165,7 +165,7 @@ offset_bottom = 1017.7938
 grow_horizontal = 0
 grow_vertical = 2
 rotation = 0.31415927
-color = Color(1, 0.43, 0.43, 1)
+color = Color(0.46470392, 0.77799255, 0.9058734, 1)
 
 [node name="ColorRect3" type="ColorRect" parent="." unique_id=1680689077]
 layout_mode = 1
@@ -181,7 +181,7 @@ offset_bottom = 465.60022
 grow_horizontal = 0
 grow_vertical = 2
 rotation = 0.31415927
-color = Color(0.5910364, 0.65055186, 0.84996295, 1)
+color = Color(0.22080001, 0.7382399, 0.96, 1)
 
 [node name="ColorRect4" type="ColorRect" parent="." unique_id=1349918725]
 layout_mode = 1
@@ -192,9 +192,9 @@ anchor_right = 1.0
 anchor_bottom = 0.5
 offset_left = 624.1726
 offset_top = -605.0
-offset_right = 1155.2009
+offset_right = 1155.2012
 offset_bottom = 409.1529
 grow_horizontal = 0
 grow_vertical = 2
 rotation = 0.31415927
-color = Color(0.26292354, 0.7254354, 0.70339155, 1)
+color = Color(0.61289847, 0.89852566, 0.9921554, 1)
