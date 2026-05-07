@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 ## CombatResolver
 ## Owns round resolution: damage calculation, HP application, match history saving,
@@ -273,16 +273,11 @@ func show_match_ended_overlay(hud: Node, reason: String) -> void:
 
 func _save_match_history(won: bool) -> void:
 	if GameManager.user_data.id == 0: return
-	# Use the locked final WPM if available (most accurate — captured at finish moment).
-	# Fall back to calculating from sentence_length / elapsed if still typing (shouldn't happen).
 	var wpm = float(typing_handler.get_wpm())
 	var accuracy = typing_handler.get_accuracy()
 	wpm      = clampf(wpm if is_finite(wpm) else 0.0, 0.0, 250.0)
 	accuracy = clampf(accuracy if is_finite(accuracy) else 0.0, 0.0, 100.0)
 
-	var SERVER = GameManager.SERVER_URL
-	var req = HTTPRequest.new()
-	add_child(req)
 	var data = {
 		"user_id":    GameManager.user_data.id,
 		"username":   GameManager.user_data.username,
@@ -292,5 +287,4 @@ func _save_match_history(won: bool) -> void:
 		"typos":      typing_handler.typos_count,
 		"won":        won
 	}
-	req.request(SERVER + "/api/game/history", ["Content-Type: application/json"],
-		HTTPClient.METHOD_POST, JSON.stringify(data))
+	GameManager.save_match_history(data)

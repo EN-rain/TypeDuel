@@ -232,6 +232,21 @@ func load_pfp_into(icon_name: String, rect: TextureRect, host_node: Node = null)
 			loader.queue_free()
 	)
 	loader.request(url)
+	
+func save_match_history(data: Dictionary) -> void:
+	if user_data.id == 0: return
+	
+	var req = HTTPRequest.new()
+	add_child(req)
+	# This ensures the request node is cleaned up after completion
+	req.request_completed.connect(func(_r, _c, _h, _b): req.queue_free())
+	
+	var headers = ["Content-Type: application/json"]
+	if user_data.token != "":
+		headers.append("Authorization: Bearer " + user_data.token)
+		
+	req.request(SERVER_URL + "/api/game/history", headers, HTTPClient.METHOD_POST, JSON.stringify(data))
+	print("[History] Match history save request sent globally")
 
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:

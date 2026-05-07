@@ -226,14 +226,14 @@ func _update_skill_buttons() -> void:
 			var new_text = "%s (%dM)" % [s1.capitalize(), SkillsManager.SKILL_COSTS.get(s1, 0)]
 			if btn1.text != new_text: btn1.text = new_text
 			var should_disable = not SkillsManager.can_pick_skill(s1) or chosen_skill_id != ""
-			if btn1.disabled != should_disable:
+			var target_a = 0.4 if should_disable else 1.0
+			
+			if btn1.disabled != should_disable or abs(btn1.modulate.a - target_a) > 0.01:
 				btn1.disabled = should_disable
-				# Smooth visual feedback: fade opacity instead of hard enable/disable flash
 				var tween = create_tween()
-				tween.tween_property(btn1, "modulate:a", 0.4 if should_disable else 1.0, 0.15)
-				_log("[SkillBtn] Skill1 '%s' disabled=%s | mana=%d cost=%d chosen='%s'" % [
-					s1, should_disable, SkillsManager.player_mana,
-					SkillsManager.SKILL_COSTS.get(s1, 0), chosen_skill_id])
+				tween.tween_property(btn1, "modulate:a", target_a, 0.15)
+				_log("[SkillBtn] Skill1 '%s' disabled=%s | target_a=%.1f" % [s1, should_disable, target_a])
+
 	if SkillsManager.selected_skills.size() > 1:
 		var s2 = SkillsManager.selected_skills[1]
 		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
@@ -241,13 +241,13 @@ func _update_skill_buttons() -> void:
 			var new_text = "%s (%dM)" % [s2.capitalize(), SkillsManager.SKILL_COSTS.get(s2, 0)]
 			if btn2.text != new_text: btn2.text = new_text
 			var should_disable = not SkillsManager.can_pick_skill(s2) or chosen_skill_id != ""
-			if btn2.disabled != should_disable:
+			var target_a = 0.4 if should_disable else 1.0
+			
+			if btn2.disabled != should_disable or abs(btn2.modulate.a - target_a) > 0.01:
 				btn2.disabled = should_disable
 				var tween = create_tween()
-				tween.tween_property(btn2, "modulate:a", 0.4 if should_disable else 1.0, 0.15)
-				_log("[SkillBtn] Skill2 '%s' disabled=%s | mana=%d cost=%d chosen='%s'" % [
-					s2, should_disable, SkillsManager.player_mana,
-					SkillsManager.SKILL_COSTS.get(s2, 0), chosen_skill_id])
+				tween.tween_property(btn2, "modulate:a", target_a, 0.15)
+				_log("[SkillBtn] Skill2 '%s' disabled=%s | target_a=%.1f" % [s2, should_disable, target_a])
 
 # 
 # Main process loop
@@ -923,9 +923,6 @@ func _save_forfeit_victory() -> void:
 	wpm = clampf(wpm if is_finite(wpm) else 0.0, 0.0, 250.0)
 	accuracy = clampf(accuracy if is_finite(accuracy) else 0.0, 0.0, 100.0)
 	
-	var http = HTTPRequest.new()
-	add_child(http)
-	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
 	var data = {
 		"user_id": GameManager.user_data.id,
 		"username": GameManager.user_data.username,
@@ -936,9 +933,7 @@ func _save_forfeit_victory() -> void:
 		"won": true,
 		"forfeit": "opponent"
 	}
-	http.request(GameManager.SERVER_URL + "/api/game/history", 
-		["Content-Type: application/json"],
-		HTTPClient.METHOD_POST, JSON.stringify(data))
+	GameManager.save_match_history(data)
 	
 	_log("[History] Saved forfeit victory to match history")
 
@@ -949,9 +944,6 @@ func _save_forfeit_loss() -> void:
 	wpm = clampf(wpm if is_finite(wpm) else 0.0, 0.0, 250.0)
 	accuracy = clampf(accuracy if is_finite(accuracy) else 0.0, 0.0, 100.0)
 	
-	var http = HTTPRequest.new()
-	add_child(http)
-	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
 	var data = {
 		"user_id": GameManager.user_data.id,
 		"username": GameManager.user_data.username,
@@ -962,8 +954,6 @@ func _save_forfeit_loss() -> void:
 		"won": false,
 		"forfeit": "self"
 	}
-	http.request(GameManager.SERVER_URL + "/api/game/history", 
-		["Content-Type: application/json"],
-		HTTPClient.METHOD_POST, JSON.stringify(data))
+	GameManager.save_match_history(data)
 	
 	_log("[History] Saved forfeit loss to match history")
