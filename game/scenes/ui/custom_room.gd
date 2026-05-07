@@ -64,6 +64,7 @@ var _last_room_seq: int = -1
 var _last_server_now_ms: float = 0.0
 var _opponent_left_lobby: bool = false
 var _was_matched_before_leave: bool = false
+var _sync_in_flight: bool = false
 
 # Dynamically built button arrays
 var _char_buttons: Array      = []
@@ -295,6 +296,8 @@ func _on_heartbeat_done(_result, _code, _headers, _body, http: HTTPRequest):
 
 func _sync_selections():
 	if room_code == "": return
+	if _sync_in_flight: return  # Don't stack sync requests
+	_sync_in_flight = true
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_sync_done.bind(http))
@@ -310,6 +313,9 @@ func _sync_selections():
 func _on_sync_done(_result, _code, _headers, _body, http: HTTPRequest):
 	if is_instance_valid(http):
 		http.queue_free()
+	_sync_in_flight = false
+	if _code != 200:
+		print("[Lobby][Sync] Selection sync failed | code=%d result=%d" % [_code, _result])
 
 func _poll_room():
 	if room_code == "": return
@@ -343,6 +349,13 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		return
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	if not json: return
+
+	# Heal transient selection desync: if local choice differs from server snapshot,
+	# resend once on the next poll cycle so readiness can converge.
+	# Skip if a sync is already in flight to avoid stacking requests.
+	if not _sync_in_flight and _is_local_selection_out_of_sync(json):
+		print("[Lobby][Sync] Local/server selection mismatch detected, re-syncing...")
+		_sync_selections()
 
 	# 0. Check for room termination (forfeit/finish) before updating data
 	if json.get("status") == "finished":
@@ -480,6 +493,41 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 			print("[Lobby][%s] ERROR: Not in tree, cannot launch!" % role)
 		return
 
+func _is_local_selection_out_of_sync(room_json: Dictionary) -> bool:
+	var my_char = GameManager.selected_character
+	var my_skills: Array = SkillsManager.selected_skills
+	var my_passive = SkillsManager.selected_passive
+
+	var server_char = ""
+	var server_skills: Array = []
+	var server_passive = ""
+
+	if GameManager.is_host:
+		var c = room_json.get("host_character", null)
+		server_char = str(c) if c != null else ""
+		var s = room_json.get("host_skills", [])
+		server_skills = s if s is Array else []
+		var p = room_json.get("host_passive", null)
+		server_passive = str(p) if p != null else ""
+	else:
+		var c = room_json.get("guest_character", null)
+		server_char = str(c) if c != null else ""
+		var s = room_json.get("guest_skills", [])
+		server_skills = s if s is Array else []
+		var p = room_json.get("guest_passive", null)
+		server_passive = str(p) if p != null else ""
+
+	if my_char != server_char:
+		return true
+	if my_passive != server_passive:
+		return true
+	if my_skills.size() != server_skills.size():
+		return true
+	for skill_id in my_skills:
+		if not server_skills.has(skill_id):
+			return true
+	return false
+
 # ── Dynamic UI setup ────────────────────────────────────────────────────────
 
 func _setup_ui():
@@ -595,9 +643,11 @@ func _on_start_notified(_result, code, _headers, body, http: HTTPRequest):
 			GameManager.match_start_time = float(json.room.get("started_at", 0))
 			print("[Lobby][HOST] Match start time set: %f" % GameManager.match_start_time)
 	elif code == 409:
-		# Room already started — poll will detect status=="started" and launch normally.
-		# Do NOT reset _matchmaking_start_sent here, or we'll spam retries every frame.
-		print("[Lobby][HOST] 409 conflict — room already started, waiting for poll to detect")
+		# Server rejected start — players not fully ready on server side yet.
+		# (The "already started" case now returns 200 with already_started:true.)
+		# Reset so _process_matchmaking_rules retries once the re-sync completes.
+		print("[Lobby][HOST] 409 — not ready on server yet, will retry after sync")
+		_matchmaking_start_sent = false
 	else:
 		# Unexpected error — reset so the host can retry
 		print("[Lobby][HOST] Start request failed (code=%d) — resetting for retry" % code)

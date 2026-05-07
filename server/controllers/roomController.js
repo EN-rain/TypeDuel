@@ -667,8 +667,9 @@ const updateProgress = (req, res) => {
             room.host_typing_start = Date.now();
         }
         if (send_mutation) room.guest_mutations.push(send_mutation);
-        // Store chosen skill so opponent can see it in their stats label
-        if (req.body.chosen_skill !== undefined) room.host_skill = String(req.body.chosen_skill || '');
+        // Only store chosen skill during typing phase — prevents stale values from a
+        // finished round's sync_progress_immediate bleeding into the next skill-select
+        if (req.body.chosen_skill !== undefined && room.phase === 'typing') room.host_skill = String(req.body.chosen_skill || '');
     } else if (room.guest_id == actorId) {
         if (progressNum !== undefined && Number.isFinite(progressNum)) room.guest_progress = Math.min(1.0, Math.max(0.0, progressNum));
         if (typosNum !== undefined && Number.isFinite(typosNum)) room.guest_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
@@ -681,8 +682,9 @@ const updateProgress = (req, res) => {
             room.guest_typing_start = Date.now();
         }
         if (send_mutation) room.host_mutations.push(send_mutation);
-        // Store chosen skill so opponent can see it in their stats label
-        if (req.body.chosen_skill !== undefined) room.guest_skill = String(req.body.chosen_skill || '');
+        // Only store chosen skill during typing phase — prevents stale values from a
+        // finished round's sync_progress_immediate bleeding into the next skill-select
+        if (req.body.chosen_skill !== undefined && room.phase === 'typing') room.guest_skill = String(req.body.chosen_skill || '');
     } else {
         return res.status(403).json({ message: 'Not in this room' });
     }

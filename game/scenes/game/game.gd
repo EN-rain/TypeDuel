@@ -280,7 +280,9 @@ func _process_skill_select(delta: float) -> void:
 		_set_countdown("Choose Skill: %d" % max(0, int(ceil(skill_timer))))
 	if skill_timer <= 0:
 		if not GameManager.is_solo and GameManager.current_room != "":
-			if GameManager.is_host and _server_phase == "skill_select" and not _host_typing_phase_requested:
+			# Allow host to drive transition even if server phase hasn't been polled yet.
+			var host_can_drive_phase = GameManager.is_host and not _host_typing_phase_requested and (_server_phase == "" or _server_phase == "skill_select")
+			if host_can_drive_phase:
 				_host_typing_phase_requested = true
 				net.set_phase("typing", max(1, _server_round_id))
 		else:
@@ -288,8 +290,10 @@ func _process_skill_select(delta: float) -> void:
 	else:
 		if GameManager.is_solo or GameManager.current_room == "":
 			pass  # Solo: wait for timer — buttons stay visible even if unaffordable
-		elif GameManager.is_host and _server_phase == "skill_select" and not _host_typing_phase_requested:
-			if _should_host_fast_forward():
+		else:
+			# Allow host fast-forward while server phase is still unknown from first polls.
+			var host_can_fast_forward = GameManager.is_host and not _host_typing_phase_requested and (_server_phase == "" or _server_phase == "skill_select")
+			if host_can_fast_forward and _should_host_fast_forward():
 				# Message already logged in _should_host_fast_forward()
 				_host_typing_phase_requested = true
 				net.set_phase("typing", max(1, _server_round_id))
@@ -740,6 +744,8 @@ func _on_skill_pressed(skill_index: int) -> void:
 			# Sync skill choice immediately so opponent knows we picked
 			if not GameManager.is_solo and GameManager.current_room != "":
 				net.sync_progress_immediate(0, 1, 0, chosen_skill_id)
+				# Force an immediate room poll on next frame to converge phase faster.
+				net.last_poll_time = 0.0
 		else:
 			_log("[Decision] ✗ Cannot afford skill '%s' (cost %d, have %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0), SkillsManager.player_mana])
 
@@ -750,15 +756,15 @@ func _should_host_fast_forward() -> bool:
 	var i_am_done = chosen_skill_id != "" or not _can_pick_any_skill()
 	if not i_am_done: return false
 
-	# Wait at least 1.5s after skill phase starts before fast-forwarding.
-	var elapsed_ms = float(Time.get_ticks_msec()) - _skill_phase_local_start_ms
-	if elapsed_ms < 1500.0: return false
-
 	# Opponent already synced their skill pick
 	var opp_picked = net.opp_chosen_skill != ""
 	if opp_picked:
 		_log("[FastForward] ✓ Both players picked skills")
 		return true
+
+	# Wait a short moment before fallback fast-forward checks so late first polls can arrive.
+	var elapsed_ms = float(Time.get_ticks_msec()) - _skill_phase_local_start_ms
+	if elapsed_ms < 300.0: return false
 
 	# If we don't know opponent's skills yet, wait
 	if _opp_skills.is_empty():
