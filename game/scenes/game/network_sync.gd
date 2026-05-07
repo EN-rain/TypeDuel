@@ -182,7 +182,12 @@ func _apply_opponent_data(room: Dictionary) -> void:
 		if g_skills != null and g_skills is Array: opp_skills = g_skills
 		# Sync opponent mana if available (fixes desync after mana-stealing skills)
 		var g_mana = room.get("guest_mana", null)
-		if g_mana != null: opp_mana = int(g_mana)
+		var prev_opp_mana = opp_mana
+		if g_mana != null: 
+			opp_mana = int(g_mana)
+			# Log mana changes (not every poll, only when it changes)
+			if prev_opp_mana >= 0 and prev_opp_mana != opp_mana:
+				print("[ManaSync] Opponent mana: %d → %d" % [prev_opp_mana, opp_mana])
 	else:
 		opp_progress     = room.get("host_progress", 0.0)
 		opp_typos        = room.get("host_typos", 0)
@@ -193,7 +198,12 @@ func _apply_opponent_data(room: Dictionary) -> void:
 		if h_skills != null and h_skills is Array: opp_skills = h_skills
 		# Sync opponent mana if available (fixes desync after mana-stealing skills)
 		var h_mana = room.get("host_mana", null)
-		if h_mana != null: opp_mana = int(h_mana)
+		var prev_opp_mana = opp_mana
+		if h_mana != null: 
+			opp_mana = int(h_mana)
+			# Log mana changes (not every poll, only when it changes)
+			if prev_opp_mana >= 0 and prev_opp_mana != opp_mana:
+				print("[ManaSync] Opponent mana: %d → %d" % [prev_opp_mana, opp_mana])
 
 func consume_new_mutations() -> Array:
 	var result: Array = []
@@ -226,7 +236,7 @@ func sync_progress(current_index: int, sentence_length: int, typos: int,
 		"user_id":      GameManager.user_data.id,
 		"progress":     prog,
 		"typos":        typos,
-		"mana":         SkillsManager.player_mana,  # Sync mana for accurate opponent display
+		"mana":         SkillsManager.player_mana,  # Sync mana in real-time for opponent display
 		"chosen_skill": chosen_skill
 	}
 	if queued_mutation != null:
@@ -333,7 +343,7 @@ func sync_progress_with_queue(current_index: int, sentence_length: int, typos: i
 		"user_id": GameManager.user_data.id, 
 		"progress": prog, 
 		"typos": typos, 
-		"mana": SkillsManager.player_mana,  # Sync mana for accurate opponent display
+		"mana": SkillsManager.player_mana,  # Sync mana in real-time for opponent display
 		"chosen_skill": chosen_skill 
 	}
 	
@@ -374,9 +384,10 @@ func sync_progress_immediate(current_index: int, sentence_length: int, typos: in
 		"user_id": GameManager.user_data.id, 
 		"progress": prog, 
 		"typos": typos, 
-		"mana": SkillsManager.player_mana,  # Sync mana for accurate opponent display
+		"mana": SkillsManager.player_mana,  # Sync final mana on finish
 		"chosen_skill": chosen_skill 
 	}
+	print("[ManaSync] Syncing mana to server: %d (progress: %.2f)" % [SkillsManager.player_mana, prog])
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.timeout = POLL_TIMEOUT_SEC

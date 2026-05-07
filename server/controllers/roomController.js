@@ -587,7 +587,10 @@ const updateProgress = (req, res) => {
     if (room.host_id == actorId) {
         if (progressNum !== undefined && Number.isFinite(progressNum)) room.host_progress = Math.min(1.0, Math.max(0.0, progressNum));
         if (typosNum !== undefined && Number.isFinite(typosNum)) room.host_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
-        if (manaNum !== undefined && Number.isFinite(manaNum)) room.host_mana = Math.min(10, Math.max(0, Math.floor(manaNum)));
+        // Accept mana updates in real-time so opponent can see mana increasing during typing
+        if (manaNum !== undefined && Number.isFinite(manaNum)) {
+            room.host_mana = Math.min(10, Math.max(0, Math.floor(manaNum)));
+        }
         // Track when player actually starts typing (first progress update > 0)
         if (progressNum !== undefined && progressNum > 0 && room.host_typing_start === 0) {
             room.host_typing_start = Date.now();
@@ -598,7 +601,10 @@ const updateProgress = (req, res) => {
     } else if (room.guest_id == actorId) {
         if (progressNum !== undefined && Number.isFinite(progressNum)) room.guest_progress = Math.min(1.0, Math.max(0.0, progressNum));
         if (typosNum !== undefined && Number.isFinite(typosNum)) room.guest_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
-        if (manaNum !== undefined && Number.isFinite(manaNum)) room.guest_mana = Math.min(10, Math.max(0, Math.floor(manaNum)));
+        // Accept mana updates in real-time so opponent can see mana increasing during typing
+        if (manaNum !== undefined && Number.isFinite(manaNum)) {
+            room.guest_mana = Math.min(10, Math.max(0, Math.floor(manaNum)));
+        }
         // Track when player actually starts typing (first progress update > 0)
         if (progressNum !== undefined && progressNum > 0 && room.guest_typing_start === 0) {
             room.guest_typing_start = Date.now();

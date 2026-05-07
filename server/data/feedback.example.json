@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1704067200000,
+    "date": "2024-01-01T00:00:00.000Z",
+    "user_id": 123,
+    "feedback": "Great game! Love the typing mechanics."
+  },
+  {
+    "id": 1704153600000,
+    "date": "2024-01-02T00:00:00.000Z",
+    "user_id": null,
+    "feedback": "Anonymous feedback example"
+  }
+]

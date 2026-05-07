@@ -16,6 +16,7 @@ yarn-error.log*
 server/database/*.sqlite
 server/database/*.sqlite-journal
 server/uploads/
+server/data/feedback.json
 
 # OS
 .DS_Store

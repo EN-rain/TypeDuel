@@ -145,10 +145,18 @@ func start_skill_phase(announce_phase: bool = false) -> void:
 	snap_active    = false
 	snap_timer     = 10.0
 	round_timer    = 60.0
-	net.opp_chosen_skill = ""
+	net.opp_chosen_skill = ""  # Clear opponent's skill choice from previous round
 	_skill_phase_local_start_ms = float(Time.get_ticks_msec())
 	_update_skill_buttons()
-	_log("[Phase] SKILL SELECT | mana=%d | skills=%s" % [SkillsManager.player_mana, str(SkillsManager.selected_skills)])
+	
+	# Use server round_id if available, otherwise increment local counter
+	if not GameManager.is_solo and GameManager.current_room != "" and _server_round_id > 0:
+		current_round = _server_round_id
+	elif GameManager.is_solo or GameManager.current_room == "":
+		# Solo mode: increment locally
+		pass
+	
+	_log("[Phase] SKILL SELECT | round=%d | mana=%d | opp_mana=%d | skills=%s" % [current_round, SkillsManager.player_mana, SkillsManager.opponent_mana, str(SkillsManager.selected_skills)])
 	if _can_pick_any_skill():
 		skill_select.show()
 	else:
@@ -303,12 +311,20 @@ func _process_typing(delta: float) -> void:
 		if i_finished and enemy_finished:
 			snap_active = false
 			if countdown_label: countdown_label.hide(); _last_countdown_text = ""
+			_log("[Decision] ✓ Both finished within 10s → BUFF mode")
 			_resolve_and_advance("buff"); return
 		if snap_timer <= 0.0:
-			_resolve_and_advance("dnf" if (enemy_finished and not i_finished) else "full_power"); return
+			if enemy_finished and not i_finished:
+				_log("[Decision] ✗ We DNF (opponent finished, we didn't) → DNF mode")
+				_resolve_and_advance("dnf")
+			else:
+				_log("[Decision] ✓ Opponent DNF (we finished, they didn't) → FULL_POWER mode")
+				_resolve_and_advance("full_power")
+			return
 	else:
 		if countdown_label: _set_countdown("%d" % max(0, int(ceil(round_timer))))
 		if round_timer <= 0.0:
+			_log("[Decision] ✗ 60s timer expired, neither finished → NO_ATTACK mode (-5 HP both)")
 			_resolve_and_advance("no_attack"); return
 	# Stats HUD
 	_update_stats_hud()
@@ -435,6 +451,8 @@ func _on_room_polled(room: Dictionary) -> void:
 		_log("[Net] Phase->typing (server) | round_id=%d" % _server_round_id)
 		start_typing_phase(false)
 	elif _server_phase == "skill_select" and current_state != GameState.SKILL_SELECT:
+		# Clear opponent's skill choice from previous round when entering new skill phase
+		net.opp_chosen_skill = ""
 		# Only transition to skill_select if this is a new round we haven't resolved yet.
 		# Prevents spurious hide/show of stats labels when a stale poll arrives mid-transition.
 		if _server_round_id > _last_resolved_round_id:
@@ -442,10 +460,16 @@ func _on_room_polled(room: Dictionary) -> void:
 			if not (GameManager.is_host and _host_skill_phase_requested):
 				_log("[Net] Phase->skill_select (server) | round_id=%d" % _server_round_id)
 				start_skill_phase(false)
+		# Guest in RESOLVING state should also transition when host announces new round
+		elif current_state == GameState.RESOLVING and _server_round_id == _last_resolved_round_id + 1:
+			_log("[Net] Phase->skill_select (server, from RESOLVING) | round_id=%d" % _server_round_id)
+			start_skill_phase(false)
 	if current_state != GameState.TYPING: return
 	# Opponent mana: use server-synced value if available, otherwise estimate from word progress
 	if net.opp_mana >= 0:
 		# Server has synced opponent mana (authoritative after skills fire)
+		if SkillsManager.opponent_mana != net.opp_mana:
+			_log("[ManaSync] Updating opponent mana from server: %d → %d" % [SkillsManager.opponent_mana, net.opp_mana])
 		SkillsManager.opponent_mana = net.opp_mana
 	else:
 		# Estimate from word progress (used before first sync)
@@ -462,7 +486,7 @@ func _on_room_polled(room: Dictionary) -> void:
 	# Enemy finished detection - check both progress threshold and server confirmation
 	var opp_finished_by_progress = net.opp_progress >= 0.99
 	var opp_finished_by_server = (_server_first_finish_by == "host" and not GameManager.is_host) or \
-	                              (_server_first_finish_by == "guest" and GameManager.is_host)
+								  (_server_first_finish_by == "guest" and GameManager.is_host)
 	
 	if not GameManager.is_solo and (opp_finished_by_progress or opp_finished_by_server) and not enemy_finished:
 		enemy_finished = true
@@ -470,7 +494,7 @@ func _on_room_polled(room: Dictionary) -> void:
 			_log("[Round] Enemy finished AFTER we finished")
 		else:
 			SkillsManager.on_opponent_finish_first()
-			_log("[Round] Enemy finished first  snap started (+2 opp mana)")
+			_log("[Decision] ✓ Opponent finished FIRST → +2 Mana to opponent (now %d)" % SkillsManager.opponent_mana)
 			snap_active = true
 	_opp_skills = net.opp_skills
 
@@ -518,16 +542,22 @@ func _on_i_finished() -> void:
 	if i_finished: return
 	i_finished = true
 	typing_label.hide(); typing_label.modulate.a = 1.0
-	if stats_label:     stats_label.hide(); _last_stats_text = ""
-	if opp_stats_label: opp_stats_label.hide(); _last_opp_stats_text = ""
+	# Keep stats labels visible after finishing so players can see their final WPM/accuracy
+	
+	var acc = typing.get_accuracy()
+	var correct_letters = typing.total_keystrokes - typing.typos_count
+	var required = int(ceil(float(typing.target_sentence.length()) * 0.6))
+	_log("[Decision] Finished typing | Acc: %.1f%% | Correct: %d/%d (need %d)" % [acc, correct_letters, typing.total_keystrokes, required])
+	
 	if enemy_finished:
 		snap_active = false
 		if countdown_label: countdown_label.hide(); _last_countdown_text = ""
 		net.sync_progress_immediate(typing.current_index, typing.target_sentence.length(), typing.typos_count, chosen_skill_id)
-		_log("[Round] We finished SECOND  DEBUFF")
+		_log("[Decision] ✓ Finished SECOND → DEBUFF mode")
 		_resolve_and_advance("debuff")
 	else:
 		SkillsManager.on_finish_first()
+		_log("[Decision] ✓ Finished FIRST → +2 Mana bonus (now %d)" % SkillsManager.player_mana)
 		if SkillsManager.selected_passive == "reversal":
 			typing.queued_mutations.append({ "type": "reversal" })
 		if GameManager.is_solo:
@@ -539,7 +569,7 @@ func _on_i_finished() -> void:
 				_local_first_finish_at_ms = _get_synced_ms()
 				_local_first_finish_by = "host" if GameManager.is_host else "guest"
 			net.sync_progress_immediate(typing.current_index, typing.target_sentence.length(), typing.typos_count, chosen_skill_id)
-			_log("[Round] We finished FIRST  snap: %.1f s" % snap_timer)
+			_log("[Decision] Starting 10s SNAP timer, waiting for opponent...")
 			countdown_label.show()
 
 func _resolve_and_advance(finish_mode: String) -> void:
@@ -548,8 +578,7 @@ func _resolve_and_advance(finish_mode: String) -> void:
 	_last_resolved_round_id = max(_last_resolved_round_id, _server_round_id)
 	if countdown_label:  countdown_label.hide(); _last_countdown_text = ""
 	if typing_label:     typing_label.hide(); typing_label.modulate.a = 1.0
-	if stats_label:      stats_label.hide(); _last_stats_text = ""
-	if opp_stats_label:  opp_stats_label.hide(); _last_opp_stats_text = ""
+	# Keep stats labels visible during combat resolution so players can see their performance
 	
 	# Guard: clear skill if player can't actually afford it (e.g. round 1 with 0 mana)
 	if chosen_skill_id != "" and not SkillsManager.can_pick_skill(chosen_skill_id):
@@ -557,14 +586,18 @@ func _resolve_and_advance(finish_mode: String) -> void:
 		chosen_skill_id = ""
 	
 	# Guard: clear skill if player didn't meet 60% accuracy requirement
-	# This check applies to all finish modes where the player actually typed
-	if chosen_skill_id != "" and finish_mode != "no_attack":
+	# This check applies to all finish modes where the player actually typed AND finished
+	# Skip for DNF (didn't finish) since they have 0 progress
+	if chosen_skill_id != "" and finish_mode != "no_attack" and finish_mode != "dnf":
 		var correct_letters = typing.total_keystrokes - typing.typos_count
 		var required = int(ceil(float(typing.target_sentence.length()) * 0.6))
 		if correct_letters < required:
-			_log("[Resolve] Skill '%s' cancelled — accuracy too low (%d/%d correct letters, need %d)" % 
+			_log("[Decision] ✗ Skill '%s' cancelled — accuracy too low (%d/%d correct, need %d) | Mana LOST" % 
 				[chosen_skill_id, correct_letters, typing.total_keystrokes, required])
 			chosen_skill_id = ""
+		else:
+			_log("[Decision] ✓ Skill '%s' validated — accuracy OK (%d/%d correct, need %d)" % 
+				[chosen_skill_id, correct_letters, typing.total_keystrokes, required])
 	
 	var result = combat.resolve(finish_mode, chosen_skill_id, net.opp_progress, _server_first_finish_at_ms, current_round)
 	_update_bars()  # Reflect HP/mana changes from resolution immediately
@@ -575,10 +608,14 @@ func _resolve_and_advance(finish_mode: String) -> void:
 	var opp_skill_for_anim = net.opp_chosen_skill
 	if finish_mode == "full_power":
 		# We finished, opponent didn't → opponent's skill shouldn't show
+		_log("[Decision] Opponent DNF → opponent skill hidden in animation")
 		opp_skill_for_anim = ""
 	elif finish_mode == "dnf":
 		# Opponent finished, we didn't → our skill already cancelled above, opponent's shows
+		_log("[Decision] We DNF → our skill hidden in animation")
 		pass
+	
+	_log("[Combat] Resolving | Mode: %s | Our skill: %s | Opp skill: %s" % [finish_mode, chosen_skill_id if chosen_skill_id != "" else "none", opp_skill_for_anim if opp_skill_for_anim != "" else "none"])
 	
 	# Wait for combat animations to complete (including HUD animation backwards)
 	await anim.play_combat_anims(
@@ -614,7 +651,7 @@ func _on_skill_pressed(skill_index: int) -> void:
 		if SkillsManager.can_pick_skill(skill):
 			chosen_skill_index = skill_index
 			chosen_skill_id    = skill
-			print("[Skill] Selected: %s (cost %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0)])
+			_log("[Decision] ✓ Can afford skill '%s' (cost %d, have %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0), SkillsManager.player_mana])
 			
 			# Immediately disable both buttons to prevent double-clicks
 			if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1"):
@@ -626,9 +663,8 @@ func _on_skill_pressed(skill_index: int) -> void:
 			# Sync skill choice immediately so opponent knows we picked
 			if not GameManager.is_solo and GameManager.current_room != "":
 				net.sync_progress_immediate(0, 1, 0, chosen_skill_id)
-				_log("[Skill] Synced choice to server immediately")
 		else:
-			print("[Skill] Not enough Mana for %s" % skill)
+			_log("[Decision] ✗ Cannot afford skill '%s' (cost %d, have %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0), SkillsManager.player_mana])
 
 func _should_host_fast_forward() -> bool:
 	# Only fast-forward if BOTH players have made their final choice (picked or can't pick)
@@ -642,10 +678,14 @@ func _should_host_fast_forward() -> bool:
 	
 	# Check if opponent has synced their choice via progress updates
 	var opp_picked = net.opp_chosen_skill != ""
-	if opp_picked: return true
+	if opp_picked: 
+		_log("[FastForward] ✓ Both done (we picked, opp picked '%s')" % net.opp_chosen_skill)
+		return true
 	
 	# If we don't know opponent's skills yet, we can't assume they can't pick — wait
-	if _opp_skills.is_empty(): return false
+	if _opp_skills.is_empty(): 
+		# Don't log here - this is called every frame and spams the console
+		return false
 	
 	# Check if opponent CAN pick any of their skills
 	var opp_can_pick = false
@@ -654,8 +694,13 @@ func _should_host_fast_forward() -> bool:
 			opp_can_pick = true
 			break
 	
-	# Only fast-forward if opponent can't pick anything either
-	return not opp_can_pick
+	# Only fast-forward if opponent can't pick anything either (both players can't pick)
+	if not opp_can_pick:
+		_log("[FastForward] ✓ Both done (neither can afford skills)")
+		return true
+	else:
+		_log("[FastForward] ✗ Waiting (opp can still pick, opp_mana=%d)" % SkillsManager.opponent_mana)
+		return false
 
 # 
 # Pause menu
