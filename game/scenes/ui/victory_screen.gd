@@ -2,7 +2,7 @@ extends Control
 
 @onready var result_label = $CenterContainer/VBoxContainer/ResultLabel
 @onready var back_button = $CenterContainer/VBoxContainer/HBoxContainer/BackButton
-@ontml:parameter name="rematch_button = $CenterContainer/VBoxContainer/HBoxContainer/RematchButton
+@onready var rematch_button = $CenterContainer/VBoxContainer/HBoxContainer/RematchButton
 @onready var match_again_button = $CenterContainer/VBoxContainer/HBoxContainer/MatchAgainButton
 @onready var rematch_status_label = $CenterContainer/VBoxContainer/RematchStatusLabel
 

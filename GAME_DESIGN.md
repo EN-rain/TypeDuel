@@ -36,9 +36,9 @@ Final damage is calculated by modifying the character's Base DMG using the follo
 
 ## 3. Mana Economy
 * Mana is the resource used to cast Active Skills.
-* **+1 Mana** per accurately-typed word (0 typos in the word).
+* **+1 Mana** per every 2 accurately-typed words (0 typos in the word).
 * **+2 Mana** bonus for finishing the sentence first.
-* Zephon's Overdrive: **+1 extra Mana** per accurate word when WPM > 80.
+* Zephon's Overdrive: **+1 extra Mana** per 2 accurate words when WPM > 80.
 * Maximum Mana is capped at **10**.
 * Players start each match with **2 Mana**.
 * If a player attempts an attack but times out, their spent mana is refunded.
@@ -74,3 +74,4 @@ The game's combat math is strictly balanced around an automated matrix of 2,025 
 * **Target Match Length:** 3 to 7 Rounds (Average sits perfectly at ~4.0 rounds).
 * **Win Rate Target:** ~50% normalized distribution across characters.
 * **Typo Punishment:** Math heavily penalizes typos to prevent "mashing" strategies.
+ 

@@ -138,6 +138,12 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 
 	print("[AnimController] play_combat_anims called | skill_id='%s' | opp_skill_id='%s' | finish_mode='%s'" % [skill_id, opp_skill_id, finish_mode])
 
+	# Guard: if a combat sequence is already running, wait for it to finish first
+	if _in_combat_sequence:
+		print("[AnimController] Waiting for previous combat sequence to finish...")
+		while _in_combat_sequence:
+			await get_tree().process_frame
+
 	await get_tree().process_frame
 
 	_in_combat_sequence = true
@@ -187,10 +193,8 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 				await p1_anim.animation_finished
 			if is_instance_valid(p1): p1.global_position = p1.get_parent().global_position
 
-		# ── Step 2: await p2's hurt animation (already started by trigger_hit) ──
-		var p2_anim = get_anim_player(p2)
-		if p2_anim and p2_anim.is_playing():
-			await p2_anim.animation_finished
+		# ── Step 2: wait for p2's hurt animation (fixed duration — hurt loops) ──
+		await get_tree().create_timer(0.35).timeout
 
 		# ── Step 3: loser (p2) retaliates if it has a skill ──────────────────
 		if opp_has_skill:
@@ -198,14 +202,13 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 			if opp_skill_id in ["whiplash", "soulbreak"]:
 				_teleport_to_marker(p2, p1)
 			safe_play_anim(p2, opp_atk)
+			var p2_anim = get_anim_player(p2)
 			if p2_anim:
 				await p2_anim.animation_finished
 			if is_instance_valid(p2): p2.global_position = p2.get_parent().global_position
 
-			# ── Step 4: await p1's hurt (triggered by p2's trigger_hit) ──────
-			var p1_anim = get_anim_player(p1)
-			if p1_anim and p1_anim.is_playing():
-				await p1_anim.animation_finished
+			# ── Step 4: wait for p1's hurt (fixed duration — hurt loops) ──────
+			await get_tree().create_timer(0.35).timeout
 
 	else:
 		# ── Step 1: winner (p2) attacks ──────────────────────────────────────
@@ -219,10 +222,8 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 				await p2_anim.animation_finished
 			if is_instance_valid(p2): p2.global_position = p2.get_parent().global_position
 
-		# ── Step 2: await p1's hurt animation ────────────────────────────────
-		var p1_anim = get_anim_player(p1)
-		if p1_anim and p1_anim.is_playing():
-			await p1_anim.animation_finished
+		# ── Step 2: wait for p1's hurt animation (fixed duration — hurt loops) ──
+		await get_tree().create_timer(0.35).timeout
 
 		# ── Step 3: loser (p1) retaliates if it has a skill ──────────────────
 		if player_has_skill:
@@ -231,14 +232,13 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 			if skill_id in ["whiplash", "soulbreak"]:
 				_teleport_to_marker(p1, p2)
 			safe_play_anim(p1, atk)
+			var p1_anim = get_anim_player(p1)
 			if p1_anim:
 				await p1_anim.animation_finished
 			if is_instance_valid(p1): p1.global_position = p1.get_parent().global_position
 
-			# ── Step 4: await p2's hurt (triggered by p1's trigger_hit) ──────
-			var p2_anim = get_anim_player(p2)
-			if p2_anim and p2_anim.is_playing():
-				await p2_anim.animation_finished
+			# ── Step 4: wait for p2's hurt (fixed duration — hurt loops) ──────
+			await get_tree().create_timer(0.35).timeout
 
 	# ── Restore idles ─────────────────────────────────────────────────────
 	_in_combat_sequence = false

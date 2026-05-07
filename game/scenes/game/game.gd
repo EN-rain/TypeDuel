@@ -197,6 +197,7 @@ func start_typing_phase(announce_phase: bool = false) -> void:
 	if stats_label:     stats_label.show()
 	if opp_stats_label: opp_stats_label.show()
 	typing.queued_mutations.clear()
+	SkillsManager.reset_round_word_counts()  # Reset per-round mana gain counters
 	if SkillsManager.selected_passive == "stutter" and SkillsManager.opponent_win_streak > 0:
 		typing.queued_mutations.append({ "type": "stutter" })
 		_log("[Passive] Stutter queued (opp win streak=%d)" % SkillsManager.opponent_win_streak)
@@ -204,6 +205,7 @@ func start_typing_phase(announce_phase: bool = false) -> void:
 		for i in range(SkillsManager.phantom_stack):
 			typing.queued_mutations.append({ "type": "phantom" })
 		_log("[Passive] Phantom queued x%d (stack=%d)" % [SkillsManager.phantom_stack, SkillsManager.phantom_stack])
+		SkillsManager.phantom_stack = 0  # Consume the stack after queuing
 	_log("[Round] Starting TYPING Phase | target_len=%d | round_id=%d" % [typing.target_sentence.length(), _server_round_id])
 	if not GameManager.is_solo and GameManager.current_room != "" and _server_typing_started_at_ms > 0.0:
 		_typing_go_at_ms = _server_typing_started_at_ms
@@ -333,11 +335,29 @@ func _process_typing(delta: float) -> void:
 			_resolve_and_advance("buff"); return
 		if snap_timer <= 0.0:
 			if enemy_finished and not i_finished:
-				_log("[Decision] ✗ We DNF (opponent finished, we didn't) → DNF mode")
-				_resolve_and_advance("dnf")
+				# Double-check: if server says WE finished first, don't DNF ourselves
+				var i_finished_server = (_server_first_finish_by == "host" and GameManager.is_host) or \
+										(_server_first_finish_by == "guest" and not GameManager.is_host)
+				if i_finished_server:
+					_log("[Decision] ✓ Server confirms we finished first → FULL_POWER mode (not DNF)")
+					_resolve_and_advance("full_power")
+				else:
+					_log("[Decision] ✗ We DNF (opponent finished, we didn't) → DNF mode")
+					_resolve_and_advance("dnf")
 			else:
-				_log("[Decision] ✓ Opponent DNF (we finished, they didn't) → FULL_POWER mode")
-				_resolve_and_advance("full_power")
+				# Check server confirmation before declaring FULL_POWER.
+				# If server says opponent finished, treat as BUFF (both finished).
+				var opp_finished_server = (_server_first_finish_by == "host" and not GameManager.is_host) or \
+										  (_server_first_finish_by == "guest" and GameManager.is_host)
+				if opp_finished_server:
+					_log("[Decision] ✓ Server confirms opponent finished → BUFF mode (not FULL_POWER)")
+					enemy_finished = true
+					snap_active = false
+					if countdown_label: countdown_label.hide(); _last_countdown_text = ""
+					_resolve_and_advance("buff")
+				else:
+					_log("[Decision] ✓ Opponent DNF (we finished, they didn't) → FULL_POWER mode")
+					_resolve_and_advance("full_power")
 			return
 	else:
 		if countdown_label: _set_countdown("%d" % max(0, int(ceil(round_timer))))
@@ -552,9 +572,16 @@ func _on_match_ended(_reason: String) -> void:
 	GameManager.current_room = ""
 	combat.show_match_ended_overlay($HUD, _reason)
 
+var _pending_death_entity: String = ""  # set when entity dies during combat resolution
+
 func _on_entity_died(entity: String) -> void:
 	if _victory_shown: return
-	if current_state == GameState.TYPING or current_state == GameState.SKILL_SELECT or current_state == GameState.RESOLVING:
+	if current_state == GameState.RESOLVING:
+		# Don't interrupt combat animations — store and handle after they complete
+		_log("[Victory] %s HP reached 0 — will show after animations" % entity)
+		_pending_death_entity = entity
+		return
+	if current_state == GameState.TYPING or current_state == GameState.SKILL_SELECT:
 		_log("[Victory] %s HP reached 0 — game over" % entity)
 		_victory_shown = true
 		current_state = GameState.RESOLVING
@@ -657,6 +684,16 @@ func _resolve_and_advance(finish_mode: String) -> void:
 		finish_mode
 	)
 	
+	# Check if an entity died during combat resolution — show victory now
+	if _pending_death_entity != "":
+		var dead = _pending_death_entity
+		_pending_death_entity = ""
+		if not _victory_shown:
+			_log("[Victory] Showing death result for %s after animations" % dead)
+			_victory_shown = true
+			combat.show_victory(dead, $HUD)
+		return
+	
 	# Small delay before showing skill select UI
 	await get_tree().create_timer(0.3).timeout
 	
@@ -726,7 +763,7 @@ func _should_host_fast_forward() -> bool:
 	
 	# Only fast-forward if opponent can't pick anything either (both players can't pick)
 	if not opp_can_pick:
-		_log("[FastForward] ✓ Neither player can afford skills")
+		_log("[FastForward] ✓ Opponent can't afford any skill — advancing")
 		return true
 	else:
 		_log("[FastForward] ✗ Waiting (opp can still pick, opp_mana=%d)" % SkillsManager.opponent_mana)

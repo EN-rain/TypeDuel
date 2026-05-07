@@ -32,6 +32,10 @@ var selected_skills: Array[String] = []
 var selected_passive: String = ""
 var phantom_stack: int = 0
 
+# Word counters for nerfed mana gain (reset each round)
+var _player_accurate_word_count: int = 0
+var _opponent_accurate_word_count: int = 0
+
 # ─────────────────────────────────────────────
 #  Public helpers
 # ─────────────────────────────────────────────
@@ -56,10 +60,22 @@ func reset_match() -> void:
 	liora_heal_total     = 0.0
 	liora_opp_heal_total = 0.0
 	phantom_stack       = 0
+	_player_accurate_word_count   = 0
+	_opponent_accurate_word_count = 0
+
+func reset_round_word_counts() -> void:
+	## Call at the start of each typing phase to reset per-round mana gain counters.
+	_player_accurate_word_count   = 0
+	_opponent_accurate_word_count = 0
 
 ## Called after every accurately-typed word during the typing phase.
 ## wpm = player's rolling WPM at that moment (for Zephon passive).
+## Mana gain: +1 per every 2 accurate words (nerfed from +1 per word).
 func on_accurate_word(wpm: float) -> void:
+	# Only grant mana on every 2nd accurate word to slow mana accumulation
+	_player_accurate_word_count += 1
+	if _player_accurate_word_count % 2 != 0:
+		return
 	var old_mana = player_mana
 	player_mana = min(10, player_mana + 1)
 	# Zephon innate: extra +1 Mana when WPM > 80
@@ -75,6 +91,10 @@ func on_finish_first() -> void:
 	print("[Mana] Finished 1st! +2 bonus → %d Mana" % player_mana)
 
 func on_opponent_accurate_word() -> void:
+	# Only grant mana on every 2nd accurate word
+	_opponent_accurate_word_count += 1
+	if _opponent_accurate_word_count % 2 != 0:
+		return
 	var old_mana = opponent_mana
 	opponent_mana = min(10, opponent_mana + 1)
 	# Zephon innate: extra +1 Mana when opponent WPM > 80 (estimated via progress)

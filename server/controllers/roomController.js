@@ -429,9 +429,8 @@ const matchmake = async (req, res) => {
     for (const c in rooms) {
         const r = rooms[c];
         if (!r.matchmaking) continue;
-        if (r.status === 'started') continue; // don't touch in-progress games
         if (r.host_id == actorId || r.guest_id == actorId) {
-            console.log(`[Matchmaking] Cleaning up stale room ${c} for user ${actorId}`);
+            console.log(`[Matchmaking] Cleaning up stale room ${c} (status=${r.status}) for user ${actorId}`);
             delete rooms[c];
         }
     }

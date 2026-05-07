@@ -162,6 +162,9 @@ func _process(delta: float):
 
 	_process_matchmaking_rules()
 
+	# Stop polling once countdown has started — avoids "Already launching" spam
+	if _launching: return
+
 	poll_timer += delta
 	if poll_timer >= POLL_INTERVAL:
 		poll_timer = 0.0
