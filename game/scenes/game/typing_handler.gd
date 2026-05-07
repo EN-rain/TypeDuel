@@ -40,6 +40,7 @@ var accuracy_warning: Label     = null
 # ─────────────────────────────────────────────
 
 func load_sentences() -> void:
+	sentences.clear()
 	var path = "res://assets/data/sentences.json"
 	var file = FileAccess.open(path, FileAccess.READ)
 	if file:
@@ -48,6 +49,7 @@ func load_sentences() -> void:
 			for item in json:
 				if item.has("text"): sentences.append(item["text"])
 		file.close()
+		print("[TypingHandler] Loaded %d sentences from JSON" % sentences.size())
 	if sentences.is_empty():
 		sentences.append("The quick brown fox jumps over the lazy dog.")
 		sentences.append("Type this sentence to practice your skills.")
