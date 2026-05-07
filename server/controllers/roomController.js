@@ -721,8 +721,10 @@ const updateProgress = (req, res) => {
 
     // Authoritative fast-forward: once both players choose a skill in skill_select,
     // transition immediately to typing on the server.
+    let phaseTransitioned = false;
     if (room.phase === 'skill_select' && room.host_skill && room.guest_skill) {
         _enterTypingPhase(room, Date.now());
+        phaseTransitioned = true;
     }
 
     // Fix #7: first-finish is set only once and never overwritten.
@@ -736,6 +738,11 @@ const updateProgress = (req, res) => {
     }
     room.seq = (room.seq || 0) + 1;
     _touchRoomPresence(room, actorId); // + presence: refresh idle timer / last seen
+    // Return the full room snapshot when a phase transition occurred so the client
+    // can apply it immediately without waiting for the next poll cycle.
+    if (phaseTransitioned) {
+        return res.json({ ok: true, room: roomSnapshot(room) });
+    }
     return res.json({ ok: true });
 };
 

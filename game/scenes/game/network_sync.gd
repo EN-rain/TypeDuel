@@ -260,7 +260,7 @@ func set_phase(phase: String, round_id: int) -> void:
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.timeout = POLL_TIMEOUT_SEC
-	http.request_completed.connect(func(result,_c,_h,_b):
+	http.request_completed.connect(func(result, _code, _h, body):
 		if is_instance_valid(http): http.queue_free()
 		if result != HTTPRequest.RESULT_SUCCESS:
 			if _phase_retry_attempts < 3:
@@ -268,6 +268,17 @@ func set_phase(phase: String, round_id: int) -> void:
 				_schedule_phase_retry(phase, round_id)
 			return
 		_phase_retry_attempts = 0
+		# Apply the returned room snapshot immediately so the host doesn't wait
+		# for the next poll to discover typing_started_at and the new phase.
+		var raw = body.get_string_from_utf8()
+		if raw.length() > 0:
+			var json = JSON.parse_string(raw)
+			if json and json.get("room") != null:
+				var sent_ms: float = Time.get_unix_time_from_system() * 1000.0
+				_apply_time_sync(json.get("room"), sent_ms, sent_ms)
+				_apply_phase(json.get("room"))
+				_apply_opponent_data(json.get("room"))
+				room_polled.emit(json.get("room"))
 	)
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/phase",
 		GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, JSON.stringify(payload))
@@ -367,7 +378,7 @@ func sync_progress_with_queue(current_index: int, sentence_length: int, typos: i
 		"user_id": GameManager.user_data.id, 
 		"progress": prog, 
 		"typos": typos, 
-		"mana": SkillsManager.player_mana,  # Sync mana in real-time for opponent display
+		"mana": SkillsManager.player_mana,
 		"chosen_skill": chosen_skill 
 	}
 	
@@ -382,18 +393,28 @@ func sync_progress_with_queue(current_index: int, sentence_length: int, typos: i
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.timeout = POLL_TIMEOUT_SEC
-	http.request_completed.connect(func(result,_c,_h,_b):
+	http.request_completed.connect(func(result, _code, _h, body):
 		if is_instance_valid(http): http.queue_free()
 		if result == HTTPRequest.RESULT_SUCCESS:
-			# Success - remove from pending
+			# Remove from pending mutations
 			if payload.has("send_mutation") and payload.send_mutation.has("seq"):
 				_pending_mutations.erase(payload.send_mutation.seq)
+			# If server returned a room snapshot (phase transition occurred), apply it immediately
+			# so we don't wait for the next poll cycle to discover the new phase.
+			var raw = body.get_string_from_utf8()
+			if raw.length() > 0:
+				var json = JSON.parse_string(raw)
+				if json and json.get("room") != null:
+					var sent_ms: float = Time.get_unix_time_from_system() * 1000.0
+					_apply_time_sync(json.get("room"), sent_ms, sent_ms)
+					_apply_phase(json.get("room"))
+					_apply_opponent_data(json.get("room"))
+					room_polled.emit(json.get("room"))
 		else:
 			# Failure - re-queue at front if not already sent successfully
 			if payload.has("send_mutation") and payload.send_mutation.has("seq"):
 				var seq = payload.send_mutation.seq
 				if _pending_mutations.has(seq):
-					# Still pending, re-queue
 					var mut_copy = _pending_mutations[seq].duplicate()
 					mutation_queue.push_front(mut_copy)
 	)
@@ -408,12 +429,25 @@ func sync_progress_immediate(current_index: int, sentence_length: int, typos: in
 		"user_id": GameManager.user_data.id, 
 		"progress": prog, 
 		"typos": typos, 
-		"mana": SkillsManager.player_mana,  # Sync final mana on finish
+		"mana": SkillsManager.player_mana,
 		"chosen_skill": chosen_skill 
 	}
 	print("[ManaSync] Syncing mana to server: %d (progress: %.2f)" % [SkillsManager.player_mana, prog])
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.timeout = POLL_TIMEOUT_SEC
-	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
+	http.request_completed.connect(func(result, _code, _h, body):
+		if is_instance_valid(http): http.queue_free()
+		if result == HTTPRequest.RESULT_SUCCESS:
+			# If server returned a room snapshot (e.g. first_finish recorded), apply immediately
+			var raw = body.get_string_from_utf8()
+			if raw.length() > 0:
+				var json = JSON.parse_string(raw)
+				if json and json.get("room") != null:
+					var sent_ms: float = Time.get_unix_time_from_system() * 1000.0
+					_apply_time_sync(json.get("room"), sent_ms, sent_ms)
+					_apply_phase(json.get("room"))
+					_apply_opponent_data(json.get("room"))
+					room_polled.emit(json.get("room"))
+	)
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/progress", GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, JSON.stringify(payload))

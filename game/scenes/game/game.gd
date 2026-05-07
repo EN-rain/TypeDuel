@@ -280,9 +280,10 @@ func _process_skill_select(delta: float) -> void:
 		_set_countdown("Choose Skill: %d" % max(0, int(ceil(skill_timer))))
 	if skill_timer <= 0:
 		if not GameManager.is_solo and GameManager.current_room != "":
-			# Allow host to drive transition even if server phase hasn't been polled yet.
-			var host_can_drive_phase = GameManager.is_host and not _host_typing_phase_requested and (_server_phase == "" or _server_phase == "skill_select")
-			if host_can_drive_phase:
+			# Host drives the typing phase transition on timer expiry.
+			# No _server_phase guard here — the host is authoritative and must not stall
+			# if the server already echoed "typing" back before the timer hit zero.
+			if GameManager.is_host and not _host_typing_phase_requested:
 				_host_typing_phase_requested = true
 				net.set_phase("typing", max(1, _server_round_id))
 		else:
@@ -291,8 +292,10 @@ func _process_skill_select(delta: float) -> void:
 		if GameManager.is_solo or GameManager.current_room == "":
 			pass  # Solo: wait for timer — buttons stay visible even if unaffordable
 		else:
-			# Allow host fast-forward while server phase is still unknown from first polls.
-			var host_can_fast_forward = GameManager.is_host and not _host_typing_phase_requested and (_server_phase == "" or _server_phase == "skill_select")
+			# Fast-forward: host can advance as soon as both players are done picking,
+			# regardless of _server_phase — the host is the authority on phase transitions.
+			# We only block if we already requested the typing phase this round.
+			var host_can_fast_forward = GameManager.is_host and not _host_typing_phase_requested
 			if host_can_fast_forward and _should_host_fast_forward():
 				# Message already logged in _should_host_fast_forward()
 				_host_typing_phase_requested = true
