@@ -96,6 +96,100 @@ const { isMatchmakingPenalized, setMatchmakingPenalty } = require('./gameControl
 // Fix #14: use last_activity_at for TTL so long games are not evicted mid-match
 const ROOM_IDLE_TTL_MS = 10 * 60 * 1000; // evict only if idle for 10 minutes
 
+// ── Matchmaking queue ────────────────────────────────────────────────────────
+// Simple in-memory queue. Entries: { user_id, display_name, queued_at }
+// Players are removed when matched, when they cancel, or after 60s stale timeout.
+const matchmakingQueue = [];
+const QUEUE_STALE_MS = 60 * 1000;
+
+// Evict stale queue entries every 30s
+setInterval(() => {
+    const now = Date.now();
+    for (let i = matchmakingQueue.length - 1; i >= 0; i--) {
+        if (now - matchmakingQueue[i].queued_at > QUEUE_STALE_MS) {
+            console.log(`[Matchmaking] Evicting stale queue entry for user ${matchmakingQueue[i].user_id}`);
+            matchmakingQueue.splice(i, 1);
+        }
+    }
+}, 30 * 1000);
+
+function _makeMatchmakingRoom(code, hostId, hostName, guestId, guestName) {
+    return {
+        code,
+        seq:             0,
+        matchmaking:     true,
+        matchmaking_deadline_at: Date.now() + 15000,
+        host_id:         hostId,
+        host_name:       hostName,
+        host_character:  null,
+        host_skills:     [],
+        host_passive:    "",
+        guest_id:        guestId,
+        guest_name:      guestName,
+        guest_character: null,
+        guest_skills:    [],
+        guest_passive:   "",
+        status:          'lobby',
+        host_progress:   0.0,
+        guest_progress:  0.0,
+        host_typos:      0,
+        guest_typos:     0,
+        host_mana:       2,
+        guest_mana:      2,
+        host_typing_start: 0,
+        guest_typing_start: 0,
+        host_mutations:  [],
+        host_skill:      "",
+        guest_mutations: [],
+        guest_skill:     "",
+        phase:           'lobby',
+        phase_started_at: 0,
+        typing_started_at: 0,
+        first_finish_at:   0,
+        first_finish_by:   null,
+        round_id:          0,
+        host_hp:           0,
+        guest_hp:          0,
+        host_last_seen_at: Date.now(),
+        guest_last_seen_at: Date.now(),
+        forfeit:           null,
+        disconnect:        null,
+        created_at:        Date.now(),
+        last_activity_at:  Date.now()
+    };
+}
+
+// POST /api/rooms/queue/leave — remove player from matchmaking queue
+const leaveQueue = (req, res) => {
+    if (!_assertBodyUserMatchesActor(req, res)) return;
+    const actorId = _actorId(req);
+    const idx = matchmakingQueue.findIndex(e => e.user_id == actorId);
+    if (idx !== -1) {
+        matchmakingQueue.splice(idx, 1);
+        console.log(`[Matchmaking] ${actorId} left queue (queue size: ${matchmakingQueue.length})`);
+    }
+    return res.json({ ok: true });
+};
+
+// GET /api/rooms/queue/status — poll for match result
+const queueStatus = (req, res) => {
+    const actorId = _actorId(req);
+    // Check if this player has been matched into a room
+    for (const code in rooms) {
+        const room = rooms[code];
+        if (!room.matchmaking) continue;
+        if (room.status !== 'lobby') continue;
+        if (room.host_id == actorId || room.guest_id == actorId) {
+            _touchRoomPresence(room, actorId);
+            const role = room.host_id == actorId ? 'host' : 'guest';
+            return res.json({ ok: true, matched: true, role, room: roomSnapshot(room) });
+        }
+    }
+    // Still in queue?
+    const inQueue = matchmakingQueue.some(e => e.user_id == actorId);
+    return res.json({ ok: true, matched: false, in_queue: inQueue });
+};
+
 // Cleanup old rooms every minute
 setInterval(() => {
     const now = Date.now();
@@ -328,79 +422,31 @@ const matchmake = async (req, res) => {
         return res.status(429).json({ message: 'Matchmaking penalty active. Please wait before queuing again.' });
     }
 
-    for (const code in rooms) {
-        const room = rooms[code];
-        // Matchmaking must never place players into custom rooms.
-        if (!room || room.matchmaking !== true) continue;
-        if (room.status && room.status !== 'lobby') continue;
-        // Require host presence to be recent; prevents joining ghost rooms.
-        const hostSeen = room.host_last_seen_at || room.created_at || 0;
-        if ((Date.now() - hostSeen) > 15000) continue;
-        if (!room.guest_id && room.host_id !== actorId) {
-            rooms[code].guest_id        = actorId;
-            rooms[code].guest_name      = display_name || 'Player';
-            rooms[code].guest_character = null;
-            rooms[code].guest_skills    = [];
-            rooms[code].guest_passive   = "";
-            // Authoritative matchmaking deadline: shared by both clients.
-            // Only set once, at the moment the match is formed.
-            if (!rooms[code].matchmaking_deadline_at || rooms[code].matchmaking_deadline_at <= 0) {
-                rooms[code].matchmaking_deadline_at = Date.now() + 15000;
-            }
-            rooms[code].seq = (rooms[code].seq || 0) + 1;
-            _touchRoomPresence(rooms[code], actorId);
-            return res.json({ ok: true, role: 'guest', room: roomSnapshot(rooms[code]) });
+    // ── Queue-based matchmaking ──────────────────────────────────────────
+    // Remove any stale queue entry for this user first
+    const existingIdx = matchmakingQueue.findIndex(e => e.user_id == actorId);
+    if (existingIdx !== -1) matchmakingQueue.splice(existingIdx, 1);
+
+    // Check if there's already someone waiting
+    const opponent = matchmakingQueue.find(e => e.user_id != actorId);
+    if (opponent) {
+        // Match found — remove opponent from queue and create a room
+        matchmakingQueue.splice(matchmakingQueue.indexOf(opponent), 1);
+
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        // Clean up any old rooms for either player
+        for (const c in rooms) {
+            if (rooms[c].host_id === actorId || rooms[c].host_id === opponent.user_id) delete rooms[c];
         }
+        rooms[code] = _makeMatchmakingRoom(code, opponent.user_id, opponent.display_name, actorId, display_name || 'Player');
+        console.log(`[Matchmaking] Matched ${opponent.user_id} (host) vs ${actorId} (guest) → room ${code}`);
+        return res.json({ ok: true, role: 'guest', room: roomSnapshot(rooms[code]) });
     }
 
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    for (const c in rooms) {
-        if (rooms[c].host_id === actorId) delete rooms[c];
-    }
-    rooms[code] = {
-        code,
-        seq:             0,
-        matchmaking:     true,
-        matchmaking_deadline_at: 0,
-        host_id:         actorId,
-        host_name:       display_name || 'Player',
-        host_character:  null,
-        host_skills:     [],
-        host_passive:    "",
-        guest_id:        null,
-        guest_name:      null,
-        guest_character: null,
-        guest_skills:    [],
-        guest_passive:   "",
-        status:          'lobby',
-        host_progress:   0.0,
-        guest_progress:  0.0,
-        host_typos:      0,
-        guest_typos:     0,
-        host_mana:       2,  // Track mana for accurate sync
-        guest_mana:      2,
-        host_typing_start: 0,  // Track when player actually starts typing
-        guest_typing_start: 0,
-        host_mutations:  [],
-        host_skill:      "",
-        guest_mutations: [],
-        guest_skill:     "",
-        phase:           'lobby',
-        phase_started_at: 0,
-        typing_started_at: 0,
-        first_finish_at:   0,
-        first_finish_by:   null,
-        round_id:          0,
-        host_hp:          0,
-        guest_hp:         0,
-        host_last_seen_at: Date.now(),
-        guest_last_seen_at: 0,
-        forfeit:          null,
-        disconnect:       null,
-        created_at:      Date.now(),
-        last_activity_at: Date.now()
-    };
-    return res.json({ ok: true, role: 'host', code });
+    // No opponent yet — add to queue and return waiting status
+    matchmakingQueue.push({ user_id: actorId, display_name: display_name || 'Player', queued_at: Date.now() });
+    console.log(`[Matchmaking] ${actorId} added to queue (queue size: ${matchmakingQueue.length})`);
+    return res.json({ ok: true, role: 'waiting' });
 };
 
 // GET /api/rooms  (debug: list all active rooms)
@@ -724,4 +770,4 @@ const updateRematch = (req, res) => {
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
-module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom, matchmake, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP, updateRematch };
+module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom, matchmake, leaveQueue, queueStatus, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP, updateRematch };

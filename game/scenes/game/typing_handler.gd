@@ -94,6 +94,23 @@ func get_progress() -> float:
 	if target_sentence.length() == 0: return 0.0
 	return float(current_index) / float(target_sentence.length())
 
+## Debug: instantly complete the sentence with perfect accuracy.
+func force_complete_sentence() -> void:
+	if target_sentence.length() == 0: return
+	# Set a realistic start time so WPM calculation doesn't produce 0 or infinity.
+	# Use 5 seconds ago as a baseline — gives a plausible WPM for debug purposes.
+	if sentence_start_time <= 0:
+		sentence_start_time = Time.get_ticks_msec() - 5000
+	if not is_typing:
+		is_typing = true
+	# Fill remaining characters as correct
+	while current_index < target_sentence.length():
+		typed_statuses.append(true)
+		total_keystrokes += 1
+		current_index += 1
+	update_ui()
+	_check_sentence_complete()
+
 # ─────────────────────────────────────────────
 #  Input processing
 # ─────────────────────────────────────────────
@@ -158,6 +175,7 @@ func _on_word_boundary() -> void:
 		_perfect_words_streak += 1
 		if SkillsManager.selected_passive == "erosion" and _perfect_words_streak % 3 == 0:
 			queued_mutations.append({ "type": "erosion" })
+			print("[Passive] Erosion queued (streak=%d)" % _perfect_words_streak)
 
 	typos_in_current_word = 0
 
@@ -169,6 +187,7 @@ func _on_word_boundary() -> void:
 	if SkillsManager.selected_passive == "jumble" and SkillsManager.player_mana >= 7 and not jumble_done:
 		set_meta("jumble_triggered_this_round", true)
 		queued_mutations.append({ "type": "jumble" })
+		print("[Passive] Jumble queued (mana=%d)" % SkillsManager.player_mana)
 
 func _check_sentence_complete() -> void:
 	if typos_in_current_word == 0:
@@ -199,6 +218,7 @@ func apply_mutation(mut: Dictionary) -> void:
 		seed(GameManager.current_room.hash() + int(get_parent().current_round) + str(mut.get("type")).hash())
 
 	var type = mut.get("type", "")
+	print("[Passive] Applying mutation: %s" % type)
 
 	if type == "stutter_effect2":
 		var prev_space = target_sentence.rfind(" ", current_index - 2)

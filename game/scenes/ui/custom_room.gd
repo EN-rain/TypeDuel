@@ -234,6 +234,8 @@ func _is_opp_ready() -> bool:
 func _handle_matchmaking_forfeit(i_was_ready: bool):
 	if _matchmaking_forfeit_handled: return
 	_matchmaking_forfeit_handled = true
+	var role = "HOST" if GameManager.is_host else "GUEST"
+	print("[Lobby][%s] Matchmaking forfeit | was_ready=%s" % [role, i_was_ready])
 
 	# Notify server to close/leave so the other client sees 404
 	if GameManager.is_host:
@@ -486,16 +488,19 @@ func _setup_ui():
 	_refresh_ui()
 
 func _on_char_selected(char_name: String):
+	print("[Lobby] Character selected: %s" % char_name)
 	GameManager.selected_character = char_name
 	_refresh_ui()
 	_sync_selections()
 
 func _on_skill_selected(skill_id: String):
 	SkillsManager.toggle_skill(skill_id)
+	print("[Lobby] Skills updated: %s" % str(SkillsManager.selected_skills))
 	_refresh_ui()
 	_sync_selections()
 
 func _on_passive_selected(passive_id: String):
+	print("[Lobby] Passive selected: %s" % passive_id)
 	SkillsManager.selected_passive = passive_id
 	_refresh_ui()
 	_sync_selections()
@@ -575,6 +580,16 @@ func _on_start_notified(_result, code, _headers, body, http: HTTPRequest):
 		if json and json.get("room", null) != null:
 			GameManager.match_start_time = float(json.room.get("started_at", 0))
 			print("[Lobby][HOST] Match start time set: %f" % GameManager.match_start_time)
+	elif code == 409:
+		# Room already started (stale state from previous session) — treat as already started.
+		# Poll will detect status=="started" and launch the countdown normally.
+		print("[Lobby][HOST] 409 conflict — room may already be started, waiting for poll to detect")
+		_matchmaking_start_sent = false  # Allow retry if poll doesn't detect start
+	else:
+		# Unexpected error — reset so the host can retry
+		print("[Lobby][HOST] Start request failed (code=%d) — resetting for retry" % code)
+		_matchmaking_start_sent = false
+		status_label.text = "Failed to start (code %d). Retrying..." % code
 	
 	GameManager.opponent_character = _opp_character
 	GameManager.opponent_passive = _opp_passive
@@ -770,6 +785,8 @@ func _launch_game_with_countdown() -> void:
 func _show_opponent_left_popup() -> void:
 	if _matchmaking_forfeit_handled: return
 	_matchmaking_forfeit_handled = true
+	var role = "HOST" if GameManager.is_host else "GUEST"
+	print("[Lobby][%s] Opponent left the lobby" % role)
 	
 	# Stop polling and heartbeat
 	poll_timer = 999999.0

@@ -316,15 +316,22 @@ func apply_hp_from_room(room: Dictionary) -> void:
 	if not (room.has("host_hp") and room.has("guest_hp")): return
 	var host_hp: float = float(room.get("host_hp", 0))
 	var guest_hp: float = float(room.get("guest_hp", 0))
-	# Only skip if server has never set HP (both exactly 0 means game hasn't started yet)
-	# Do NOT skip if one is 0  that means a player died and we need to sync it
+	# Skip only if the server has never written HP (both 0 = before first sync_hp call).
 	if host_hp == 0 and guest_hp == 0: return
 	if GameManager.is_host:
-		if abs(HPManager.player_hp   - host_hp)  > 0.01: HPManager.set_hp("player",   host_hp)
-		if abs(HPManager.opponent_hp - guest_hp) > 0.01: HPManager.set_hp("opponent", guest_hp)
+		if abs(HPManager.player_hp   - host_hp)  > 0.01:
+			print("[HPSync] HOST player_hp: %.0f → %.0f" % [HPManager.player_hp, host_hp])
+			HPManager.set_hp("player",   host_hp)
+		if abs(HPManager.opponent_hp - guest_hp) > 0.01:
+			print("[HPSync] HOST opponent_hp: %.0f → %.0f" % [HPManager.opponent_hp, guest_hp])
+			HPManager.set_hp("opponent", guest_hp)
 	else:
-		if abs(HPManager.player_hp   - guest_hp) > 0.01: HPManager.set_hp("player",   guest_hp)
-		if abs(HPManager.opponent_hp - host_hp)  > 0.01: HPManager.set_hp("opponent", host_hp)
+		if abs(HPManager.player_hp   - guest_hp) > 0.01:
+			print("[HPSync] GUEST player_hp: %.0f → %.0f" % [HPManager.player_hp, guest_hp])
+			HPManager.set_hp("player",   guest_hp)
+		if abs(HPManager.opponent_hp - host_hp)  > 0.01:
+			print("[HPSync] GUEST opponent_hp: %.0f → %.0f" % [HPManager.opponent_hp, host_hp])
+			HPManager.set_hp("opponent", host_hp)
 
 # Sends progress and pops one mutation from the queue only if the interval has elapsed
 # Mutations are sent with sequence numbers to prevent loss/reordering

@@ -248,8 +248,15 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 	_check_death_final()
 
 	if any_skill and hud_anim and hud_anim.has_animation("anim"):
-		hud_anim.play_backwards("anim")
-		await hud_anim.animation_finished
+		# Use a timer equal to the animation length instead of awaiting animation_finished,
+		# which is unreliable on reverse playback in Godot 4.
+		var anim_len: float = hud_anim.get_animation("anim").length
+		hud_anim.speed_scale = -1.0
+		hud_anim.seek(anim_len, true)
+		hud_anim.play("anim")
+		await get_tree().create_timer(anim_len).timeout
+		hud_anim.stop()
+		hud_anim.speed_scale = 1.0
 
 func play_death_anim(entity: String) -> void:
 	var my_char:  String = GameManager.selected_character

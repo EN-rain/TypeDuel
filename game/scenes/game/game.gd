@@ -68,6 +68,9 @@ func _ready() -> void:
 func _deferred_init() -> void:
 	HPManager.init_game()
 	_update_bars()
+	_log("[Init] Game scene loaded | char=%s | opp=%s | room=%s | role=%s" % [
+		GameManager.selected_character, GameManager.opponent_character,
+		GameManager.current_room, _role_tag()])
 	if not GameManager.is_solo and GameManager.current_room != "":
 		seed(GameManager.current_room.hash())
 	else:
@@ -146,7 +149,6 @@ func start_skill_phase(announce_phase: bool = false) -> void:
 	round_timer    = 60.0
 	net.opp_chosen_skill = ""  # Clear opponent's skill choice from previous round
 	_skill_phase_local_start_ms = float(Time.get_ticks_msec())
-	_update_skill_buttons()
 	
 	# Use server round_id if available, otherwise increment local counter
 	if not GameManager.is_solo and GameManager.current_room != "" and _server_round_id > 0:
@@ -157,11 +159,9 @@ func start_skill_phase(announce_phase: bool = false) -> void:
 	
 	_log("[Phase] SKILL SELECT | round=%d | mana=%d | opp_mana=%d | skills=%s" % [current_round, SkillsManager.player_mana, SkillsManager.opponent_mana, str(SkillsManager.selected_skills)])
 	
-	# Re-enable skill buttons for new round
-	if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1"):
-		$HUD/OwnSkillSelect/HBoxContainer/Skill1.disabled = false
-	if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
-		$HUD/OwnSkillSelect/HBoxContainer/Skill2.disabled = false
+	# Update skill buttons based on current mana — do NOT unconditionally re-enable them.
+	# _update_skill_buttons() already handles enable/disable based on affordability.
+	_update_skill_buttons()
 	
 	if _can_pick_any_skill():
 		skill_select.show()
@@ -199,9 +199,11 @@ func start_typing_phase(announce_phase: bool = false) -> void:
 	typing.queued_mutations.clear()
 	if SkillsManager.selected_passive == "stutter" and SkillsManager.opponent_win_streak > 0:
 		typing.queued_mutations.append({ "type": "stutter" })
+		_log("[Passive] Stutter queued (opp win streak=%d)" % SkillsManager.opponent_win_streak)
 	if SkillsManager.selected_passive == "phantom" and SkillsManager.phantom_stack > 0:
 		for i in range(SkillsManager.phantom_stack):
 			typing.queued_mutations.append({ "type": "phantom" })
+		_log("[Passive] Phantom queued x%d (stack=%d)" % [SkillsManager.phantom_stack, SkillsManager.phantom_stack])
 	_log("[Round] Starting TYPING Phase | target_len=%d | round_id=%d" % [typing.target_sentence.length(), _server_round_id])
 	if not GameManager.is_solo and GameManager.current_room != "" and _server_typing_started_at_ms > 0.0:
 		_typing_go_at_ms = _server_typing_started_at_ms
@@ -220,15 +222,23 @@ func _update_skill_buttons() -> void:
 		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1"):
 			var btn1 = $HUD/OwnSkillSelect/HBoxContainer/Skill1
 			btn1.text = "%s (%dM)" % [s1.capitalize(), SkillsManager.SKILL_COSTS.get(s1, 0)]
-			# Only enable if we can afford it AND haven't already chosen a skill
+			var was_disabled = btn1.disabled
 			btn1.disabled = not SkillsManager.can_pick_skill(s1) or chosen_skill_id != ""
+			if was_disabled != btn1.disabled:
+				_log("[SkillBtn] Skill1 '%s' disabled=%s | mana=%d cost=%d chosen='%s'" % [
+					s1, btn1.disabled, SkillsManager.player_mana,
+					SkillsManager.SKILL_COSTS.get(s1, 0), chosen_skill_id])
 	if SkillsManager.selected_skills.size() > 1:
 		var s2 = SkillsManager.selected_skills[1]
 		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
 			var btn2 = $HUD/OwnSkillSelect/HBoxContainer/Skill2
 			btn2.text = "%s (%dM)" % [s2.capitalize(), SkillsManager.SKILL_COSTS.get(s2, 0)]
-			# Only enable if we can afford it AND haven't already chosen a skill
+			var was_disabled = btn2.disabled
 			btn2.disabled = not SkillsManager.can_pick_skill(s2) or chosen_skill_id != ""
+			if was_disabled != btn2.disabled:
+				_log("[SkillBtn] Skill2 '%s' disabled=%s | mana=%d cost=%d chosen='%s'" % [
+					s2, btn2.disabled, SkillsManager.player_mana,
+					SkillsManager.SKILL_COSTS.get(s2, 0), chosen_skill_id])
 
 # 
 # Main process loop
@@ -421,6 +431,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_F3:
 			anim.play_combat_anims("whiplash", "", "buff")
 			return
+		elif event.keycode == KEY_F4:
+			# Auto-complete the current sentence (debug only)
+			if current_state == GameState.TYPING and not i_finished:
+				_log("[Debug] F4: Auto-completing sentence")
+				typing.force_complete_sentence()
+			return
 		# ──────────────────────────────────────
 
 	if current_state != GameState.TYPING: return
@@ -445,8 +461,9 @@ func _on_accuracy_too_low() -> void:
 	# Player finished but didn't meet the 60% accuracy threshold.
 	# Skill is cancelled — mana is NOT refunded (mana is only gained from words).
 	# This is the authoritative check; _resolve_and_advance will also verify.
+	_log("[Accuracy] Warning: below 60%% threshold | acc=%.1f%%" % typing.get_accuracy())
 	if chosen_skill_id != "":
-		_log("[Accuracy] Too low — skill '%s' cancelled, mana lost" % chosen_skill_id)
+		_log("[Accuracy] Skill '%s' cancelled, mana lost" % chosen_skill_id)
 		chosen_skill_id = ""
 		chosen_skill_index = -1
 
@@ -507,6 +524,7 @@ func _on_room_polled(room: Dictionary) -> void:
 
 func _on_opponent_forfeited() -> void:
 	if _victory_shown: return
+	_log("[Victory] Opponent forfeited — we win")
 	_victory_shown = true
 	GameManager.current_room = ""
 	
@@ -537,6 +555,7 @@ func _on_match_ended(_reason: String) -> void:
 func _on_entity_died(entity: String) -> void:
 	if _victory_shown: return
 	if current_state == GameState.TYPING or current_state == GameState.SKILL_SELECT or current_state == GameState.RESOLVING:
+		_log("[Victory] %s HP reached 0 — game over" % entity)
 		_victory_shown = true
 		current_state = GameState.RESOLVING
 		combat.show_victory(entity, $HUD)
@@ -567,6 +586,7 @@ func _on_i_finished() -> void:
 		_log("[Decision] ✓ Finished FIRST → +2 Mana bonus (now %d)" % SkillsManager.player_mana)
 		if SkillsManager.selected_passive == "reversal":
 			typing.queued_mutations.append({ "type": "reversal" })
+			_log("[Passive] Reversal queued (finished first)")
 		if GameManager.is_solo:
 			_resolve_and_advance("buff")
 		else:
@@ -609,6 +629,12 @@ func _resolve_and_advance(finish_mode: String) -> void:
 	var result = combat.resolve(finish_mode, chosen_skill_id, net.opp_progress, _server_first_finish_at_ms, current_round)
 	_update_bars()  # Reflect HP/mana changes from resolution immediately
 	
+	# Sync HP to server immediately after resolution so polling doesn't overwrite
+	# correct local HP with stale server values during the animation window.
+	if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
+		_log("[HP] Syncing to server — player=%.0f opp=%.0f" % [HPManager.player_hp, HPManager.opponent_hp])
+		net.sync_hp()
+	
 	# Determine which skills should show in animation based on who finished
 	var my_skill_for_anim = chosen_skill_id
 	var opp_skill_for_anim = net.opp_chosen_skill
@@ -630,9 +656,6 @@ func _resolve_and_advance(finish_mode: String) -> void:
 		opp_skill_for_anim,
 		finish_mode
 	)
-	
-	if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
-		net.sync_hp()
 	
 	# Small delay before showing skill select UI
 	await get_tree().create_timer(0.3).timeout

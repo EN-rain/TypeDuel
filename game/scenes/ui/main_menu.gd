@@ -131,11 +131,11 @@ func _process(delta):
 		var seconds = int(elapsed) % 60
 		matchmaking_time_label.text = "Time: %d:%02d" % [minutes, seconds]
 		
-		if matchmaking_code != "":
-			poll_timer += delta
-			if poll_timer >= 1.0:
-				poll_timer = 0.0
-				_check_matchmaking_status()
+		# Poll /queue/status every second to check if matched
+		poll_timer += delta
+		if poll_timer >= 1.0:
+			poll_timer = 0.0
+			_check_matchmaking_status()
 
 # ── Heartbeat & Online Count ──────────────────────────────────────────────
 
@@ -263,21 +263,33 @@ func _on_play_online_pressed():
 		return
 
 	if is_matchmaking:
-		# Cancel matchmaking
+		# Cancel — leave the queue on the server
+		print("[Matchmaking] Cancelled by player")
 		is_matchmaking = false
 		matchmaking_label.hide()
 		matchmaking_time_label.hide()
 		play_online_btn.text = "Play Online"
 		matchmaking_code = ""
+		var http_leave = HTTPRequest.new()
+		add_child(http_leave)
+		http_leave.request_completed.connect(func(_r,_c,_h,_b): http_leave.queue_free())
+		http_leave.timeout = 5.0
+		http_leave.request(GameManager.SERVER_URL + "/api/rooms/queue/leave",
+			GameManager.get_auth_headers(), HTTPClient.METHOD_POST,
+			JSON.stringify({"user_id": GameManager.user_data.id}))
 		return
 
-	print("Starting Matchmaking...")
+	print("[Matchmaking] Joining queue...")
 	is_matchmaking = true
 	matchmaking_start_time = Time.get_ticks_msec() / 1000.0
+	matchmaking_label.text = "Searching for opponent..."
 	matchmaking_label.show()
 	matchmaking_time_label.show()
 	play_online_btn.text = TEXT_CANCEL_MATCHMAKE
 	
+	_send_matchmake_request()
+
+func _send_matchmake_request():
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_matchmake_done.bind(http))
@@ -294,12 +306,14 @@ func _on_play_online_pressed():
 func _on_matchmake_done(_result, code, _headers, body, http):
 	if is_instance_valid(http):
 		http.queue_free()
-	if not is_matchmaking: return # already cancelled
+	if not is_matchmaking:
+		return  # Cancelled while in-flight — queue/leave already sent by cancel handler
 	
 	if code == 200:
 		var json = JSON.parse_string(body.get_string_from_utf8())
-		if json.role == "guest":
-			# Found a match instantly — stop polling to prevent duplicate transitions
+		if json.get("role") == "guest":
+			# Matched immediately as guest
+			print("[Matchmaking] Matched instantly as GUEST | room=%s" % json.room.code)
 			is_matchmaking = false
 			matchmaking_label.hide()
 			matchmaking_time_label.hide()
@@ -308,11 +322,17 @@ func _on_matchmake_done(_result, code, _headers, body, http):
 			GameManager.is_solo = false
 			GameManager.is_matchmaking = true
 			await _transition_with_outro(SCENE_CUSTOM_ROOM)
-		else:
-			# Waiting for guest
-			matchmaking_code = json.code
+		elif json.get("role") == "waiting":
+			# In queue — poll /queue/status until matched
+			print("[Matchmaking] In queue, waiting for opponent...")
 			matchmaking_label.text = TEXT_WAITING_OPPONENT
+	elif code == 429:
+		print("[Matchmaking] Penalty active — cannot queue")
+		is_matchmaking = false
+		matchmaking_label.text = "Penalty active. Please wait."
+		play_online_btn.text = TEXT_PLAY_ONLINE
 	else:
+		print("[Matchmaking] Request failed (code=%d)" % code)
 		is_matchmaking = false
 		matchmaking_label.text = TEXT_MATCHMAKE_FAILED
 		play_online_btn.text = TEXT_PLAY_ONLINE
@@ -322,7 +342,7 @@ func _check_matchmaking_status():
 	add_child(http)
 	http.request_completed.connect(_on_poll_match_done.bind(http))
 	http.timeout = 5.0
-	http.request(GameManager.SERVER_URL + "/api/rooms/" + matchmaking_code, GameManager.get_auth_headers())
+	http.request(GameManager.SERVER_URL + "/api/rooms/queue/status", GameManager.get_auth_headers())
 
 func _on_poll_match_done(_result, code, _headers, body, http):
 	if is_instance_valid(http):
@@ -331,16 +351,28 @@ func _on_poll_match_done(_result, code, _headers, body, http):
 	
 	if code == 200:
 		var json = JSON.parse_string(body.get_string_from_utf8())
-		if json.guest_id:
-			# Guest joined — stop polling immediately to prevent duplicate transitions
+		if json.get("matched") == true:
+			var role = "HOST" if json.get("role") == "host" else "GUEST"
+			print("[Matchmaking] Matched as %s | room=%s" % [role, json.room.code])
 			is_matchmaking = false
 			matchmaking_label.hide()
 			matchmaking_time_label.hide()
-			GameManager.current_room = matchmaking_code
-			GameManager.is_host = true
+			GameManager.current_room = json.room.code
+			GameManager.is_host = (json.get("role") == "host")
 			GameManager.is_solo = false
 			GameManager.is_matchmaking = true
 			await _transition_with_outro(SCENE_CUSTOM_ROOM)
+		elif json.get("in_queue") == false:
+			# Server evicted us from queue (stale) — re-queue
+			print("[Matchmaking] Evicted from queue, re-queuing...")
+			if is_matchmaking:
+				matchmaking_label.text = "Re-queuing..."
+				_send_matchmake_request()
+	elif code == 404 or code == 401:
+		print("[Matchmaking] Queue status error (code=%d)" % code)
+		is_matchmaking = false
+		matchmaking_label.text = TEXT_MATCHMAKE_FAILED
+		play_online_btn.text = TEXT_PLAY_ONLINE
 
 func _on_leaderboard_pressed():
 	# Play settings slide-out AND main menu outro simultaneously

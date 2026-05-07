@@ -6,6 +6,8 @@ const authMiddleware = require('../middleware/auth');
 router.post('/create',           authMiddleware, roomController.createRoom);
 router.post('/join',             authMiddleware, roomController.joinRoom);
 router.post('/matchmake',        authMiddleware, roomController.matchmake);
+router.post('/queue/leave',      authMiddleware, roomController.leaveQueue);
+router.get('/queue/status',      authMiddleware, roomController.queueStatus);
 router.post('/:code/leave',      authMiddleware, roomController.leaveRoom);
 router.get('/',                  authMiddleware, roomController.listRooms);
 router.patch('/:code/select',    authMiddleware, roomController.updateSelections);

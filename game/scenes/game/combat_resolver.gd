@@ -104,18 +104,24 @@ func _apply_hp(result: Dictionary) -> void:
 	# In multiplayer, only the host authoritatively applies HP changes
 	# Guests will receive HP updates via server sync (apply_hp_from_room)
 	if GameManager.is_solo or GameManager.is_host:
+		var role = "SOLO" if GameManager.is_solo else "HOST"
+		print("[HP][%s] Before apply — player=%.0f opp=%.0f" % [role, HPManager.player_hp, HPManager.opponent_hp])
 		if result.player_hp_delta != 0:
 			HPManager.heal("player", result.player_hp_delta)
 		if result.opp_hp_delta != 0:
 			HPManager.heal("opponent", result.opp_hp_delta)
 		if result.player_damage > 0:
 			HPManager.take_damage("opponent", result.player_damage)
-		
 		# Host also applies opponent's damage to itself
 		if not GameManager.is_solo:
 			var opp_dmg = result.get("opp_player_damage", 0.0)
 			if opp_dmg > 0:
 				HPManager.take_damage("player", opp_dmg)
+		print("[HP][%s] After apply  — player=%.0f opp=%.0f | dmg_dealt=%.0f opp_dmg=%.0f" % [
+			role, HPManager.player_hp, HPManager.opponent_hp,
+			result.player_damage, result.get("opp_player_damage", 0.0)])
+	else:
+		print("[HP][GUEST] Skipping local apply — waiting for server sync | dmg_dealt=%.0f" % result.player_damage)
 
 func _update_phantom_stack() -> void:
 	if SkillsManager.selected_passive != "phantom": return
