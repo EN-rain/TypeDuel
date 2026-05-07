@@ -445,6 +445,22 @@ animation = &"idle"
 frame_progress = 0.37780395
 flip_h = true
 
+[node name="Label" type="Label" parent="CenterPlaceholder" unique_id=1705137088]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -47.0
+offset_right = 20.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_rndi5")
+text = "Choose 2 Skills"
+
 [node name="StartButton" type="Button" parent="." unique_id=1078626780]
 custom_minimum_size = Vector2(200, 55)
 layout_mode = 1
@@ -541,6 +557,7 @@ theme_override_constants/separation = 15
 clip_contents = true
 custom_minimum_size = Vector2(150, 80)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("4_rndi5")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Characters/VBoxContainer/Character1" unique_id=1255368999]
 texture_filter = 1
@@ -732,6 +749,20 @@ theme_override_styles/normal = SubResource("StyleBoxTexture_10h8c")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_10h8c")
 theme_override_styles/hover = SubResource("StyleBoxTexture_10h8c")
 
+[node name="Label" type="Label" parent="Passive" unique_id=488508961]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -138.5
+offset_top = -52.50009
+offset_right = -98.5
+offset_bottom = -29.500092
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("4_rndi5")
+theme_override_font_sizes/font_size = 14
+text = "Choose a Passive"
+
 [node name="InnateAbility" type="Label" parent="." unique_id=1239003720]
 layout_mode = 1
 anchors_preset = 2
@@ -743,7 +774,6 @@ offset_right = 353.0
 offset_bottom = 19.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rndi5")
-theme_override_font_sizes/font_size = 13
 autowrap_mode = 3
 
 [node name="OtherInfo" type="Label" parent="." unique_id=1376996322]
@@ -759,7 +789,6 @@ offset_bottom = 28.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rndi5")
-theme_override_font_sizes/font_size = 13
 autowrap_mode = 3
 
 [connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]

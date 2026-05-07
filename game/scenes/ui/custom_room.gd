@@ -28,6 +28,8 @@ const SKILLS = [
 # Info labels
 @onready var _innate_label: Label = $InnateAbility
 @onready var _other_info_label: Label = $OtherInfo
+@onready var _skill_hint_label: Label = $CenterPlaceholder/Label
+@onready var _passive_hint_label: Label = $Passive/Label
 
 # Character buttons
 @onready var char_button_1 = $Characters/VBoxContainer/Character1
@@ -624,11 +626,10 @@ func _setup_ui():
 	for i in range(min(CHARACTERS.size(), _char_buttons.size())):
 		_char_buttons[i].text = CHARACTERS[i]
 	
-	for i in range(min(SKILLS.size(), _skill_buttons.size())):
-		_skill_buttons[i].text = SKILLS[i]["name"]
+	# Skill buttons have no text — icons only
 	
 	for i in range(min(GameManager.PASSIVES.size(), _passive_buttons.size())):
-		_passive_buttons[i].text = GameManager.PASSIVES[i]["name"]
+		_passive_buttons[i].text = ""
 
 	# Hide center previews until characters are selected
 	if is_instance_valid(_preview_p1): _preview_p1.visible = false
@@ -689,10 +690,12 @@ func _refresh_ui():
 				sprite.frame = 0
 	for i in _skill_buttons.size():
 		var id = SKILLS[i]["id"]
-		_skill_buttons[i].modulate = selected_skill_color if SkillsManager.selected_skills.has(id) else Color.WHITE
+		var is_selected = SkillsManager.selected_skills.has(id)
+		_skill_buttons[i].modulate = Color(1, 1, 1, 0.7) if is_selected else Color.WHITE
 	for i in _passive_buttons.size():
 		var id = GameManager.PASSIVES[i]["id"]
-		_passive_buttons[i].modulate = selected_passive_color if SkillsManager.selected_passive == id else Color.WHITE
+		var is_selected = SkillsManager.selected_passive == id
+		_passive_buttons[i].modulate = Color(1, 1, 1, 0.7) if is_selected else Color.WHITE
 	
 	# Sync preview sprites with current selections
 	_update_player_preview(GameManager.selected_character)
@@ -709,7 +712,24 @@ func _refresh_ui():
 			player2_tag.text = "You: " + GameManager.selected_character
 		else:
 			player2_tag.text = "You (Guest)"
-	
+
+	# Dynamic skill hint label
+	if is_instance_valid(_skill_hint_label):
+		var count = SkillsManager.selected_skills.size()
+		if count == 0:
+			_skill_hint_label.text = "Choose 2 skills"
+		elif count == 1:
+			_skill_hint_label.text = "1 more skill"
+		else:
+			_skill_hint_label.text = "Done"
+
+	# Dynamic passive hint label
+	if is_instance_valid(_passive_hint_label):
+		if SkillsManager.selected_passive != "":
+			_passive_hint_label.text = "Done"
+		else:
+			_passive_hint_label.text = "Choose a Passive"
+
 	_check_start_ready()
 
 func _check_start_ready():
