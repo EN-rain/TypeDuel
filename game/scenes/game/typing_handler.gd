@@ -180,6 +180,7 @@ func _check_sentence_complete() -> void:
 	if sentence_start_time > 0:
 		var elapsed_min = (Time.get_ticks_msec() - sentence_start_time) / 60000.0
 		_final_wpm = int((float(current_index) / 5.0) / elapsed_min) if elapsed_min > 0 else 0
+		print("[WPM] Locked at finish: %d WPM" % _final_wpm)
 
 	var correct_letters = total_keystrokes - typos_count
 	var required = int(ceil(float(target_sentence.length()) * 0.6))

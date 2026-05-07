@@ -60,11 +60,14 @@ func reset_match() -> void:
 ## Called after every accurately-typed word during the typing phase.
 ## wpm = player's rolling WPM at that moment (for Zephon passive).
 func on_accurate_word(wpm: float) -> void:
+	var old_mana = player_mana
 	player_mana = min(10, player_mana + 1)
 	# Zephon innate: extra +1 Mana when WPM > 80
 	if HPManager.player_innate == "Overdrive" and wpm > 80.0:
 		player_mana = min(10, player_mana + 1)
-		print("[Innate Ability: Overdrive] WPM > 80 on accurate word → %d Mana" % player_mana)
+		print("[Mana] Accurate word (Overdrive WPM>80): %d → %d" % [old_mana, player_mana])
+	elif player_mana != old_mana:
+		print("[Mana] Accurate word: %d → %d" % [old_mana, player_mana])
 
 ## Award the +2 Mana bonus for finishing the sentence first.
 func on_finish_first() -> void:
@@ -72,13 +75,15 @@ func on_finish_first() -> void:
 	print("[Mana] Finished 1st! +2 bonus → %d Mana" % player_mana)
 
 func on_opponent_accurate_word() -> void:
+	var old_mana = opponent_mana
 	opponent_mana = min(10, opponent_mana + 1)
 	# Zephon innate: extra +1 Mana when opponent WPM > 80 (estimated via progress)
 	if HPManager.opponent_innate == "Overdrive":
 		opponent_mana = min(10, opponent_mana + 1)
-		print("[Innate Ability: Overdrive] Opponent Zephon accurate word → %d Mana" % opponent_mana)
-	else:
-		print("[Mana] Opponent typed word → %d Mana" % opponent_mana)
+		if opponent_mana != old_mana:
+			print("[Mana] Opponent word (Overdrive): %d → %d" % [old_mana, opponent_mana])
+	elif opponent_mana != old_mana:
+		print("[Mana] Opponent word: %d → %d" % [old_mana, opponent_mana])
 
 func on_opponent_finish_first() -> void:
 	opponent_mana = min(10, opponent_mana + 2)

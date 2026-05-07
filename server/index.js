@@ -7,6 +7,7 @@ const gameRoutes = require('./routes/game');
 const roomRoutes = require('./routes/rooms');
 const chatRoutes = require('./routes/chat');
 const friendsRoutes = require('./routes/friends');
+const feedbackRoutes = require('./routes/feedback');
 
 const fs = require('fs');
 const path = require('path');
@@ -34,6 +35,7 @@ app.use('/api/game', gameRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/friends', friendsRoutes);
+app.use('/api/feedback', feedbackRoutes);
 app.get('/api/health', (req, res) => res.sendStatus(200));
 
 

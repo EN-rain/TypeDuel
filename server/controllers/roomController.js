@@ -194,6 +194,8 @@ const joinRoom = (req, res) => {
     room.guest_character = null;
     room.guest_skills  = [];
     room.guest_passive = "";
+    room.guest_mana    = 2;  // Initialize guest mana
+    room.guest_typing_start = 0;  // Initialize guest typing start time
     room.seq = (room.seq || 0) + 1;
     _touchRoomPresence(room, actorId);
     return res.json({ ok: true, room });
@@ -302,8 +304,13 @@ const leaveRoom = (req, res) => {
     room.guest_passive = "";
     room.guest_progress = 0.0;
     room.guest_typos = 0;
+    room.guest_mana = 2;  // Reset guest mana
+    room.guest_typing_start = 0;  // Reset guest typing start
     room.guest_mutations = [];
     room.guest_skill = "";
+    if (room.matchmaking) {
+        room.matchmaking_deadline_at = 0;
+    }
     room.seq = (room.seq || 0) + 1;
     _touchRoomPresence(room, actorId);
     return res.json({ ok: true, room: roomSnapshot(room) });
@@ -370,6 +377,10 @@ const matchmake = async (req, res) => {
         guest_progress:  0.0,
         host_typos:      0,
         guest_typos:     0,
+        host_mana:       2,  // Track mana for accurate sync
+        guest_mana:      2,
+        host_typing_start: 0,  // Track when player actually starts typing
+        guest_typing_start: 0,
         host_mutations:  [],
         host_skill:      "",
         guest_mutations: [],
@@ -490,6 +501,10 @@ const startRoomGame = (req, res) => {
     room.guest_progress = 0.0;
     room.host_typos = 0;
     room.guest_typos = 0;
+    room.host_mana = 2;  // Reset mana for round 1
+    room.guest_mana = 2;
+    room.host_typing_start = 0;  // Reset typing start times
+    room.guest_typing_start = 0;
     room.host_mutations = [];
     room.guest_mutations = [];
     // HP is set by host client via /hp once the game scene initializes.
@@ -539,6 +554,8 @@ const updatePhase = (req, res) => {
         room.guest_progress = 0.0;
         room.host_typos = 0;
         room.guest_typos = 0;
+        room.host_typing_start = 0;  // Reset typing start times for new round
+        room.guest_typing_start = 0;
         room.host_mutations = [];
         room.guest_mutations = [];
         room.host_skill = "";
@@ -553,7 +570,7 @@ const updatePhase = (req, res) => {
 // PATCH /api/rooms/:code/progress
 const updateProgress = (req, res) => {
     const code = _normalizeCode(req.params.code);
-    const { user_id, progress, typos, send_mutation } = req.body;
+    const { user_id, progress, typos, send_mutation, mana } = req.body;
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
     if (!_assertBodyUserMatchesActor(req, res)) return;
@@ -562,6 +579,7 @@ const updateProgress = (req, res) => {
 
     const progressNum = (progress === undefined) ? undefined : Number(progress);
     const typosNum = (typos === undefined) ? undefined : Number(typos);
+    const manaNum = (mana === undefined) ? undefined : Number(mana);
 
     // Fix #12: cap typos to a sane maximum to prevent damage manipulation
     const MAX_TYPOS = 500;
@@ -569,12 +587,28 @@ const updateProgress = (req, res) => {
     if (room.host_id == actorId) {
         if (progressNum !== undefined && Number.isFinite(progressNum)) room.host_progress = Math.min(1.0, Math.max(0.0, progressNum));
         if (typosNum !== undefined && Number.isFinite(typosNum)) room.host_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
+        // Accept mana updates in real-time so opponent can see mana increasing during typing
+        if (manaNum !== undefined && Number.isFinite(manaNum)) {
+            room.host_mana = Math.min(10, Math.max(0, Math.floor(manaNum)));
+        }
+        // Track when player actually starts typing (first progress update > 0)
+        if (progressNum !== undefined && progressNum > 0 && room.host_typing_start === 0) {
+            room.host_typing_start = Date.now();
+        }
         if (send_mutation) room.guest_mutations.push(send_mutation);
         // Store chosen skill so opponent can see it in their stats label
         if (req.body.chosen_skill !== undefined) room.host_skill = String(req.body.chosen_skill || '');
     } else if (room.guest_id == actorId) {
         if (progressNum !== undefined && Number.isFinite(progressNum)) room.guest_progress = Math.min(1.0, Math.max(0.0, progressNum));
         if (typosNum !== undefined && Number.isFinite(typosNum)) room.guest_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
+        // Accept mana updates in real-time so opponent can see mana increasing during typing
+        if (manaNum !== undefined && Number.isFinite(manaNum)) {
+            room.guest_mana = Math.min(10, Math.max(0, Math.floor(manaNum)));
+        }
+        // Track when player actually starts typing (first progress update > 0)
+        if (progressNum !== undefined && progressNum > 0 && room.guest_typing_start === 0) {
+            room.guest_typing_start = Date.now();
+        }
         if (send_mutation) room.host_mutations.push(send_mutation);
         // Store chosen skill so opponent can see it in their stats label
         if (req.body.chosen_skill !== undefined) room.guest_skill = String(req.body.chosen_skill || '');
