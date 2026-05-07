@@ -102,6 +102,27 @@ const ROOM_IDLE_TTL_MS = 10 * 60 * 1000; // evict only if idle for 10 minutes
 const matchmakingQueue = [];
 const QUEUE_STALE_MS = 60 * 1000;
 
+function _enterTypingPhase(room, nowMs) {
+    const now = nowMs || Date.now();
+    room.phase = 'typing';
+    room.phase_started_at = now;
+    if (room.round_id <= 1) {
+        room.typing_started_at = now + 3000;
+    } else {
+        room.typing_started_at = now;
+    }
+    room.first_finish_at = 0;
+    room.first_finish_by = null;
+    room.host_progress = 0.0;
+    room.guest_progress = 0.0;
+    room.host_typos = 0;
+    room.guest_typos = 0;
+    room.host_typing_start = 0;
+    room.guest_typing_start = 0;
+    room.host_mutations = [];
+    room.guest_mutations = [];
+}
+
 // Evict stale queue entries every 30s
 setInterval(() => {
     const now = Date.now();
@@ -613,22 +634,7 @@ const updatePhase = (req, res) => {
         room.guest_skill = "";
     }
     if (phase === 'typing') {
-        // Add a short ready countdown so the typing start isn't a surprise for the first round.
-        if (room.round_id <= 1) {
-            room.typing_started_at = now + 3000;
-        } else {
-            room.typing_started_at = now;
-        }
-        room.first_finish_at = 0;
-        room.first_finish_by = null;
-        room.host_progress = 0.0;
-        room.guest_progress = 0.0;
-        room.host_typos = 0;
-        room.guest_typos = 0;
-        room.host_typing_start = 0;  // Reset typing start times for new round
-        room.guest_typing_start = 0;
-        room.host_mutations = [];
-        room.guest_mutations = [];
+        _enterTypingPhase(room, now);
         room.host_skill = "";
         room.guest_skill = "";
     }
@@ -711,6 +717,12 @@ const updateProgress = (req, res) => {
         }
     } else {
         return res.status(403).json({ message: 'Not in this room' });
+    }
+
+    // Authoritative fast-forward: once both players choose a skill in skill_select,
+    // transition immediately to typing on the server.
+    if (room.phase === 'skill_select' && room.host_skill && room.guest_skill) {
+        _enterTypingPhase(room, Date.now());
     }
 
     // Fix #7: first-finish is set only once and never overwritten.
