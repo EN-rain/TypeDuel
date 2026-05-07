@@ -15,6 +15,7 @@ var _rematch_initiated: bool = false
 var _opp_left: bool = false
 
 func _ready():
+	SoundManager.play_music(preload("res://assets/bg-music/Victory.wav"))
 	back_button.pressed.connect(_on_back_pressed)
 	rematch_button.pressed.connect(_on_rematch_pressed)
 	match_again_button.pressed.connect(_on_match_again_pressed)

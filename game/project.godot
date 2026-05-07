@@ -22,6 +22,7 @@ SkillsManager="*res://scripts/autoload/SkillsManager.gd"
 HPManager="*res://scripts/autoload/HPManager.gd"
 ManaManager="*res://scripts/autoload/ManaManager.gd"
 TransitionManager="*res://scripts/autoload/TransitionManager.gd"
+SoundManager="*uid://doo1mqlyconmk"
 
 [display]
 

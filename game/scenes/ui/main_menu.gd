@@ -55,6 +55,7 @@ func _enter_tree():
 			ap.seek(0.0, true)
 
 func _ready():
+	SoundManager.play_music(preload("res://assets/bg-music/Loop-Menu.wav"))
 
 	var name_to_show = GameManager.user_data.display_name
 	if name_to_show == "":
