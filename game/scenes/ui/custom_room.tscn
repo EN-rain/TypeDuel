@@ -297,10 +297,10 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 0.998
-offset_left = 6.0
-offset_top = -138.0
-offset_right = 1.0
-offset_bottom = 116.29596
+offset_left = -5.0
+offset_top = -139.0
+offset_right = -5.0
+offset_bottom = 115.29596
 texture = ExtResource("2_xghyf")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1167147991]
