@@ -23,6 +23,7 @@ const io = new SocketIO(httpServer, {
     transports: ['websocket', 'polling'],
 });
 require('./socket')(io);
+require('./socket/ws')(httpServer);
 const PORT = process.env.PORT || 3000;
 
 // Middleware
