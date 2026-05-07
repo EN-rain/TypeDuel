@@ -459,7 +459,7 @@ grow_vertical = 2
 theme_override_constants/separation = 15
 
 [node name="Character1" type="Button" parent="Characters/VBoxContainer" unique_id=282563812]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(100, 50)
 layout_mode = 2
 text = "PLAYER NAME 1"
 
