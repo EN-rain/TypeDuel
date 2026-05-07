@@ -62,6 +62,7 @@ var _pause_visible: bool = false
 # ─────────────────────────────────────────────
 
 func _ready() -> void:
+	SoundManager.play_music(preload("res://assets/bg-music/fight_looped.wav"))
 	_build_pause_panel()
 	call_deferred("_deferred_init")
 

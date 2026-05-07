@@ -14,6 +14,7 @@ var _poll_in_flight: bool = false
 var _rematch_initiated: bool = false
 
 func _ready():
+	SoundManager.play_music(preload("res://assets/bg-music/Victory.wav"))
 	back_button.pressed.connect(_on_back_pressed)
 	rematch_button.pressed.connect(_on_rematch_pressed)
 	match_again_button.pressed.connect(_on_match_again_pressed)

@@ -15,6 +15,10 @@ run/main_scene="res://scenes/ui/login_scene.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[audio]
+
+buses/default_bus_layout="uid://spp6sdtg1mea"
+
 [autoload]
 
 GameManager="*res://scripts/autoload/GameManager.gd"
@@ -22,6 +26,7 @@ SkillsManager="*res://scripts/autoload/SkillsManager.gd"
 HPManager="*res://scripts/autoload/HPManager.gd"
 ManaManager="*res://scripts/autoload/ManaManager.gd"
 TransitionManager="*res://scripts/autoload/TransitionManager.gd"
+SoundManager="*uid://doo1mqlyconmk"
 
 [display]
 

@@ -1,8 +1,8 @@
-[gd_scene format=3 uid="uid://online_lobby_scene"]
+[gd_scene format=3 uid="uid://bftolvcfx86th"]
 
-[ext_resource type="Script" path="res://scenes/ui/online_lobby.gd" id="1_online_lobby_script"]
+[ext_resource type="Script" uid="uid://by33qk34i2bu6" path="res://scenes/ui/online_lobby.gd" id="1_online_lobby_script"]
 
-[node name="OnlineLobby" type="Control"]
+[node name="OnlineLobby" type="Control" unique_id=1539098269]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_online_lobby_script")
 
-[node name="BackButton" type="Button" parent="."]
+[node name="BackButton" type="Button" parent="." unique_id=1465950011]
 custom_minimum_size = Vector2(100, 40)
 layout_mode = 0
 offset_left = 20.0
@@ -20,7 +20,7 @@ offset_right = 120.0
 offset_bottom = 60.0
 text = "Back"
 
-[node name="TitleContainer" type="VBoxContainer" parent="."]
+[node name="TitleContainer" type="VBoxContainer" parent="." unique_id=2061855485]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -32,25 +32,25 @@ offset_bottom = 110.0
 grow_horizontal = 2
 theme_override_constants/separation = 6
 
-[node name="Title" type="Label" parent="TitleContainer"]
+[node name="Title" type="Label" parent="TitleContainer" unique_id=1367212376]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "Play Online"
 horizontal_alignment = 1
 
-[node name="StatusLabel" type="Label" parent="TitleContainer"]
+[node name="StatusLabel" type="Label" parent="TitleContainer" unique_id=49887861]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Searching for a match..."
 horizontal_alignment = 1
 
-[node name="TimerLabel" type="Label" parent="TitleContainer"]
+[node name="TimerLabel" type="Label" parent="TitleContainer" unique_id=1494089659]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Time: 0:00"
 horizontal_alignment = 1
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=560709816]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -58,55 +58,55 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=754792333]
 layout_mode = 2
 theme_override_constants/separation = 30
 
-[node name="PlayerSlots" type="HBoxContainer" parent="CenterContainer/VBoxContainer"]
+[node name="PlayerSlots" type="HBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=605419021]
 layout_mode = 2
 theme_override_constants/separation = 60
 
-[node name="Player1Slot" type="VBoxContainer" parent="CenterContainer/VBoxContainer/PlayerSlots"]
+[node name="Player1Slot" type="VBoxContainer" parent="CenterContainer/VBoxContainer/PlayerSlots" unique_id=552683501]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Player1Name" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots/Player1Slot"]
+[node name="Player1Name" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots/Player1Slot" unique_id=1760044892]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "You"
 horizontal_alignment = 1
 
-[node name="Player1Status" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots/Player1Slot"]
+[node name="Player1Status" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots/Player1Slot" unique_id=84841948]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "In Queue"
 horizontal_alignment = 1
 
-[node name="VSLabel" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots"]
+[node name="VSLabel" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots" unique_id=1412123839]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "VS"
 vertical_alignment = 1
 
-[node name="Player2Slot" type="VBoxContainer" parent="CenterContainer/VBoxContainer/PlayerSlots"]
+[node name="Player2Slot" type="VBoxContainer" parent="CenterContainer/VBoxContainer/PlayerSlots" unique_id=445581694]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Player2Name" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots/Player2Slot"]
+[node name="Player2Name" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots/Player2Slot" unique_id=1083317734]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "---"
 horizontal_alignment = 1
 
-[node name="Player2Status" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots/Player2Slot"]
+[node name="Player2Status" type="Label" parent="CenterContainer/VBoxContainer/PlayerSlots/Player2Slot" unique_id=341457563]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Searching..."
 horizontal_alignment = 1
 
-[node name="CancelButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="CancelButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1706547182]
 custom_minimum_size = Vector2(200, 55)
 layout_mode = 2
 text = "Cancel Search"
