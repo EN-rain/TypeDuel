@@ -101,16 +101,21 @@ func _derive_opp_accuracy(opp_progress: float, sentence_length: int, opp_typos: 
 	return clampf((chars_typed / total_typed) * 100.0, 0.0, 100.0)
 
 func _apply_hp(result: Dictionary) -> void:
-	if result.player_hp_delta != 0:
-		HPManager.heal("player", result.player_hp_delta)
-	if result.opp_hp_delta != 0:
-		HPManager.heal("opponent", result.opp_hp_delta)
-	if result.player_damage > 0:
-		HPManager.take_damage("opponent", result.player_damage)
-	if not GameManager.is_solo and GameManager.is_host:
-		var opp_dmg = result.get("opp_player_damage", 0.0)
-		if opp_dmg > 0:
-			HPManager.take_damage("player", opp_dmg)
+	# In multiplayer, only the host authoritatively applies HP changes
+	# Guests will receive HP updates via server sync (apply_hp_from_room)
+	if GameManager.is_solo or GameManager.is_host:
+		if result.player_hp_delta != 0:
+			HPManager.heal("player", result.player_hp_delta)
+		if result.opp_hp_delta != 0:
+			HPManager.heal("opponent", result.opp_hp_delta)
+		if result.player_damage > 0:
+			HPManager.take_damage("opponent", result.player_damage)
+		
+		# Host also applies opponent's damage to itself
+		if not GameManager.is_solo:
+			var opp_dmg = result.get("opp_player_damage", 0.0)
+			if opp_dmg > 0:
+				HPManager.take_damage("player", opp_dmg)
 
 func _update_phantom_stack() -> void:
 	if SkillsManager.selected_passive != "phantom": return
@@ -125,6 +130,24 @@ func _update_phantom_stack() -> void:
 func _log_result(result: Dictionary, finish_mode: String, chosen_skill: String) -> void:
 	for line in result.log:
 		print("[Combat] ", line)
+	
+	# For display purposes only:
+	# - Host/Solo: Use actual HPManager values (already updated)
+	# - Guest: Calculate expected values since HP sync happens later via polling
+	var display_player_hp: float = HPManager.player_hp
+	var display_opp_hp: float = HPManager.opponent_hp
+	
+	# Guest needs to calculate expected HP for display since _apply_hp doesn't update HPManager for guests
+	if not GameManager.is_solo and not GameManager.is_host:
+		# Apply player's own HP delta and damage dealt
+		display_player_hp += result.player_hp_delta
+		display_opp_hp += result.opp_hp_delta
+		if result.player_damage > 0:
+			display_opp_hp -= result.player_damage
+		# Clamp to valid range
+		display_player_hp = clampf(display_player_hp, 0, HPManager.player_max_hp)
+		display_opp_hp = clampf(display_opp_hp, 0, HPManager.opponent_max_hp)
+	
 	print("╔══════════════════════════════════════════╗")
 	if chosen_skill == "":
 		print("║  [NO SKILL] — Base attack only           ║")
@@ -138,8 +161,8 @@ func _log_result(result: Dictionary, finish_mode: String, chosen_skill: String) 
 	print("║  Player: %-30s  ║" % GameManager.user_data.username)
 	print("║  DMG dealt:  %-5.0f                         ║" % result.player_damage)
 	print("║  HP delta:   %+.0f                          ║" % result.player_hp_delta)
-	print("║  Your HP:    %.0f / %.0f                     ║" % [HPManager.player_hp, HPManager.player_max_hp])
-	print("║  Opp HP:     %.0f / %.0f                     ║" % [HPManager.opponent_hp, HPManager.opponent_max_hp])
+	print("║  Your HP:    %.0f / %.0f                     ║" % [display_player_hp, HPManager.player_max_hp])
+	print("║  Opp HP:     %.0f / %.0f                     ║" % [display_opp_hp, HPManager.opponent_max_hp])
 	print("║  Mana:       %d                             ║" % SkillsManager.player_mana)
 	print("╚══════════════════════════════════════════╝")
 

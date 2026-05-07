@@ -2,12 +2,13 @@
 
 [ext_resource type="Script" uid="uid://cdsv6vd7esyby" path="res://scenes/ui/custom_room.gd" id="1_custom_room_script"]
 [ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
-[ext_resource type="Texture2D" uid="uid://knxiuy7qi2cg" path="res://assets/GUI/colosseum-bg.png" id="2_xghyf"]
+[ext_resource type="Texture2D" uid="uid://ic0is52jbtpd" path="res://assets/GUI/colosseum-bg.png" id="2_xghyf"]
 [ext_resource type="Texture2D" uid="uid://ckawbo5yt310e" path="res://assets/GUI/skills.png" id="4_mqf87"]
-[ext_resource type="Texture2D" uid="uid://rfvv3o4lhaev" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_qkbvd"]
+[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_qkbvd"]
 [ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="4_rndi5"]
 [ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="5_qkbvd"]
-[ext_resource type="Texture2D" uid="uid://d3jct2xqj1e5l" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_ugbnh"]
+[ext_resource type="Texture2D" uid="uid://bqqanitehsl4m" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_ugbnh"]
+[ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="7_10h8c"]
 
 [sub_resource type="Animation" id="Animation_custom_room_intro"]
 resource_name = "intro"
@@ -459,19 +460,31 @@ grow_vertical = 2
 theme_override_constants/separation = 15
 
 [node name="Character1" type="Button" parent="Characters/VBoxContainer" unique_id=282563812]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(150, 80)
 layout_mode = 2
-text = "PLAYER NAME 1"
+text = "Character 1"
+
+[node name="TextureRect" type="TextureRect" parent="Characters/VBoxContainer/Character1" unique_id=458217733]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("7_10h8c")
+expand_mode = 1
 
 [node name="Character2" type="Button" parent="Characters/VBoxContainer" unique_id=1818998384]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(150, 80)
 layout_mode = 2
-text = "PLAYER NAME 2"
+text = "Character 2"
+clip_contents = false
 
 [node name="Character3" type="Button" parent="Characters/VBoxContainer" unique_id=1929784093]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(150, 80)
 layout_mode = 2
-text = "PLAYER NAME 3"
+text = "Character 3"
+clip_contents = false
 
 [node name="Skill" type="Control" parent="." unique_id=1150963434]
 layout_mode = 1
@@ -502,20 +515,19 @@ grow_vertical = 2
 theme_override_constants/separation = 15
 
 [node name="Skill1" type="Button" parent="Skill/VBoxContainer" unique_id=2113046492]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(150, 60)
 layout_mode = 2
-text = "Skill Name 1"
+text = "Skill 1"
 
 [node name="Skill2" type="Button" parent="Skill/VBoxContainer" unique_id=260171594]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(150, 60)
 layout_mode = 2
-text = "Skill Name 2"
+text = "Skill 2"
 
 [node name="Skill3" type="Button" parent="Skill/VBoxContainer" unique_id=34176200]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(150, 60)
 layout_mode = 2
-text = "Skill Name 3
-"
+text = "Skill 3"
 
 [node name="ChatBox" parent="." unique_id=1946247923 instance=ExtResource("2_chat_box")]
 layout_mode = 1
@@ -592,3 +604,14 @@ theme_override_styles/hover = SubResource("StyleBoxTexture_10h8c")
 
 [connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]
 [connection signal="pressed" from="StartButton" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="Characters/VBoxContainer/Character1" to="." method="_on_char_selected" binds= ["Riven"]]
+[connection signal="pressed" from="Characters/VBoxContainer/Character2" to="." method="_on_char_selected" binds= ["Zephon"]]
+[connection signal="pressed" from="Characters/VBoxContainer/Character3" to="." method="_on_char_selected" binds= ["Liora"]]
+[connection signal="pressed" from="Skill/VBoxContainer/Skill1" to="." method="_on_skill_selected" binds= ["quickslash"]]
+[connection signal="pressed" from="Skill/VBoxContainer/Skill2" to="." method="_on_skill_selected" binds= ["whiplash"]]
+[connection signal="pressed" from="Skill/VBoxContainer/Skill3" to="." method="_on_skill_selected" binds= ["soulbreak"]]
+[connection signal="pressed" from="Passive/HBoxContainer/VBoxContainer1/Passive1" to="." method="_on_passive_selected" binds= ["reversal"]]
+[connection signal="pressed" from="Passive/HBoxContainer/VBoxContainer1/Passive2" to="." method="_on_passive_selected" binds= ["jumble"]]
+[connection signal="pressed" from="Passive/HBoxContainer/VBoxContainer2/Passive3" to="." method="_on_passive_selected" binds= ["phantom"]]
+[connection signal="pressed" from="Passive/HBoxContainer/VBoxContainer2/Passive4" to="." method="_on_passive_selected" binds= ["stutter"]]
+[connection signal="pressed" from="Passive/HBoxContainer/VBoxContainer3/Passive5" to="." method="_on_passive_selected" binds= ["erosion"]]
