@@ -530,8 +530,10 @@ const startRoomGame = (req, res) => {
     if (!room.guest_id) {
         return res.status(409).json({ message: 'Cannot start without guest' });
     }
+    // Idempotent start: if already started, return current room state instead of 409.
+    // This avoids client-side race errors when duplicate start requests arrive close together.
     if (room.status === 'started') {
-        return res.status(409).json({ message: 'Room already started' });
+        return res.json({ ok: true, already_started: true, room: roomSnapshot(room) });
     }
 
     // Server-side readiness validation (don’t rely only on client UI).
