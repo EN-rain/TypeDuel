@@ -72,7 +72,7 @@ func safe_play_anim(node: Node, anim: String) -> void:
 	if anim == "" or not has_anim(node, anim):
 		print("[AnimController] safe_play_anim SKIPPED | anim='%s' | has_anim=%s" % [anim, has_anim(node, anim)])
 		return
-	print("[AnimController] safe_play_anim PLAYING | node=%s | anim='%s'" % [node.name if node else "null", anim])
+	print("[AnimController] safe_play_anim PLAYING | node=%s | anim='%s'" % [node.name if node else StringName("null"), anim])
 	if node.has_method("play"):
 		node.call("play", StringName(anim))
 		return
@@ -114,7 +114,7 @@ func restore_idle_after(node: Node, char_name: String, seconds: float) -> void:
 	if node.get_meta("last_idle_call") == call_id:
 		safe_play_anim(node, idle_anim)
 
-func attack_anim_for(char_name: String, skill_id: String) -> String:
+func attack_anim_for(_char_name: String, skill_id: String) -> String:
 	var base: String = str(SKILL_ANIM_NAME.get(skill_id, ""))
 	if base == "": base = "quickslash"
 	# All characters currently use the same animation names from player.tscn.
@@ -184,13 +184,14 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 		if player_has_skill:
 			var atk = attack_anim_for(my_char, skill_id)
 			print("[AnimController] Player attacking | char=%s | skill=%s | anim=%s" % [my_char, skill_id, atk])
-			# Teleport to target's marker for close-range skills
 			if skill_id in ["whiplash", "soulbreak"]:
 				_teleport_to_marker(p1, p2)
 			safe_play_anim(p1, atk)
 			var p1_anim = get_anim_player(p1)
-			if p1_anim:
-				await p1_anim.animation_finished
+			if p1_anim and p1_anim.has_animation(atk):
+				await get_tree().create_timer(p1_anim.get_animation(atk).length).timeout
+			else:
+				await get_tree().create_timer(0.5).timeout
 			if is_instance_valid(p1): p1.global_position = p1.get_parent().global_position
 
 		# ── Step 2: wait for p2's hurt animation (fixed duration — hurt loops) ──
@@ -203,8 +204,10 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 				_teleport_to_marker(p2, p1)
 			safe_play_anim(p2, opp_atk)
 			var p2_anim = get_anim_player(p2)
-			if p2_anim:
-				await p2_anim.animation_finished
+			if p2_anim and p2_anim.has_animation(opp_atk):
+				await get_tree().create_timer(p2_anim.get_animation(opp_atk).length).timeout
+			else:
+				await get_tree().create_timer(0.5).timeout
 			if is_instance_valid(p2): p2.global_position = p2.get_parent().global_position
 
 			# ── Step 4: wait for p1's hurt (fixed duration — hurt loops) ──────
@@ -218,8 +221,10 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 				_teleport_to_marker(p2, p1)
 			safe_play_anim(p2, opp_atk)
 			var p2_anim = get_anim_player(p2)
-			if p2_anim:
-				await p2_anim.animation_finished
+			if p2_anim and p2_anim.has_animation(opp_atk):
+				await get_tree().create_timer(p2_anim.get_animation(opp_atk).length).timeout
+			else:
+				await get_tree().create_timer(0.5).timeout
 			if is_instance_valid(p2): p2.global_position = p2.get_parent().global_position
 
 		# ── Step 2: wait for p1's hurt animation (fixed duration — hurt loops) ──
@@ -233,8 +238,10 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 				_teleport_to_marker(p1, p2)
 			safe_play_anim(p1, atk)
 			var p1_anim = get_anim_player(p1)
-			if p1_anim:
-				await p1_anim.animation_finished
+			if p1_anim and p1_anim.has_animation(atk):
+				await get_tree().create_timer(p1_anim.get_animation(atk).length).timeout
+			else:
+				await get_tree().create_timer(0.5).timeout
 			if is_instance_valid(p1): p1.global_position = p1.get_parent().global_position
 
 			# ── Step 4: wait for p2's hurt (fixed duration — hurt loops) ──────

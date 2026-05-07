@@ -2,12 +2,13 @@
 
 [ext_resource type="Script" uid="uid://cm08hoggnme0a" path="res://scenes/ui/account.gd" id="1_settings_script"]
 [ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="2_7pacj"]
-[ext_resource type="Texture2D" uid="uid://c1qfj3rwamvrn" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_8j5j1"]
+[ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_8j5j1"]
 [ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="3_4j7lo"]
-[ext_resource type="Texture2D" uid="uid://db5usllk3ufj3" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderA-Sheet.png" id="3_c0ciy"]
+[ext_resource type="Texture2D" uid="uid://cfjp1slue2lno" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderA-Sheet.png" id="3_c0ciy"]
 [ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="6_khvee"]
 [ext_resource type="Texture2D" uid="uid://dekw8dbcmnkrx" path="res://assets/GUI/FREE RPG SKILL ICONS 32x32/Gold Skill Border.png" id="6_txnlg"]
-[ext_resource type="Texture2D" uid="uid://rfvv3o4lhaev" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="7_txnlg"]
+[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="7_txnlg"]
+[ext_resource type="Texture2D" uid="uid://bdct065ju36yh" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/goldenbutton.png" id="8_22geo"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4j7lo"]
 texture = ExtResource("3_c0ciy")
@@ -21,6 +22,100 @@ texture = ExtResource("7_txnlg")
 expand_margin_top = 10.0
 expand_margin_bottom = 10.0
 region_rect = Rect2(202.08957, 0, 82.379486, 31.776203)
+
+[sub_resource type="Animation" id="Animation_account_reset"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Control:modulate:a")
+tracks/0/interp = 1
+tracks/0/loop_wrap = false
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Control2:modulate:a")
+tracks/1/interp = 1
+tracks/1/loop_wrap = false
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BackButton:modulate:a")
+tracks/2/interp = 1
+tracks/2/loop_wrap = false
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_account_fadein"]
+resource_name = "fade_in"
+length = 0.4
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Control:modulate:a")
+tracks/0/interp = 2
+tracks/0/loop_wrap = false
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Control2:modulate:a")
+tracks/1/interp = 2
+tracks/1/loop_wrap = false
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BackButton:modulate:a")
+tracks/2/interp = 2
+tracks/2/loop_wrap = false
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_account_input"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+content_margin_bottom = 4.0
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_account"]
+_data = {
+&"RESET": SubResource("Animation_account_reset"),
+&"fade_in": SubResource("Animation_account_fadein")
+}
 
 [node name="Account" type="Control" unique_id=1832984600]
 layout_mode = 3
@@ -39,6 +134,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_8j5j1")
+metadata/_edit_lock_ = true
 
 [node name="BackButton" type="Button" parent="." unique_id=849240718]
 modulate = Color(1, 1, 1, 0)
@@ -55,7 +151,36 @@ theme_override_styles/pressed = SubResource("StyleBoxTexture_4j7lo")
 theme_override_styles/hover = SubResource("StyleBoxTexture_4j7lo")
 text = "Back to Menu"
 
-[node name="PFP" type="TextureRect" parent="." unique_id=645872083]
+[node name="Control" type="Control" parent="." unique_id=50217605]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -40.0
+offset_top = -20.0
+offset_bottom = 20.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Border" type="Panel" parent="Control" unique_id=133364715]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.70900005
+anchor_top = 0.404
+anchor_right = 0.70900005
+anchor_bottom = 0.404
+offset_left = -408.36002
+offset_top = -140.16
+offset_right = -149.36
+offset_bottom = 83.84
+theme_override_styles/panel = SubResource("StyleBoxTexture_22geo")
+
+[node name="PFP" type="TextureRect" parent="Control" unique_id=645872083]
+unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
 clip_contents = true
 layout_mode = 1
@@ -64,44 +189,138 @@ anchor_left = 0.6197917
 anchor_top = 0.25925925
 anchor_right = 0.7934028
 anchor_bottom = 0.56790125
+offset_left = -470.79166
+offset_top = -206.37038
+offset_right = -127.736115
+offset_bottom = 131.28395
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 texture = ExtResource("2_7pacj")
 expand_mode = 1
 stretch_mode = 6
-metadata/_edit_use_anchors_ = true
 
-[node name="Border" type="Panel" parent="." unique_id=133364715]
+[node name="ChangePFPButton" type="Button" parent="Control" unique_id=1638788306]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = -365.0
+offset_top = 179.0
+offset_right = -165.0
+offset_bottom = 229.0
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_txnlg")
+theme_override_styles/hover = SubResource("StyleBoxTexture_txnlg")
+text = " "
+
+[node name="TextureRect" type="TextureRect" parent="Control/ChangePFPButton" unique_id=603264184]
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.70900005
-anchor_top = 0.404
-anchor_right = 0.70900005
-anchor_bottom = 0.404
-offset_left = -129.76807
-offset_top = -111.79202
-offset_right = 129.23193
-offset_bottom = 112.20798
-theme_override_styles/panel = SubResource("StyleBoxTexture_22geo")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("8_22geo")
+metadata/_edit_lock_ = true
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=26434344]
-modulate = Color(1, 1, 1, 0)
+[node name="Label" type="Label" parent="Control/ChangePFPButton" unique_id=1372425677]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -443.0
-offset_top = -222.0
-offset_right = -143.0
-offset_bottom = 175.0
+offset_left = -29.0
+offset_top = -11.5
+offset_right = 29.0
+offset_bottom = 11.5
 grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+text = "Change"
+metadata/_edit_lock_ = true
+
+[node name="Control2" type="Control" parent="." unique_id=1143818297]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+anchors_preset = 0
+offset_left = 111.0
+offset_top = 368.0
+offset_right = 411.0
+offset_bottom = 368.0
+
+[node name="SaveButton" type="Button" parent="Control2" unique_id=1321472439]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -25.0
+offset_right = 100.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/pressed = SubResource("StyleBoxTexture_txnlg")
+theme_override_styles/hover = SubResource("StyleBoxTexture_txnlg")
+text = "Save Changes"
+
+[node name="TextureRect" type="TextureRect" parent="Control2/SaveButton" unique_id=1367325995]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("8_22geo")
+metadata/_edit_lock_ = true
+
+[node name="Label" type="Label" parent="Control2/SaveButton" unique_id=1897483491]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -29.0
+offset_top = -11.5
+offset_right = 29.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+text = "Save Changes"
+metadata/_edit_lock_ = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control2" unique_id=26434344]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -255.0
+offset_right = 300.0
+offset_bottom = 142.0
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="Title" type="Label" parent="VBoxContainer" unique_id=2117485580]
+[node name="Title" type="Label" parent="Control2/VBoxContainer" unique_id=2117485580]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -111,18 +330,7 @@ theme_override_font_sizes/font_size = 32
 text = "Account"
 horizontal_alignment = 1
 
-[node name="ChangePFPButton" type="Button" parent="VBoxContainer" unique_id=1638788306]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("3_4j7lo")
-theme_override_styles/normal = SubResource("StyleBoxTexture_txnlg")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_txnlg")
-theme_override_styles/hover = SubResource("StyleBoxTexture_txnlg")
-text = "Change Profile Picture"
-
-[node name="DisplayNameLabel" type="Label" parent="VBoxContainer" unique_id=1477476892]
+[node name="DisplayNameLabel" type="Label" parent="Control2/VBoxContainer" unique_id=1477476892]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -130,12 +338,19 @@ theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("3_4j7lo")
 text = "In-game Name:"
 
-[node name="DisplayNameInput" type="LineEdit" parent="VBoxContainer" unique_id=1310931705]
+[node name="DisplayNameInput" type="LineEdit" parent="Control2/VBoxContainer" unique_id=1310931705]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.5)
+theme_override_colors/caret_color = Color(0, 0, 0, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_account_input")
 placeholder_text = "Enter in-game name"
 
-[node name="PasswordLabel" type="Label" parent="VBoxContainer" unique_id=885569531]
+[node name="PasswordLabel" type="Label" parent="Control2/VBoxContainer" unique_id=885569531]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -143,32 +358,32 @@ theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("3_4j7lo")
 text = "Change Password:"
 
-[node name="PasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=1072349181]
+[node name="PasswordInput" type="LineEdit" parent="Control2/VBoxContainer" unique_id=1072349181]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.5)
+theme_override_colors/caret_color = Color(0, 0, 0, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_account_input")
 placeholder_text = "New password"
 secret = true
 
-[node name="SaveButton" type="Button" parent="VBoxContainer" unique_id=1321472439]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("3_4j7lo")
-theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("StyleBoxTexture_txnlg")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_txnlg")
-theme_override_styles/hover = SubResource("StyleBoxTexture_txnlg")
-text = "Save Changes"
-
-[node name="StatusLabel" type="Label" parent="VBoxContainer" unique_id=1819294478]
+[node name="StatusLabel" type="Label" parent="Control2/VBoxContainer" unique_id=1819294478]
+unique_name_in_owner = true
 layout_mode = 2
 horizontal_alignment = 1
 
 [node name="HTTPRequest" type="HTTPRequest" parent="." unique_id=1940745539]
+unique_name_in_owner = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1940745540]
+libraries/ = SubResource("AnimationLibrary_account")
 
 [node name="FileDialog" type="FileDialog" parent="." unique_id=1203934336]
+unique_name_in_owner = true
 oversampling_override = 1.0
 title = "Open a File"
 initial_position = 2
@@ -180,8 +395,9 @@ filters = PackedStringArray("*.png", "*.jpg", "*.jpeg")
 use_native_dialog = true
 
 [node name="UploadRequest" type="HTTPRequest" parent="." unique_id=203356162]
+unique_name_in_owner = true
 
 [connection signal="pressed" from="BackButton" to="." method="_on_back_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/ChangePFPButton" to="." method="_on_change_pfp_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="Control/ChangePFPButton" to="." method="_on_change_pfp_button_pressed"]
+[connection signal="pressed" from="Control2/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="file_selected" from="FileDialog" to="." method="_on_file_dialog_file_selected"]

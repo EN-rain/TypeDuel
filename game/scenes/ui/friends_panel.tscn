@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bkqnn57tfo72j"]
 
 [ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="1_7aone"]
-[ext_resource type="Texture2D" uid="uid://rfvv3o4lhaev" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="2_82mst"]
+[ext_resource type="Texture2D" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="2_82mst"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_eawe5"]
 texture = ExtResource("2_82mst")

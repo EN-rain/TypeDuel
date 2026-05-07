@@ -827,7 +827,10 @@ func _show_opponent_left_popup() -> void:
 	vbox.add_child(countdown_label)
 	
 	# Leave the room (no penalty for us)
-	_delete_room() if GameManager.is_host else _leave_room()
+	if GameManager.is_host:
+		_delete_room()
+	else:
+		_leave_room()
 	GameManager.current_room = ""
 	
 	# Enable auto-requeue since we're the innocent party

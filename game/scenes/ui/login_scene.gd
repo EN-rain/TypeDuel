@@ -97,7 +97,7 @@ func _on_request_completed(_result, response_code, _headers, body):
 			_set_label("Registered! Please login.", Color(0.1, 0.55, 0.1, 1))
 			_on_mode_selected(true)
 	else:
-		_set_label(response.message if response and response.has("message") else "Failed")
+		_set_label(str(response.message) if response and response.has("message") else "Failed")
 
 func _fade_out_and_transition(scene_path: String):
 	var tween = create_tween()

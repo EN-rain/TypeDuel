@@ -5,7 +5,6 @@
 ## and the victory/forfeit overlays.
 ## Attach to "CombatResolver" under the Game scene root.
 
-signal round_resolved
 signal match_ended
 
 # Set by Game
@@ -18,7 +17,7 @@ var anim_controller # ref to AnimationController node
 # ─────────────────────────────────────────────
 
 func resolve(finish_mode: String, chosen_skill: String, enemy_typing_progress: float,
-		server_first_finish_at_ms: float, current_round: int) -> Dictionary:
+		server_first_finish_at_ms: float, _current_round: int) -> Dictionary:
 
 	var sentence_length = typing_handler.target_sentence.length()
 	var words: float = float(sentence_length) / 5.0

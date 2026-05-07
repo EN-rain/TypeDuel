@@ -674,7 +674,7 @@ func _resolve_and_advance(finish_mode: String) -> void:
 			_log("[Decision] ✓ Skill '%s' validated — accuracy OK (%d/%d correct, need %d)" % 
 				[chosen_skill_id, correct_letters, typing.total_keystrokes, required])
 	
-	var result = combat.resolve(finish_mode, chosen_skill_id, net.opp_progress, _server_first_finish_at_ms, current_round)
+	var _result = combat.resolve(finish_mode, chosen_skill_id, net.opp_progress, _server_first_finish_at_ms, current_round)
 	_update_bars()  # Reflect HP/mana changes from resolution immediately
 	
 	# Sync HP to server immediately after resolution so polling doesn't overwrite
