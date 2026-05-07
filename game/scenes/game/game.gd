@@ -109,6 +109,7 @@ func _deferred_init() -> void:
 		$HUD/OwnSkillSelect/HBoxContainer/Skill1.pressed.connect(_on_skill_pressed.bind(1))
 	if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
 		$HUD/OwnSkillSelect/HBoxContainer/Skill2.pressed.connect(_on_skill_pressed.bind(2))
+	_update_skill_icons()
 	typing.load_sentences()
 	# Delay the first skill phase announcement to let both clients load the scene
 	if not GameManager.is_solo and GameManager.current_room != "" and GameManager.is_host:
@@ -797,6 +798,16 @@ func _should_host_fast_forward() -> bool:
 		_ff_last_log_time = now
 		_log("[FastForward] ✗ Waiting for opponent to pick (opp_mana=%d)" % SkillsManager.opponent_mana)
 	return false
+
+func _update_skill_icons() -> void:
+	if SkillsManager.selected_skills.size() > 0:
+		var s1 = SkillsManager.selected_skills[0]
+		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1/TextureRect"):
+			$HUD/OwnSkillSelect/HBoxContainer/Skill1/TextureRect.texture = SkillsManager.SKILL_ICONS.get(s1)
+	if SkillsManager.selected_skills.size() > 1:
+		var s2 = SkillsManager.selected_skills[1]
+		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2/TextureRect"):
+			$HUD/OwnSkillSelect/HBoxContainer/Skill2/TextureRect.texture = SkillsManager.SKILL_ICONS.get(s2)
 # 
 
 func _build_pause_panel() -> void:

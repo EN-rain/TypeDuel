@@ -10,6 +10,8 @@ const SKILLS = [
 	{"id": "soulbreak",  "name": "Soulbreak (3M)"},
 ]
 
+const PIXEL_FONT = preload("res://assets/fonts/pixel_operator/PixelOperatorHB.ttf")
+
 
 @onready var room_code_label  = $RoomCode
 @onready var status_label     = $CenterPlaceholder/StatusLabel
@@ -190,8 +192,9 @@ func _ready():
 		countdown_timer_label.offset_left = -150
 		countdown_timer_label.offset_right = 150
 		countdown_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		countdown_timer_label.add_theme_font_override("font", PIXEL_FONT)
 		countdown_timer_label.add_theme_font_size_override("font_size", 36)
-		countdown_timer_label.add_theme_color_override("font_color", Color.YELLOW)
+		countdown_timer_label.add_theme_color_override("font_color", Color.WHITE)
 		countdown_timer_label.text = ""
 		add_child(countdown_timer_label)
 
@@ -199,6 +202,7 @@ func _ready():
 	room_code_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	room_code_label.gui_input.connect(_on_room_code_input)
 
+	status_label.add_theme_font_override("font", PIXEL_FONT)
 	_setup_ui()
 
 func _process(delta: float):
@@ -250,7 +254,7 @@ func _process_matchmaking_rules():
 			_on_start_pressed()
 		if countdown_timer_label:
 			countdown_timer_label.text = "Starting..."
-			countdown_timer_label.modulate = Color.GREEN
+			countdown_timer_label.modulate = Color.WHITE
 		return
 
 	var remaining_sec = max(0, int(ceil((_matchmaking_deadline_unix_ms - now_unix_ms) / 1000.0)))
@@ -268,7 +272,7 @@ func _process_matchmaking_rules():
 		elif remaining_sec <= 10:
 			countdown_timer_label.modulate = Color.ORANGE
 		else:
-			countdown_timer_label.modulate = Color.YELLOW
+			countdown_timer_label.modulate = Color.WHITE
 
 	# Update status with countdown — only source of status text during matchmaking.
 	if my_ready and not opp_ready:
@@ -489,6 +493,8 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 			else:
 				status_label.text = "Pick 1 character and 2 skills."
 
+	_refresh_ui()
+	
 	# 2. Check for game start
 	if json.get("status") == "started":
 		# Guard: only process game start once
@@ -922,6 +928,7 @@ func _launch_game_with_countdown() -> void:
 	ready_label.offset_right = 200
 	ready_label.text = "GET READY!"
 	ready_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ready_label.add_theme_font_override("font", PIXEL_FONT)
 	ready_label.add_theme_font_size_override("font_size", 48)
 	ready_label.add_theme_color_override("font_color", Color.WHITE)
 	overlay.add_child(ready_label)
@@ -934,8 +941,9 @@ func _launch_game_with_countdown() -> void:
 	label.offset_bottom = 80
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_override("font", PIXEL_FONT)
 	label.add_theme_font_size_override("font_size", 120)
-	label.add_theme_color_override("font_color", Color.YELLOW)
+	label.add_theme_color_override("font_color", Color.WHITE)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 8)
 	overlay.add_child(label)
@@ -1023,8 +1031,9 @@ func _show_opponent_left_popup() -> void:
 	var countdown_label = Label.new()
 	countdown_label.text = "3"
 	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	countdown_label.add_theme_font_override("font", PIXEL_FONT)
 	countdown_label.add_theme_font_size_override("font_size", 48)
-	countdown_label.add_theme_color_override("font_color", Color.YELLOW)
+	countdown_label.add_theme_color_override("font_color", Color.WHITE)
 	vbox.add_child(countdown_label)
 	
 	# Leave the room (no penalty for us)

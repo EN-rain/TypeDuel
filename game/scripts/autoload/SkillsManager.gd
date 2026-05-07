@@ -14,6 +14,12 @@ const SKILL_COSTS = {
 	"soulbreak":  3
 }
 
+const SKILL_ICONS = {
+	"quickslash": preload("res://assets/GUI/FREE RPG SKILL ICONS 32x32/quickstrike.png"),
+	"whiplash":   preload("res://assets/GUI/FREE RPG SKILL ICONS 32x32/doubleslash.png"),
+	"soulbreak":  preload("res://assets/GUI/FREE RPG SKILL ICONS 32x32/horizontalcut.png")
+}
+
 # ─────────────────────────────────────────────
 #  Per-Match State  (reset each match)
 # ─────────────────────────────────────────────

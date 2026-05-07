@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 ## TypingHandler
 ## Owns sentence state, keyboard input processing, mutation application,
@@ -10,7 +10,7 @@ signal accuracy_too_low
 
 @export var correct_color:      Color = Color.GREEN
 @export var wrong_color:        Color = Color.RED
-@export var current_char_color: Color = Color.YELLOW
+@export var current_char_color: Color = Color.WHITE
 @export var upcoming_color:     Color = Color.WHITE
 
 # Sentence state
@@ -290,7 +290,7 @@ func update_ui() -> void:
 	var highlight_word: String = ""
 	if has_meta("passive_highlight_word"):
 		highlight_word = str(get_meta("passive_highlight_word"))
-	var highlight_hex = "#ffcc00"
+	var highlight_hex = "#ffffff"
 
 	var bbcode = "[center]"
 	for i in range(current_index):

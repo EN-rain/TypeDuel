@@ -4,9 +4,10 @@
 [ext_resource type="Texture2D" uid="uid://cru6ltepkd3fr" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png" id="3_lakwo"]
 [ext_resource type="Texture2D" uid="uid://ic0is52jbtpd" path="res://assets/GUI/colosseum-bg.png" id="6_bdhmt"]
 [ext_resource type="Script" uid="uid://dmr300ctl4yd8" path="res://scenes/game/animation_controller.gd" id="10_anim_ctrl"]
-[ext_resource type="Script" uid="uid://dmd8luvc1i657" path="res://scenes/game/network_sync.gd" id="11_net_sync"]
+[ext_resource type="Script" uid="uid://bgn84alc3smp5" path="res://scenes/game/network_sync.gd" id="11_net_sync"]
 [ext_resource type="Script" uid="uid://frxg518kays6" path="res://scenes/game/typing_handler.gd" id="12_typing"]
 [ext_resource type="Script" uid="uid://b3ewd1idjqdkb" path="res://scenes/game/combat_resolver.gd" id="13_combat"]
+[ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="2_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_blue"]
 bg_color = Color(0, 0.46, 1, 1)
@@ -683,6 +684,7 @@ offset_right = 433.0
 offset_bottom = -25.0
 grow_vertical = 0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 24
 text = "WPM: 0 | Typos: 0 | Accuracy: 100%"
 horizontal_alignment = 1
@@ -700,6 +702,7 @@ offset_bottom = -21.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 24
 text = "WPM: 0 | Typos: 0 | Accuracy: 100%"
 horizontal_alignment = 1
@@ -721,6 +724,7 @@ theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 28
+theme_override_fonts/font = ExtResource("2_font")
 text = "Too many typos! Correct at least 60% of the sentence."
 horizontal_alignment = 1
 
@@ -737,10 +741,11 @@ offset_right = 100.0
 offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 120
+theme_override_fonts/font = ExtResource("2_font")
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -759,6 +764,8 @@ grow_vertical = 2
 theme_override_colors/default_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/normal_font_size = 28
 theme_override_font_sizes/bold_font_size = 28
+theme_override_fonts/normal_font = ExtResource("2_font")
+theme_override_fonts/bold_font = ExtResource("2_font")
 bbcode_enabled = true
 text = "[center]Loading...[/center]"
 fit_content = true
@@ -791,12 +798,28 @@ theme_override_constants/separation = 20
 [node name="Skill1" type="Button" parent="HUD/OwnSkillSelect/HBoxContainer" unique_id=962882081]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
-text = "Skill 1"
+
+[node name="TextureRect" type="TextureRect" parent="HUD/OwnSkillSelect/HBoxContainer/Skill1" unique_id=697266475]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
 
 [node name="Skill2" type="Button" parent="HUD/OwnSkillSelect/HBoxContainer" unique_id=923503301]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
-text = "Skill 2 "
+
+[node name="TextureRect" type="TextureRect" parent="HUD/OwnSkillSelect/HBoxContainer/Skill2" unique_id=42952741]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="HUD/OwnSkillSelect" unique_id=372199046]
 layout_mode = 1
@@ -887,6 +910,7 @@ anchor_right = 1.0
 offset_left = -533.0
 offset_bottom = 27.0
 grow_horizontal = 0
+theme_override_font_sizes/font_size = 5
 theme_override_styles/fill = SubResource("StyleBoxFlat_green")
 fill_mode = 1
 show_percentage = false
@@ -901,6 +925,7 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 11
 text = "100"
 horizontal_alignment = 1
@@ -910,6 +935,7 @@ vertical_alignment = 1
 layout_mode = 1
 offset_right = 533.0
 offset_bottom = 27.0
+theme_override_font_sizes/font_size = 5
 theme_override_styles/fill = SubResource("StyleBoxFlat_green")
 show_percentage = false
 
@@ -923,6 +949,7 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 11
 text = "100"
 horizontal_alignment = 1
@@ -933,6 +960,7 @@ layout_mode = 0
 offset_top = 29.0
 offset_right = 355.0
 offset_bottom = 56.0
+theme_override_font_sizes/font_size = 5
 theme_override_styles/fill = SubResource("StyleBoxFlat_blue")
 show_percentage = false
 
@@ -946,6 +974,7 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 11
 text = "2"
 horizontal_alignment = 1
@@ -960,6 +989,7 @@ offset_left = -355.0
 offset_top = 31.0
 offset_bottom = 58.0
 grow_horizontal = 0
+theme_override_font_sizes/font_size = 5
 theme_override_styles/fill = SubResource("StyleBoxFlat_blue")
 fill_mode = 1
 show_percentage = false
@@ -974,6 +1004,7 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 11
 text = "2"
 horizontal_alignment = 1
@@ -989,6 +1020,7 @@ offset_right = 20.0
 offset_bottom = 23.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_font")
 text = "1:00"
 
 [node name="OwnStatus" type="HBoxContainer" parent="HUD/Stats" unique_id=470283597]

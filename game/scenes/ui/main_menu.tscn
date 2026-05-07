@@ -1035,10 +1035,10 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -157.0
-offset_top = 145.0
-offset_right = 143.0
-offset_bottom = 207.0
+offset_left = -150.0
+offset_top = 81.0
+offset_right = 150.0
+offset_bottom = 189.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -1047,7 +1047,8 @@ theme_override_fonts/font = ExtResource("3_x2yvf")
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxTexture_1g8jr")
 text = "Hi, Player!
-Welcome to"
+Welcome to
+"
 horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="." unique_id=977881426]

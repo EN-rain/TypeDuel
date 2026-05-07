@@ -11,7 +11,7 @@ const TEXT_JOINING           = "Joining..."
 const TEXT_WAITING_OPPONENT  = "Waiting for opponent..."
 const TEXT_MATCHMAKE_FAILED  = "Matchmaking failed."
 const TEXT_SENDING_REQUEST   = "Sending request..."
-const TEXT_GREETING          = "Hi, %s!"
+const TEXT_GREETING          = "Hi, %s!\nWelcome to"
 const TEXT_PLAYER_ONLINE     = "● 1 player online"
 const TEXT_PLAYERS_ONLINE    = "● %d players online"
 
@@ -54,7 +54,7 @@ func _enter_tree():
 			ap.seek(0.0, true)
 
 func _ready():
-	SoundManager.play_music(preload("res://assets/bg-music/Loop-Menu.wav"))
+	get_node("/root/SoundManager").play_music(preload("res://assets/bg-music/Loop-Menu.wav"))
 
 	var name_to_show = GameManager.user_data.display_name
 	if name_to_show == "":
