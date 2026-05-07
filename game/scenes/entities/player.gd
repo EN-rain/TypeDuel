@@ -19,3 +19,25 @@ func play(anim: StringName) -> void:
 ## Called by AnimationPlayer via "Call Method Track" at specific frames
 func trigger_hit() -> void:
 	hit_triggered.emit()
+
+# ── SFX playback functions ──────────────────────────────────────────
+
+## Play female death vocal SFX
+func play_sfx_female_death() -> void:
+	$SfxFemaleDeathVocal.play()
+
+## Play male death vocal SFX
+func play_sfx_male_death() -> void:
+	$SfxMaleDeathVocal.play()
+
+## Play sword draw SFX
+func play_sfx_sword_draw() -> void:
+	$SfxSwordDraw.play()
+
+## Play sword hit flesh/bone variant 1 SFX
+func play_sfx_sword_hit_1() -> void:
+	$SfxSwordHit1.play()
+
+## Play sword hit flesh/bone variant 2 SFX
+func play_sfx_sword_hit_2() -> void:
+	$SfxSwordHit2.play()
