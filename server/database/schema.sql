@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   profile_icon TEXT DEFAULT "default",
   last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
   session_token TEXT,
-  -- Fix #10: server-side matchmaking penalty (unix ms timestamp; 0 = no penalty)
+  -- server-side matchmaking penalty (unix ms timestamp; 0 = no penalty)
   matchmaking_penalty_until INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

@@ -98,9 +98,9 @@ func get_progress() -> float:
 func force_complete_sentence() -> void:
 	if target_sentence.length() == 0: return
 	# Set a realistic start time so WPM calculation doesn't produce 0 or infinity.
-	# Use 5 seconds ago as a baseline — gives a plausible WPM for debug purposes.
+	# Use 30 seconds ago as a baseline — gives ~60 WPM for debug purposes.
 	if sentence_start_time <= 0:
-		sentence_start_time = Time.get_ticks_msec() - 5000
+		sentence_start_time = Time.get_ticks_msec() - 30000
 	if not is_typing:
 		is_typing = true
 	# Fill remaining characters as correct

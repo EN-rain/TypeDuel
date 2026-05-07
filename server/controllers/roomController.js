@@ -84,16 +84,16 @@ function _assertBodyUserMatchesActor(req, res) {
     return true;
 }
 
-// Fix #6: allowed values for server-side selection validation
+// allowed values for server-side selection validation
 const VALID_CHARACTERS = new Set(['Riven', 'Zephon', 'Liora']);
 const VALID_SKILLS     = new Set(['quickslash', 'whiplash', 'soulbreak']);
 const VALID_PASSIVES   = new Set(['reversal', 'jumble', 'phantom', 'stutter', 'erosion']);
 const VALID_PHASES     = new Set(['lobby', 'skill_select', 'typing', 'resolving', 'finished']);
 
-// Fix #10 + Fix #14: import penalty helpers from gameController
+// import penalty helpers from gameController
 const { isMatchmakingPenalized, setMatchmakingPenalty } = require('./gameController');
 
-// Fix #14: use last_activity_at for TTL so long games are not evicted mid-match
+// use last_activity_at for TTL so long games are not evicted mid-match
 const ROOM_IDLE_TTL_MS = 10 * 60 * 1000; // evict only if idle for 10 minutes
 
 // ── Matchmaking queue ────────────────────────────────────────────────────────
@@ -150,6 +150,8 @@ function _makeMatchmakingRoom(code, hostId, hostName, guestId, guestName) {
         round_id:          0,
         host_hp:           0,
         guest_hp:          0,
+        host_streak:       0,
+        guest_streak:      0,
         host_last_seen_at: Date.now(),
         guest_last_seen_at: Date.now(),
         forfeit:           null,
@@ -253,6 +255,8 @@ const createRoom = (req, res) => {
         round_id:          0,
         host_hp:           0,
         guest_hp:          0,
+        host_streak:       0,
+        guest_streak:      0,
         host_last_seen_at: Date.now(),
         guest_last_seen_at: 0,
         // Rematch tracking
@@ -599,6 +603,13 @@ const updatePhase = (req, res) => {
     if (typeof round_id === 'number' && round_id > 0) {
         room.round_id = round_id;
     }
+    if (phase === 'skill_select') {
+        // Clear per-round picked skills immediately when entering selection.
+        // Without this, stale host_skill/guest_skill from the prior round can
+        // make the host fast-forward think both players already picked.
+        room.host_skill = "";
+        room.guest_skill = "";
+    }
     if (phase === 'typing') {
         // Add a short ready countdown so the typing start isn't a surprise for the first round.
         if (room.round_id <= 1) {
@@ -689,11 +700,11 @@ const updateProgress = (req, res) => {
 };
 
 // PATCH /api/rooms/:code/hp
-// Body: { user_id, host_hp, guest_hp }
-// Host is authoritative for HP sync.
+// Body: { user_id, host_hp, guest_hp, host_streak, guest_streak }
+// Host is authoritative for HP and streak sync.
 const updateHP = (req, res) => {
     const code = _normalizeCode(req.params.code);
-    const { user_id, host_hp, guest_hp } = req.body;
+    const { user_id, host_hp, guest_hp, host_streak, guest_streak } = req.body;
     const room = rooms[code];
     if (!room) return res.status(404).json({ message: 'Room not found' });
     if (!_assertBodyUserMatchesActor(req, res)) return;
@@ -709,10 +720,13 @@ const updateHP = (req, res) => {
 
     room.host_hp = hostHpNum;
     room.guest_hp = guestHpNum;
+    // Persist streak state so GUEST can sync authoritative values from HOST
+    if (host_streak !== undefined) room.host_streak = Number(host_streak) || 0;
+    if (guest_streak !== undefined) room.guest_streak = Number(guest_streak) || 0;
     room.seq = (room.seq || 0) + 1;
     _touchRoomPresence(room, actorId); //presence: refresh idle timer / last seen
     if (process.env.LOG_ROOMS === 'true') {
-        console.log(`[rooms] ${code} hp host=${room.host_hp} guest=${room.guest_hp}`);
+        console.log(`[rooms] ${code} hp host=${room.host_hp} guest=${room.guest_hp} streaks=${room.host_streak}/${room.guest_streak}`);
     }
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
@@ -758,6 +772,7 @@ const updateRematch = (req, res) => {
         room.host_typos = 0;
         room.host_mutations = [];
         room.host_hp = 100;
+        room.host_streak = 0;
         
         room.guest_character = null;
         room.guest_skills = [];
@@ -767,6 +782,7 @@ const updateRematch = (req, res) => {
         room.guest_typos = 0;
         room.guest_mutations = [];
         room.guest_hp = 100;
+        room.guest_streak = 0;
         
         // Reset rematch flags
         room.host_wants_rematch = false;
@@ -783,3 +799,4 @@ const updateRematch = (req, res) => {
 };
 
 module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom, matchmake, leaveQueue, queueStatus, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP, updateRematch };
+

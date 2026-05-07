@@ -44,6 +44,7 @@ var viewing_history_id: int = 0
 var selected_character: String = ""
 var opponent_character: String = ""
 var opponent_passive: String = ""
+var opponent_name: String = ""
 var match_start_time: float = 0.0
 
 func is_matchmaking_penalized() -> bool:

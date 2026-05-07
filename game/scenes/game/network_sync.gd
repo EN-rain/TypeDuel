@@ -279,9 +279,11 @@ func sync_hp() -> void:
 	if GameManager.is_solo or not GameManager.is_host: return
 	_hp_sync_sent_at_ms = Time.get_ticks_msec()
 	var payload: Dictionary = {
-		"user_id":  GameManager.user_data.id,
-		"host_hp":  HPManager.player_hp,
-		"guest_hp": HPManager.opponent_hp
+		"user_id":        GameManager.user_data.id,
+		"host_hp":        HPManager.player_hp,
+		"guest_hp":       HPManager.opponent_hp,
+		"host_streak":    SkillsManager.player_win_streak,
+		"guest_streak":   SkillsManager.opponent_win_streak
 	}
 	var http := HTTPRequest.new()
 	add_child(http)
@@ -340,6 +342,13 @@ func apply_hp_from_room(room: Dictionary) -> void:
 		if abs(HPManager.opponent_hp - host_hp)  > 0.01:
 			print("[HPSync] GUEST opponent_hp: %.0f → %.0f" % [HPManager.opponent_hp, host_hp])
 			HPManager.set_hp("opponent", host_hp)
+		# Sync authoritative streak state from HOST so GUEST damage calculations match
+		# (HOST is the only one that resolves both sides, so its streaks are correct)
+		var host_streak  = room.get("host_streak",  null)
+		var guest_streak = room.get("guest_streak", null)
+		if host_streak != null and guest_streak != null:
+			SkillsManager.opponent_win_streak = int(host_streak)
+			SkillsManager.player_win_streak   = int(guest_streak)
 
 # Sends progress and pops one mutation from the queue only if the interval has elapsed
 # Mutations are sent with sequence numbers to prevent loss/reordering

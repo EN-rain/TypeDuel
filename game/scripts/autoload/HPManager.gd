@@ -55,7 +55,7 @@ func init_game():
 	hp_changed.emit("player", player_hp, player_max_hp)
 	hp_changed.emit("opponent", opponent_hp, opponent_max_hp)
 	
-	# Fix #3: reset all per-match SkillsManager state (streaks, mana, Liora heal cap,
+	# reset all per-match SkillsManager state (streaks, mana, Liora heal cap,
 	# Phantom stack) so nothing bleeds across rematches.
 	SkillsManager.reset_match()
 	

@@ -2,7 +2,7 @@ extends Node
 
 ## ManaManager — DEPRECATED / UNUSED
 ##
-## Fix #2: All mana state is managed by SkillsManager (player_mana / opponent_mana).
+## All mana state is managed by SkillsManager (player_mana / opponent_mana).
 ## This singleton is registered as an autoload but is never referenced anywhere in the
 ## codebase.  It is kept here to avoid breaking the autoload list in project.godot, but
 ## it does nothing.  If you want to centralise mana management in the future, migrate

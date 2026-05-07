@@ -48,7 +48,7 @@ const initDb = () => {
         } else {
             console.log('Database initialized');
             
-            // Fix #10: run migrations to add any new columns to existing databases
+            // run migrations to add any new columns to existing databases
             require('./scripts/migrate');
 
             // Check if seeding is needed
@@ -67,7 +67,7 @@ app.listen(PORT, () => {
     console.log('Connected to SQLite database');
     initDb();
 
-    // Fix #11: only purge global chat messages, not DMs.
+    // only purge global chat messages, not DMs.
     // DM room IDs follow the pattern 'dm_<id>_<id>'; global chat uses 'global'.
     // This prevents users losing private conversation history.
     const purgeOldMessages = () => {

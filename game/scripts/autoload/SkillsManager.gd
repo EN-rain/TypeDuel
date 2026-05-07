@@ -130,7 +130,8 @@ func resolve_round(
 		chosen_skill: String,
 		_opp_hp:       float,
 		_player_hp:    float,
-		actor_role:    String = "player") -> Dictionary:
+		actor_role:    String = "player",
+		update_streaks: bool  = true) -> Dictionary:
 
 	var combat_log: Array[String] = []
 	var player_damage:   float = 0.0
@@ -151,32 +152,33 @@ func resolve_round(
 
 	# ── Timeout: nobody finished (60s) ────────────────
 	if finish_mode == "no_attack":
+		# Both timed out — no streak change (neither won)
 		player_hp_delta -= 5.0
 		combat_log.append("[Timeout] -5HP. No damage dealt.")
 		return _result(0.0, -5.0, 0.0, combat_log)
 
 	# ── DNF: Failed to finish within opponent's 10s snap ──
 	if finish_mode == "dnf":
+		# Actor DNF'd — opponent won this round, update streaks accordingly
+		if update_streaks:
+			if actor_role == "player":
+				opponent_win_streak += 1
+				player_win_streak    = 0
+			else:
+				player_win_streak    += 1
+				opponent_win_streak   = 0
 		combat_log.append("[DNF] Actor did not finish. 0 DMG.")
+		combat_log.append("[Streak] Player: %d | Opponent: %d" % [player_win_streak, opponent_win_streak])
 		return _result(0.0, 0.0, 0.0, combat_log)
 
 	# ── Spend Mana (only if a skill was picked AND actor can afford it) ───────
 	# Snapshot mana BEFORE spending so Overdrive can check pre-spend value
 	var mana_before_spend: int = player_mana if actor_role == "player" else opponent_mana
+	# Mana was already deducted at skill-pick time for both player and opponent.
+	# Just log it — no deduction or blocking here.
 	if chosen_skill != "":
 		var cost: int = int(SKILL_COSTS.get(chosen_skill, 0))
-		var current_mana: int = player_mana if actor_role == "player" else opponent_mana
-		if current_mana < cost:
-			# Not enough mana — cancel the skill silently and treat as no-skill round.
-			combat_log.append("[Mana] BLOCKED '%s' — need %d, have %d. Falling back to no-skill." % [chosen_skill, cost, current_mana])
-			chosen_skill = ""
-		else:
-			if actor_role == "player":
-				player_mana = max(0, player_mana - cost)
-				combat_log.append("[Mana] Spent %d on '%s' → %d remaining" % [cost, chosen_skill, player_mana])
-			else:
-				opponent_mana = max(0, opponent_mana - cost)
-				combat_log.append("[Mana] Opponent spent %d on '%s' → %d remaining" % [cost, chosen_skill, opponent_mana])
+		combat_log.append("[Mana] Used %d on '%s'" % [cost, chosen_skill])
 
 	# ── Debuff case: refund Mana if opponent didn't finish ─
 	# P2 who did NOT finish → Mana refunded (handled by caller marking finish_mode="debuff"
@@ -202,20 +204,23 @@ func resolve_round(
 	# ── Win-streak tracking ───────────────────────────
 	# NOTE: streaks are updated BEFORE innate abilities so Bloodlust can read
 	# the freshly-incremented streak value (fix #5).
-	if won:
-		if actor_role == "player":
-			player_win_streak   += 1
-			opponent_win_streak  = 0
+	# update_streaks=false is used for the opponent resolve call so streaks are
+	# only mutated once per round (the player resolve already set them correctly).
+	if update_streaks:
+		if won:
+			if actor_role == "player":
+				player_win_streak   += 1
+				opponent_win_streak  = 0
+			else:
+				opponent_win_streak += 1
+				player_win_streak   = 0
 		else:
-			opponent_win_streak += 1
-			player_win_streak   = 0
-	else:
-		if actor_role == "player":
-			opponent_win_streak += 1
-			player_win_streak    = 0
-		else:
-			player_win_streak    += 1
-			opponent_win_streak   = 0
+			if actor_role == "player":
+				opponent_win_streak += 1
+				player_win_streak    = 0
+			else:
+				player_win_streak    += 1
+				opponent_win_streak   = 0
 	combat_log.append("[Streak] Player: %d | Opponent: %d" % [player_win_streak, opponent_win_streak])
 
 	# ── Character Innate Abilities ────────────────────────────

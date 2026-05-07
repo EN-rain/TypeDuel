@@ -13,7 +13,7 @@ db.serialize(() => {
         if (!hasColumn(rows, 'display_name')) missing.push("ALTER TABLE users ADD COLUMN display_name TEXT");
         if (!hasColumn(rows, 'last_active'))  missing.push("ALTER TABLE users ADD COLUMN last_active DATETIME");
         if (!hasColumn(rows, 'profile_icon')) missing.push("ALTER TABLE users ADD COLUMN profile_icon TEXT DEFAULT 'default'");
-        // Fix #10: server-side matchmaking penalty column
+        // server-side matchmaking penalty column
         if (!hasColumn(rows, 'matchmaking_penalty_until')) missing.push("ALTER TABLE users ADD COLUMN matchmaking_penalty_until INTEGER DEFAULT 0");
 
         if (missing.length === 0) {

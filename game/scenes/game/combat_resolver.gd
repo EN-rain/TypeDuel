@@ -55,7 +55,8 @@ func resolve(finish_mode: String, chosen_skill: String, enemy_typing_progress: f
 			float(opp_wpm), opp_acc, opp_typos, typos,
 			opp_finish_mode, network_sync.opp_chosen_skill,
 			HPManager.player_hp, HPManager.opponent_hp,
-			"opponent"
+			"opponent",
+			false  # streaks already updated by the player resolve call
 		)
 
 		result.player_hp_delta += opp_result.opp_hp_delta
@@ -73,22 +74,26 @@ func resolve(finish_mode: String, chosen_skill: String, enemy_typing_progress: f
 
 func _mirror_finish_mode(fm: String) -> String:
 	match fm:
+		"buff":       return "debuff"
 		"debuff":     return "buff"
 		"full_power": return "dnf"
+		"dnf":        return "full_power"
 		"tie":        return "tie"
 		"no_attack":  return "no_attack"
 		_:            return "debuff"
 
 func _estimate_opp_wpm(opp_finish_mode: String, words: float, server_first_finish_at_ms: float) -> int:
 	if opp_finish_mode in ["buff", "tie"]:
-		# Use typing_started_at as the baseline — match_start_time includes skill select
-		# and would massively underestimate WPM.
 		var start_ms = network_sync.server_typing_started_at_ms
 		if start_ms <= 0:
-			start_ms = GameManager.match_start_time  # fallback only
-		var finish_ms = server_first_finish_at_ms if server_first_finish_at_ms > 0 else float(Time.get_unix_time_from_system() * 1000.0)
-		var dur_min = (finish_ms - start_ms) / 60000.0
-		return clamp(int(words / dur_min) if dur_min > 0.0 else 0, 0, 250)
+			return 60  # safe fallback — average typist
+		if server_first_finish_at_ms <= 0 or server_first_finish_at_ms <= start_ms:
+			return 60  # finish time invalid or before start
+		var dur_min = (server_first_finish_at_ms - start_ms) / 60000.0
+		if dur_min <= 0.0:
+			return 60
+		# Cap at 120 WPM — anything higher is likely a debug skip (F4) artifact
+		return clamp(int(words / dur_min), 0, 120)
 	elif opp_finish_mode == "debuff":
 		return 40
 	return 0
@@ -105,17 +110,18 @@ func _apply_hp(result: Dictionary) -> void:
 	if GameManager.is_solo or GameManager.is_host:
 		var role = "SOLO" if GameManager.is_solo else "HOST"
 		print("[HP][%s] Before apply — player=%.0f opp=%.0f" % [role, HPManager.player_hp, HPManager.opponent_hp])
-		if result.player_hp_delta != 0:
-			HPManager.heal("player", result.player_hp_delta)
-		if result.opp_hp_delta != 0:
-			HPManager.heal("opponent", result.opp_hp_delta)
+		# Apply damage first, then heals — so heals aren't wasted when at full HP
+		# (e.g. Liora's Grace heal after taking damage this round)
 		if result.player_damage > 0:
 			HPManager.take_damage("opponent", result.player_damage)
-		# Host also applies opponent's damage to itself
 		if not GameManager.is_solo:
 			var opp_dmg = result.get("opp_player_damage", 0.0)
 			if opp_dmg > 0:
 				HPManager.take_damage("player", opp_dmg)
+		if result.player_hp_delta != 0:
+			HPManager.heal("player", result.player_hp_delta)
+		if result.opp_hp_delta != 0:
+			HPManager.heal("opponent", result.opp_hp_delta)
 		print("[HP][%s] After apply  — player=%.0f opp=%.0f | dmg_dealt=%.0f opp_dmg=%.0f" % [
 			role, HPManager.player_hp, HPManager.opponent_hp,
 			result.player_damage, result.get("opp_player_damage", 0.0)])
@@ -138,21 +144,18 @@ func _log_result(result: Dictionary, finish_mode: String, chosen_skill: String) 
 	
 	# For display purposes only:
 	# - Host/Solo: Use actual HPManager values (already updated)
-	# - Guest: Calculate expected values since HP sync happens later via polling
+	# - Guest: Show pre-round HP with self-effects applied.
+	#   Incoming opponent damage is unknown until server sync — don't guess it.
 	var display_player_hp: float = HPManager.player_hp
 	var display_opp_hp: float = HPManager.opponent_hp
 	
-	# Guest needs to calculate expected HP for display since _apply_hp doesn't update HPManager for guests
+	# Guest applies only self-effects (hp_delta = Bloodlust self-damage, heals, etc.)
+	# Opponent HP shown is pre-round value since we don't know their incoming damage yet.
 	if not GameManager.is_solo and not GameManager.is_host:
-		# Apply player's own HP delta and damage dealt
-		display_player_hp += result.player_hp_delta
-		display_opp_hp += result.opp_hp_delta
-		# Only subtract damage if we actually dealt it (not DNF, not no_attack)
-		if result.player_damage > 0 and finish_mode not in ["dnf", "no_attack"]:
-			display_opp_hp -= result.player_damage
-		# Clamp to valid range
-		display_player_hp = clampf(display_player_hp, 0, HPManager.player_max_hp)
-		display_opp_hp = clampf(display_opp_hp, 0, HPManager.opponent_max_hp)
+		display_player_hp = clampf(HPManager.player_hp + result.player_hp_delta, 0, HPManager.player_max_hp)
+		# Don't subtract player_damage from opp display — that would show a misleading
+		# partial result. The server sync will update both HPs correctly after resolution.
+		display_opp_hp = clampf(HPManager.opponent_hp, 0, HPManager.opponent_max_hp)
 	
 	print("╔══════════════════════════════════════════╗")
 	if chosen_skill == "":

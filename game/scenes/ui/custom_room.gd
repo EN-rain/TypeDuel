@@ -48,6 +48,7 @@ var my_name: String     = ""
 var poll_timer: float   = 0.0
 var guest_joined: bool  = false
 var _heartbeat_timer: float = 0.0
+var _lobby_ready_time: float = 0.0  # time when lobby finished loading
 var _poll_in_flight: bool = false
 
 # Opponent's last known selections (populated from poll)
@@ -90,6 +91,11 @@ func _ready():
 	my_name    = GameManager.user_data.display_name
 	if my_name == "":
 		my_name = GameManager.user_data.username
+
+	# Grace period — don't treat 404/finished as "opponent left" for the first 3s
+	# For rematch, the room already exists so use a shorter grace period
+	var grace = 5.0 if GameManager.is_matchmaking else 3.0
+	_lobby_ready_time = Time.get_ticks_msec() / 1000.0 + grace
 
 	if not GameManager.is_host:
 		room_code = GameManager.current_room
@@ -186,7 +192,7 @@ func _process_matchmaking_rules():
 	# If we don't have an authoritative deadline yet, fall back to a local one.
 	# This will be replaced as soon as the next poll returns matchmaking_deadline_at.
 	if _matchmaking_deadline_unix_ms <= 0.0:
-		_matchmaking_deadline_unix_ms = now_unix_ms + 15000.0
+		_matchmaking_deadline_unix_ms = now_unix_ms + 60000.0
 
 	var my_ready = _is_me_ready()
 	var opp_ready = _is_opp_ready()
@@ -260,7 +266,7 @@ func _handle_matchmaking_forfeit(i_was_ready: bool):
 	GameManager.is_matchmaking = false
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
-## Fix #10: tell the server to record a matchmaking penalty for this user.
+## tell the server to record a matchmaking penalty for this user.
 func _apply_matchmaking_penalty(duration_ms: int) -> void:
 	if GameManager.user_data.id == 0: return
 	var http = HTTPRequest.new()
@@ -325,7 +331,9 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if code != 200:
 		# Matchmaking forfeits/room closes show up as 404.
 		# If the room is gone but WE didn't initiate the leave, we are the 'innocent' party.
-		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled:
+		# Ignore 404s during the grace period — room may not be fully set up yet.
+		var past_grace = (Time.get_ticks_msec() / 1000.0) >= _lobby_ready_time
+		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled and past_grace:
 			# Show popup that opponent left instead of immediate forfeit
 			_opponent_left_lobby = true
 			_show_opponent_left_popup()
@@ -338,7 +346,8 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 
 	# 0. Check for room termination (forfeit/finish) before updating data
 	if json.get("status") == "finished":
-		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled:
+		var past_grace = (Time.get_ticks_msec() / 1000.0) >= _lobby_ready_time
+		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled and past_grace:
 			# If the room is finished but we are still here, the opponent left/forfeited.
 			_opponent_left_lobby = true
 			_show_opponent_left_popup()
@@ -385,7 +394,8 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 			_opp_passive = str(g_passive) if g_passive != null else ""
 		else:
 			# Guest left - check if we were matched before
-			if guest_joined and GameManager.is_matchmaking and not _matchmaking_forfeit_handled:
+			var past_grace = (Time.get_ticks_msec() / 1000.0) >= _lobby_ready_time
+			if guest_joined and GameManager.is_matchmaking and not _matchmaking_forfeit_handled and past_grace:
 				# Opponent left after joining - show popup and return to menu
 				_opponent_left_lobby = true
 				_show_opponent_left_popup()
@@ -450,6 +460,7 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		
 		GameManager.opponent_character = _opp_character
 		GameManager.opponent_passive = _opp_passive
+		GameManager.opponent_name = str(json.get("guest_name", "Opponent")) if GameManager.is_host else str(json.get("host_name", "Opponent"))
 		GameManager.match_start_time = float(json.get("started_at", 0))
 		
 		var role = "HOST" if GameManager.is_host else "GUEST"
@@ -584,10 +595,9 @@ func _on_start_notified(_result, code, _headers, body, http: HTTPRequest):
 			GameManager.match_start_time = float(json.room.get("started_at", 0))
 			print("[Lobby][HOST] Match start time set: %f" % GameManager.match_start_time)
 	elif code == 409:
-		# Room already started (stale state from previous session) — treat as already started.
-		# Poll will detect status=="started" and launch the countdown normally.
-		print("[Lobby][HOST] 409 conflict — room may already be started, waiting for poll to detect")
-		_matchmaking_start_sent = false  # Allow retry if poll doesn't detect start
+		# Room already started — poll will detect status=="started" and launch normally.
+		# Do NOT reset _matchmaking_start_sent here, or we'll spam retries every frame.
+		print("[Lobby][HOST] 409 conflict — room already started, waiting for poll to detect")
 	else:
 		# Unexpected error — reset so the host can retry
 		print("[Lobby][HOST] Start request failed (code=%d) — resetting for retry" % code)

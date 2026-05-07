@@ -457,27 +457,18 @@ func _update_stats_hud() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _initialized: return
+	if event is InputEventKey and event.pressed:
+		# ──────── DEBUG KEYS ────────
+		if event.keycode == KEY_F4:
+			if current_state == GameState.TYPING and not i_finished:
+				print("[Debug] F4: Skipping sentence")
+				typing.force_complete_sentence()
+			return
+		# ────────────────────────────
+
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			_toggle_pause_panel(); return
-			
-		# ──────── TEMPORARY DEBUG KEYS ────────
-		if event.keycode == KEY_F1:
-			anim.play_combat_anims("quickslash", "", "buff")
-			return
-		elif event.keycode == KEY_F2:
-			anim.play_combat_anims("soulbreak", "", "buff")
-			return
-		elif event.keycode == KEY_F3:
-			anim.play_combat_anims("whiplash", "", "buff")
-			return
-		elif event.keycode == KEY_F4:
-			# Auto-complete the current sentence (debug only)
-			if current_state == GameState.TYPING and not i_finished:
-				_log("[Debug] F4: Auto-completing sentence")
-				typing.force_complete_sentence()
-			return
-		# ──────────────────────────────────────
 
 	if current_state != GameState.TYPING: return
 	if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "typing" and _server_typing_started_at_ms > 0.0:
@@ -600,7 +591,12 @@ func _on_entity_died(entity: String) -> void:
 	if current_state == GameState.RESOLVING:
 		# Don't interrupt combat animations — store and handle after they complete
 		_log("[Victory] %s HP reached 0 — will show after animations" % entity)
-		_pending_death_entity = entity
+		# If both die simultaneously, "player" death (we lose) takes priority for display
+		if _pending_death_entity == "":
+			_pending_death_entity = entity
+		elif _pending_death_entity != entity:
+			# Both died — treat as player loss (tie goes to opponent winning)
+			_pending_death_entity = "player"
 		return
 	if current_state == GameState.TYPING or current_state == GameState.SKILL_SELECT:
 		_log("[Victory] %s HP reached 0 — game over" % entity)
@@ -655,11 +651,6 @@ func _resolve_and_advance(finish_mode: String) -> void:
 	if typing_label:     typing_label.hide(); typing_label.modulate.a = 1.0
 	# Keep stats labels visible during combat resolution so players can see their performance
 	
-	# Guard: clear skill if player can't actually afford it (e.g. round 1 with 0 mana)
-	if chosen_skill_id != "" and not SkillsManager.can_pick_skill(chosen_skill_id):
-		_log("[Resolve] Skill '%s' cancelled — insufficient mana (%d)" % [chosen_skill_id, SkillsManager.player_mana])
-		chosen_skill_id = ""
-	
 	# Guard: clear skill if player didn't meet 60% accuracy requirement
 	# This check applies to all finish modes where the player actually typed AND finished
 	# Skip for DNF (didn't finish) since they have 0 progress
@@ -698,12 +689,9 @@ func _resolve_and_advance(finish_mode: String) -> void:
 	
 	_log("[Combat] Resolving | Mode: %s | Our skill: %s | Opp skill: %s" % [finish_mode, my_skill_for_anim if my_skill_for_anim != "" else "none", opp_skill_for_anim if opp_skill_for_anim != "" else "none"])
 	
-	# Wait for combat animations to complete (including HUD animation backwards)
-	await anim.play_combat_anims(
-		my_skill_for_anim,
-		opp_skill_for_anim,
-		finish_mode
-	)
+	# Wait for combat animations to complete — with a safety timeout so victory
+	# is never permanently blocked by a stuck animation sequence.
+	await anim.play_combat_anims(my_skill_for_anim, opp_skill_for_anim, finish_mode)
 	
 	# Check if an entity died during combat resolution — show victory now
 	if _pending_death_entity != "":
@@ -739,58 +727,66 @@ func _on_skill_pressed(skill_index: int) -> void:
 		if SkillsManager.can_pick_skill(skill):
 			chosen_skill_index = skill_index
 			chosen_skill_id    = skill
-			_log("[Decision] ✓ Can afford skill '%s' (cost %d, have %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0), SkillsManager.player_mana])
+			# Deduct mana immediately on pick so the bar reflects the cost
+			var cost = SkillsManager.SKILL_COSTS.get(skill, 0)
+			SkillsManager.player_mana = max(0, SkillsManager.player_mana - cost)
+			_log("[Decision] ✓ Picked skill '%s' (cost %d) → mana now %d" % [skill, cost, SkillsManager.player_mana])
 			
 			# Immediately disable both buttons to prevent double-clicks
 			if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1"):
 				$HUD/OwnSkillSelect/HBoxContainer/Skill1.disabled = true
 			if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
 				$HUD/OwnSkillSelect/HBoxContainer/Skill2.disabled = true
-			# Don't hide the panel — keep buttons visible so player can see their choice
 			# Sync skill choice immediately so opponent knows we picked
 			if not GameManager.is_solo and GameManager.current_room != "":
 				net.sync_progress_immediate(0, 1, 0, chosen_skill_id)
 		else:
 			_log("[Decision] ✗ Cannot afford skill '%s' (cost %d, have %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0), SkillsManager.player_mana])
 
+var _ff_last_log_time: float = 0.0
+
 func _should_host_fast_forward() -> bool:
 	# Only fast-forward if BOTH players have made their final choice (picked or can't pick)
 	var i_am_done = chosen_skill_id != "" or not _can_pick_any_skill()
 	if not i_am_done: return false
-	
+
 	# Wait at least 1.5s after skill phase starts before fast-forwarding.
-	# This gives the opponent time to sync their choice (poll interval is 0.5s).
 	var elapsed_ms = float(Time.get_ticks_msec()) - _skill_phase_local_start_ms
 	if elapsed_ms < 1500.0: return false
-	
-	# Check if opponent has synced their choice via progress updates
+
+	# Opponent already synced their skill pick
 	var opp_picked = net.opp_chosen_skill != ""
-	if opp_picked: 
+	if opp_picked:
 		_log("[FastForward] ✓ Both players picked skills")
 		return true
-	
-	# If we don't know opponent's skills yet, we can't assume they can't pick — wait
-	if _opp_skills.is_empty(): 
-		# Don't log here - this is called every frame and spams the console
+
+	# If we don't know opponent's skills yet, wait
+	if _opp_skills.is_empty():
 		return false
-	
-	# Check if opponent CAN pick any of their skills
+
+	# Check if opponent CAN pick any of their skills based on their current mana
 	var opp_can_pick = false
 	for s_id in _opp_skills:
 		if SkillsManager.can_pick_skill(s_id, true):
 			opp_can_pick = true
 			break
-	
-	# Only fast-forward if opponent can't pick anything either (both players can't pick)
+
 	if not opp_can_pick:
 		_log("[FastForward] ✓ Opponent can't afford any skill — advancing")
 		return true
-	else:
-		_log("[FastForward] ✗ Waiting (opp can still pick, opp_mana=%d)" % SkillsManager.opponent_mana)
-		return false
 
-# 
-# Pause menu
+	# Opponent has mana but hasn't picked yet — wait for them, BUT
+	# if the skill timer is almost up (< 1s left), advance anyway so we don't stall
+	if skill_timer <= 1.0:
+		_log("[FastForward] ✓ Timer nearly expired, advancing regardless")
+		return true
+
+	# Throttle the waiting log to once per second to avoid spam
+	var now = Time.get_ticks_msec() / 1000.0
+	if now - _ff_last_log_time >= 1.0:
+		_ff_last_log_time = now
+		_log("[FastForward] ✗ Waiting for opponent to pick (opp_mana=%d)" % SkillsManager.opponent_mana)
+	return false
 # 
 
 func _build_pause_panel() -> void:

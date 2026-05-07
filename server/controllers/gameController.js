@@ -157,7 +157,7 @@ const getMatchHistory = (req, res) => {
     });
 };
 
-// Fix #10: HTTP endpoint to apply a matchmaking penalty for a user.
+// HTTP endpoint to apply a matchmaking penalty for a user.
 // This endpoint is intentionally called ONLY from the matchmaking flow
 // (custom_room.gd → _apply_matchmaking_penalty, gated by GameManager.is_matchmaking).
 // Custom-room players are never penalized — the client never calls this endpoint for them.
@@ -191,7 +191,7 @@ const clearAllOnline = (req, res) => {
     res.json({ ok: true, cleared: count });
 };
 
-// Fix #10: set a server-side matchmaking penalty for a user (unix ms)
+// set a server-side matchmaking penalty for a user (unix ms)
 const setMatchmakingPenalty = (userId, durationMs) => {
     const until = Date.now() + durationMs;
     db.run('UPDATE users SET matchmaking_penalty_until = ? WHERE id = ?', [until, userId], (err) => {
@@ -199,7 +199,7 @@ const setMatchmakingPenalty = (userId, durationMs) => {
     });
 };
 
-// Fix #10: check if a user is currently penalised (returns Promise<bool>)
+// check if a user is currently penalised (returns Promise<bool>)
 const isMatchmakingPenalized = (userId) => new Promise((resolve) => {
     db.get('SELECT matchmaking_penalty_until FROM users WHERE id = ?', [userId], (err, row) => {
         if (err || !row) return resolve(false);

@@ -138,15 +138,23 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 	print("[AnimController] play_combat_anims called | skill_id='%s' | opp_skill_id='%s' | finish_mode='%s'" % [skill_id, opp_skill_id, finish_mode])
 
 	# Guard: if a combat sequence is already running, wait for it to finish first
+	# with a safety timeout to prevent infinite blocking
 	if _in_combat_sequence:
 		print("[AnimController] Waiting for previous combat sequence to finish...")
-		while _in_combat_sequence:
+		var wait_frames := 0
+		while _in_combat_sequence and wait_frames < 300:  # max ~5s at 60fps
 			await get_tree().process_frame
+			wait_frames += 1
+		if _in_combat_sequence:
+			print("[AnimController] TIMEOUT: forced reset of _in_combat_sequence after %d frames" % wait_frames)
+			_in_combat_sequence = false
 
 	await get_tree().process_frame
-
+	print("[AnimController] Starting combat sequence | skill='%s' opp='%s' mode='%s'" % [skill_id, opp_skill_id, finish_mode])
 	_in_combat_sequence = true
-	_death_played = false  # reset for this combat sequence
+	# Only reset _death_played if nobody has died yet — once death plays it must not be overwritten
+	if HPManager.player_hp > 0 and HPManager.opponent_hp > 0:
+		_death_played = false
 
 	var hud_anim: AnimationPlayer = null
 	if get_parent() and get_parent().has_node("HUD/Animation/AnimationPlayer"):
@@ -183,76 +191,90 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 		# ── Step 1: winner (p1) attacks ──────────────────────────────────────
 		if player_has_skill:
 			var atk = attack_anim_for(my_char, skill_id)
-			print("[AnimController] Player attacking | char=%s | skill=%s | anim=%s" % [my_char, skill_id, atk])
+			print("[AnimController] P1 attacking | char=%s skill=%s anim=%s" % [my_char, skill_id, atk])
 			if skill_id in ["whiplash", "soulbreak"]:
 				_teleport_to_marker(p1, p2)
 			safe_play_anim(p1, atk)
 			var p1_anim = get_anim_player(p1)
 			if p1_anim and p1_anim.has_animation(atk):
-				await get_tree().create_timer(p1_anim.get_animation(atk).length).timeout
+				var dur = p1_anim.get_animation(atk).length
+				print("[AnimController] P1 attack anim length=%.2f" % dur)
+				await get_tree().create_timer(dur).timeout
 			else:
+				print("[AnimController] P1 attack anim not found, using fallback 0.5s")
 				await get_tree().create_timer(0.5).timeout
 			if is_instance_valid(p1): p1.global_position = p1.get_parent().global_position
 
-		# ── Step 2: wait for p2's hurt animation (fixed duration — hurt loops) ──
+		print("[AnimController] P1 attack done, waiting for hurt...")
 		await get_tree().create_timer(0.35).timeout
 
-		# ── Step 3: loser (p2) retaliates if it has a skill ──────────────────
 		if opp_has_skill:
 			var opp_atk = attack_anim_for(opp_char, opp_skill_id)
+			print("[AnimController] P2 retaliating | char=%s skill=%s anim=%s" % [opp_char, opp_skill_id, opp_atk])
 			if opp_skill_id in ["whiplash", "soulbreak"]:
 				_teleport_to_marker(p2, p1)
 			safe_play_anim(p2, opp_atk)
 			var p2_anim = get_anim_player(p2)
 			if p2_anim and p2_anim.has_animation(opp_atk):
-				await get_tree().create_timer(p2_anim.get_animation(opp_atk).length).timeout
+				var dur = p2_anim.get_animation(opp_atk).length
+				print("[AnimController] P2 retaliate anim length=%.2f" % dur)
+				await get_tree().create_timer(dur).timeout
 			else:
+				print("[AnimController] P2 retaliate anim not found, using fallback 0.5s")
 				await get_tree().create_timer(0.5).timeout
 			if is_instance_valid(p2): p2.global_position = p2.get_parent().global_position
-
-			# ── Step 4: wait for p1's hurt (fixed duration — hurt loops) ──────
+			print("[AnimController] P2 retaliate done, waiting for hurt...")
 			await get_tree().create_timer(0.35).timeout
 
 	else:
 		# ── Step 1: winner (p2) attacks ──────────────────────────────────────
 		if opp_has_skill:
 			var opp_atk = attack_anim_for(opp_char, opp_skill_id)
+			print("[AnimController] P2 attacking | char=%s skill=%s anim=%s" % [opp_char, opp_skill_id, opp_atk])
 			if opp_skill_id in ["whiplash", "soulbreak"]:
 				_teleport_to_marker(p2, p1)
 			safe_play_anim(p2, opp_atk)
 			var p2_anim = get_anim_player(p2)
 			if p2_anim and p2_anim.has_animation(opp_atk):
-				await get_tree().create_timer(p2_anim.get_animation(opp_atk).length).timeout
+				var dur = p2_anim.get_animation(opp_atk).length
+				print("[AnimController] P2 attack anim length=%.2f" % dur)
+				await get_tree().create_timer(dur).timeout
 			else:
+				print("[AnimController] P2 attack anim not found, using fallback 0.5s")
 				await get_tree().create_timer(0.5).timeout
 			if is_instance_valid(p2): p2.global_position = p2.get_parent().global_position
 
-		# ── Step 2: wait for p1's hurt animation (fixed duration — hurt loops) ──
+		print("[AnimController] P2 attack done, waiting for hurt...")
 		await get_tree().create_timer(0.35).timeout
 
-		# ── Step 3: loser (p1) retaliates if it has a skill ──────────────────
 		if player_has_skill:
 			var atk = attack_anim_for(my_char, skill_id)
-			print("[AnimController] Player attacking | char=%s | skill=%s | anim=%s" % [my_char, skill_id, atk])
+			print("[AnimController] P1 retaliating | char=%s skill=%s anim=%s" % [my_char, skill_id, atk])
 			if skill_id in ["whiplash", "soulbreak"]:
 				_teleport_to_marker(p1, p2)
 			safe_play_anim(p1, atk)
 			var p1_anim = get_anim_player(p1)
 			if p1_anim and p1_anim.has_animation(atk):
-				await get_tree().create_timer(p1_anim.get_animation(atk).length).timeout
+				var dur = p1_anim.get_animation(atk).length
+				print("[AnimController] P1 retaliate anim length=%.2f" % dur)
+				await get_tree().create_timer(dur).timeout
 			else:
+				print("[AnimController] P1 retaliate anim not found, using fallback 0.5s")
 				await get_tree().create_timer(0.5).timeout
 			if is_instance_valid(p1): p1.global_position = p1.get_parent().global_position
-
-			# ── Step 4: wait for p2's hurt (fixed duration — hurt loops) ──────
+			print("[AnimController] P1 retaliate done, waiting for hurt...")
 			await get_tree().create_timer(0.35).timeout
 
 	# ── Restore idles ─────────────────────────────────────────────────────
+	print("[AnimController] Combat sequence complete, restoring idles")
 	_in_combat_sequence = false
-	restore_idle_after(p1, my_char, 0.1)
-	restore_idle_after(p2, opp_char, 0.1)
-
+	# Check death FIRST — so _death_played is set before restore_idle_after runs
 	_check_death_final()
+	# Only restore idle for characters that are still alive
+	if HPManager.player_hp > 0:
+		restore_idle_after(p1, my_char, 0.1)
+	if HPManager.opponent_hp > 0:
+		restore_idle_after(p2, opp_char, 0.1)
 
 	if any_skill and hud_anim and hud_anim.has_animation("anim"):
 		# Use a timer equal to the animation length instead of awaiting animation_finished,
