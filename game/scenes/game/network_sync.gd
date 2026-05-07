@@ -53,6 +53,7 @@ var opp_typos: int       = 0
 var opp_chosen_skill: String = ""
 var opp_skills: Array    = []
 var opp_mutations: Array = []
+var opp_mana: int        = -1  # -1 = not synced yet, use estimation
 var _last_mutation_index: int = 0
 
 func get_synced_server_time_ms() -> float:
@@ -179,6 +180,9 @@ func _apply_opponent_data(room: Dictionary) -> void:
 		opp_mutations    = room.get("host_mutations", [])
 		var g_skills = room.get("guest_skills", null)
 		if g_skills != null and g_skills is Array: opp_skills = g_skills
+		# Sync opponent mana if available (fixes desync after mana-stealing skills)
+		var g_mana = room.get("guest_mana", null)
+		if g_mana != null: opp_mana = int(g_mana)
 	else:
 		opp_progress     = room.get("host_progress", 0.0)
 		opp_typos        = room.get("host_typos", 0)
@@ -187,6 +191,9 @@ func _apply_opponent_data(room: Dictionary) -> void:
 		opp_mutations    = room.get("guest_mutations", [])
 		var h_skills = room.get("host_skills", null)
 		if h_skills != null and h_skills is Array: opp_skills = h_skills
+		# Sync opponent mana if available (fixes desync after mana-stealing skills)
+		var h_mana = room.get("host_mana", null)
+		if h_mana != null: opp_mana = int(h_mana)
 
 func consume_new_mutations() -> Array:
 	var result: Array = []
@@ -197,6 +204,8 @@ func consume_new_mutations() -> Array:
 
 func reset_mutation_index() -> void:
 	_last_mutation_index = 0
+	_mutation_seq = 0
+	_pending_mutations.clear()
 
 # ─────────────────────────────────────────────
 #  Progress sync
@@ -217,6 +226,7 @@ func sync_progress(current_index: int, sentence_length: int, typos: int,
 		"user_id":      GameManager.user_data.id,
 		"progress":     prog,
 		"typos":        typos,
+		"mana":         SkillsManager.player_mana,  # Sync mana for accurate opponent display
 		"chosen_skill": chosen_skill
 	}
 	if queued_mutation != null:
@@ -307,6 +317,10 @@ func apply_hp_from_room(room: Dictionary) -> void:
 		if abs(HPManager.opponent_hp - host_hp)  > 0.01: HPManager.set_hp("opponent", host_hp)
 
 # Sends progress and pops one mutation from the queue only if the interval has elapsed
+# Mutations are sent with sequence numbers to prevent loss/reordering
+var _mutation_seq: int = 0
+var _pending_mutations: Dictionary = {}  # seq -> mutation
+
 func sync_progress_with_queue(current_index: int, sentence_length: int, typos: int,
 	chosen_skill: String, mutation_queue: Array, accuracy_warning_visible: bool) -> void:
 	if GameManager.current_room == "" or GameManager.user_data.id == 0: return
@@ -315,19 +329,39 @@ func sync_progress_with_queue(current_index: int, sentence_length: int, typos: i
 	last_progress_sync = now
 	var prog = float(current_index) / float(sentence_length) if sentence_length > 0 else 0.0
 	if accuracy_warning_visible: prog = minf(prog, 0.98)
-	var payload: Dictionary = { "user_id": GameManager.user_data.id, "progress": prog, "typos": typos, "chosen_skill": chosen_skill }
-	var pending_mut = null
+	var payload: Dictionary = { 
+		"user_id": GameManager.user_data.id, 
+		"progress": prog, 
+		"typos": typos, 
+		"mana": SkillsManager.player_mana,  # Sync mana for accurate opponent display
+		"chosen_skill": chosen_skill 
+	}
+	
+	# Send mutation with sequence number to prevent loss
 	if mutation_queue.size() > 0:
-		pending_mut = mutation_queue.pop_front()
-		payload["send_mutation"] = pending_mut
+		var mut = mutation_queue.pop_front()
+		_mutation_seq += 1
+		mut["seq"] = _mutation_seq
+		_pending_mutations[_mutation_seq] = mut
+		payload["send_mutation"] = mut
+	
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.timeout = POLL_TIMEOUT_SEC
-	# Re-queue mutation at front if request fails so it isn't lost
 	http.request_completed.connect(func(result,_c,_h,_b):
-		http.queue_free()
-		if result != HTTPRequest.RESULT_SUCCESS and pending_mut != null:
-			mutation_queue.push_front(pending_mut)
+		if is_instance_valid(http): http.queue_free()
+		if result == HTTPRequest.RESULT_SUCCESS:
+			# Success - remove from pending
+			if payload.has("send_mutation") and payload.send_mutation.has("seq"):
+				_pending_mutations.erase(payload.send_mutation.seq)
+		else:
+			# Failure - re-queue at front if not already sent successfully
+			if payload.has("send_mutation") and payload.send_mutation.has("seq"):
+				var seq = payload.send_mutation.seq
+				if _pending_mutations.has(seq):
+					# Still pending, re-queue
+					var mut_copy = _pending_mutations[seq].duplicate()
+					mutation_queue.push_front(mut_copy)
 	)
 	http.request(SERVER + "/api/rooms/" + GameManager.current_room + "/progress", GameManager.get_auth_headers(), HTTPClient.METHOD_PATCH, JSON.stringify(payload))
 
@@ -336,7 +370,13 @@ func sync_progress_immediate(current_index: int, sentence_length: int, typos: in
 	if GameManager.current_room == "" or GameManager.user_data.id == 0: return
 	last_progress_sync = Time.get_ticks_msec() / 1000.0
 	var prog = float(current_index) / float(sentence_length) if sentence_length > 0 else 0.0
-	var payload: Dictionary = { "user_id": GameManager.user_data.id, "progress": prog, "typos": typos, "chosen_skill": chosen_skill }
+	var payload: Dictionary = { 
+		"user_id": GameManager.user_data.id, 
+		"progress": prog, 
+		"typos": typos, 
+		"mana": SkillsManager.player_mana,  # Sync mana for accurate opponent display
+		"chosen_skill": chosen_skill 
+	}
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.timeout = POLL_TIMEOUT_SEC

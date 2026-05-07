@@ -40,7 +40,6 @@ var _local_first_finish_by: String      = ""
 var _host_typing_phase_requested: bool  = false
 var _host_skill_phase_requested: bool   = false
 var _opp_skills: Array                  = []
-var _last_snap_fallback_log_ms: int     = 0
 var _last_opp_words: int                = 0
 @onready var typing_label       = $HUD/TypingText
 @onready var skill_select       = $HUD/OwnSkillSelect
@@ -137,6 +136,7 @@ func start_skill_phase(announce_phase: bool = false) -> void:
 	_server_typing_started_at_ms = 0.0
 	_server_first_finish_at_ms   = 0.0
 	_server_first_finish_by      = ""
+	_victory_shown = false  # Reset for new round (edge case protection)
 	skill_timer    = 10.0
 	chosen_skill_id    = ""
 	chosen_skill_index = -1
@@ -145,7 +145,6 @@ func start_skill_phase(announce_phase: bool = false) -> void:
 	snap_active    = false
 	snap_timer     = 10.0
 	round_timer    = 60.0
-	_last_snap_fallback_log_ms = 0
 	net.opp_chosen_skill = ""
 	_skill_phase_local_start_ms = float(Time.get_ticks_msec())
 	_update_skill_buttons()
@@ -171,6 +170,7 @@ func start_typing_phase(announce_phase: bool = false) -> void:
 	_local_first_finish_at_ms = 0.0
 	_local_first_finish_by   = ""
 	net.reset_mutation_index()
+	net.opp_mana = -1  # Reset to use estimation until server syncs
 	_last_opp_words = 0
 	if GameManager.is_solo or GameManager.current_room == "":
 		current_round += 1
@@ -207,13 +207,15 @@ func _update_skill_buttons() -> void:
 		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1"):
 			var btn1 = $HUD/OwnSkillSelect/HBoxContainer/Skill1
 			btn1.text = "%s (%dM)" % [s1.capitalize(), SkillsManager.SKILL_COSTS.get(s1, 0)]
-			btn1.disabled = not SkillsManager.can_pick_skill(s1)
+			# Only enable if we can afford it AND haven't already chosen a skill
+			btn1.disabled = not SkillsManager.can_pick_skill(s1) or chosen_skill_id != ""
 	if SkillsManager.selected_skills.size() > 1:
 		var s2 = SkillsManager.selected_skills[1]
 		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
 			var btn2 = $HUD/OwnSkillSelect/HBoxContainer/Skill2
 			btn2.text = "%s (%dM)" % [s2.capitalize(), SkillsManager.SKILL_COSTS.get(s2, 0)]
-			btn2.disabled = not SkillsManager.can_pick_skill(s2)
+			# Only enable if we can afford it AND haven't already chosen a skill
+			btn2.disabled = not SkillsManager.can_pick_skill(s2) or chosen_skill_id != ""
 
 # 
 # Main process loop
@@ -312,7 +314,11 @@ func _process_typing(delta: float) -> void:
 	_update_stats_hud()
 	# Progress bars
 	own_progress_bar.max_value = 1.0
-	own_progress_bar.value     = typing.get_progress()
+	var own_prog = typing.get_progress()
+	# Clamp progress to 98% if accuracy warning is visible (matches server sync)
+	if accuracy_warning != null and accuracy_warning.visible:
+		own_prog = minf(own_prog, 0.98)
+	own_progress_bar.value = own_prog
 	enemy_progress_bar.max_value = 1.0
 	enemy_progress_bar.value     = net.opp_progress
 	# HP / Mana bars
@@ -406,6 +412,7 @@ func _on_sentence_finished() -> void:
 func _on_accuracy_too_low() -> void:
 	# Player finished but didn't meet the 60% accuracy threshold.
 	# Skill is cancelled — mana is NOT refunded (mana is only gained from words).
+	# This is the authoritative check; _resolve_and_advance will also verify.
 	if chosen_skill_id != "":
 		_log("[Accuracy] Too low — skill '%s' cancelled, mana lost" % chosen_skill_id)
 		chosen_skill_id = ""
@@ -436,22 +443,28 @@ func _on_room_polled(room: Dictionary) -> void:
 				_log("[Net] Phase->skill_select (server) | round_id=%d" % _server_round_id)
 				start_skill_phase(false)
 	if current_state != GameState.TYPING: return
-	# Opponent mana from word progress — estimated from progress delta each poll.
-	# Note: after skills fire (whiplash/soulbreak mana changes), the guest's opponent_mana
-	# may drift from the host's authoritative value. This is a known approximation;
-	# the host is the only one that resolves combat, so gameplay correctness is unaffected.
-	var total_words = float(typing.target_sentence.length()) / 5.0
-	var cur_opp_words = int(floor(net.opp_progress * total_words))
-	if cur_opp_words > _last_opp_words:
-		for i in range(cur_opp_words - _last_opp_words):
-			SkillsManager.on_opponent_accurate_word()
-		_last_opp_words = cur_opp_words
+	# Opponent mana: use server-synced value if available, otherwise estimate from word progress
+	if net.opp_mana >= 0:
+		# Server has synced opponent mana (authoritative after skills fire)
+		SkillsManager.opponent_mana = net.opp_mana
+	else:
+		# Estimate from word progress (used before first sync)
+		var total_words = float(typing.target_sentence.length()) / 5.0
+		var cur_opp_words = int(floor(net.opp_progress * total_words))
+		if cur_opp_words > _last_opp_words:
+			for i in range(cur_opp_words - _last_opp_words):
+				SkillsManager.on_opponent_accurate_word()
+			_last_opp_words = cur_opp_words
 	# Apply incoming mutations
 	for mut in net.consume_new_mutations():
 		typing.apply_mutation(mut)
 		anim.show_passive_popup(mut.get("type", ""))
-	# Enemy finished detection
-	if not GameManager.is_solo and net.opp_progress >= 0.99 and not enemy_finished:
+	# Enemy finished detection - check both progress threshold and server confirmation
+	var opp_finished_by_progress = net.opp_progress >= 0.99
+	var opp_finished_by_server = (_server_first_finish_by == "host" and not GameManager.is_host) or \
+	                              (_server_first_finish_by == "guest" and GameManager.is_host)
+	
+	if not GameManager.is_solo and (opp_finished_by_progress or opp_finished_by_server) and not enemy_finished:
 		enemy_finished = true
 		if i_finished:
 			_log("[Round] Enemy finished AFTER we finished")
@@ -465,12 +478,23 @@ func _on_opponent_forfeited() -> void:
 	if _victory_shown: return
 	_victory_shown = true
 	GameManager.current_room = ""
+	
+	# Save match history as a win by forfeit
+	_save_forfeit_victory()
+	
 	combat.show_opponent_forfeited_overlay($HUD)
 
 func _on_you_forfeited() -> void:
 	if _victory_shown: return
 	_victory_shown = true
 	GameManager.current_room = ""
+	
+	# Save match history as a loss by forfeit
+	_save_forfeit_loss()
+	
+	# Apply penalty for forfeiting
+	_apply_forfeit_penalty()
+	
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
 func _on_match_ended(_reason: String) -> void:
@@ -526,17 +550,40 @@ func _resolve_and_advance(finish_mode: String) -> void:
 	if typing_label:     typing_label.hide(); typing_label.modulate.a = 1.0
 	if stats_label:      stats_label.hide(); _last_stats_text = ""
 	if opp_stats_label:  opp_stats_label.hide(); _last_opp_stats_text = ""
+	
 	# Guard: clear skill if player can't actually afford it (e.g. round 1 with 0 mana)
 	if chosen_skill_id != "" and not SkillsManager.can_pick_skill(chosen_skill_id):
 		_log("[Resolve] Skill '%s' cancelled — insufficient mana (%d)" % [chosen_skill_id, SkillsManager.player_mana])
 		chosen_skill_id = ""
+	
+	# Guard: clear skill if player didn't meet 60% accuracy requirement
+	# This check applies to all finish modes where the player actually typed
+	if chosen_skill_id != "" and finish_mode != "no_attack":
+		var correct_letters = typing.total_keystrokes - typing.typos_count
+		var required = int(ceil(float(typing.target_sentence.length()) * 0.6))
+		if correct_letters < required:
+			_log("[Resolve] Skill '%s' cancelled — accuracy too low (%d/%d correct letters, need %d)" % 
+				[chosen_skill_id, correct_letters, typing.total_keystrokes, required])
+			chosen_skill_id = ""
+	
 	var result = combat.resolve(finish_mode, chosen_skill_id, net.opp_progress, _server_first_finish_at_ms, current_round)
 	_update_bars()  # Reflect HP/mana changes from resolution immediately
+	
+	# Determine opponent's effective skill for animation
+	# If opponent didn't finish (we got full_power/buff) or we didn't finish (dnf/debuff),
+	# the non-finisher's skill shouldn't show in animation
+	var opp_skill_for_anim = net.opp_chosen_skill
+	if finish_mode == "full_power":
+		# We finished, opponent didn't → opponent's skill shouldn't show
+		opp_skill_for_anim = ""
+	elif finish_mode == "dnf":
+		# Opponent finished, we didn't → our skill already cancelled above, opponent's shows
+		pass
 	
 	# Wait for combat animations to complete (including HUD animation backwards)
 	await anim.play_combat_anims(
 		chosen_skill_id,
-		net.opp_chosen_skill,
+		opp_skill_for_anim,
 		finish_mode
 	)
 	
@@ -557,6 +604,10 @@ func _resolve_and_advance(finish_mode: String) -> void:
 # 
 
 func _on_skill_pressed(skill_index: int) -> void:
+	# Prevent multiple clicks - if a skill is already chosen, ignore
+	if chosen_skill_id != "":
+		return
+	
 	var idx = skill_index - 1
 	if idx < SkillsManager.selected_skills.size():
 		var skill = SkillsManager.selected_skills[idx]
@@ -564,10 +615,18 @@ func _on_skill_pressed(skill_index: int) -> void:
 			chosen_skill_index = skill_index
 			chosen_skill_id    = skill
 			print("[Skill] Selected: %s (cost %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0)])
+			
+			# Immediately disable both buttons to prevent double-clicks
+			if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1"):
+				$HUD/OwnSkillSelect/HBoxContainer/Skill1.disabled = true
+			if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
+				$HUD/OwnSkillSelect/HBoxContainer/Skill2.disabled = true
+			
 			skill_select.hide()
 			# Sync skill choice immediately so opponent knows we picked
 			if not GameManager.is_solo and GameManager.current_room != "":
 				net.sync_progress_immediate(0, 1, 0, chosen_skill_id)
+				_log("[Skill] Synced choice to server immediately")
 		else:
 			print("[Skill] Not enough Mana for %s" % skill)
 
@@ -638,6 +697,9 @@ func _on_forfeit_pressed() -> void:
 	_pause_visible = false
 	if is_instance_valid(_pause_panel): _pause_panel.visible = false
 	if not GameManager.is_solo and GameManager.current_room != "":
+		# Save forfeit loss to history and apply penalty
+		_save_forfeit_loss()
+		_apply_forfeit_penalty()
 		net.delete_room()
 		GameManager.current_room = ""
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
@@ -676,4 +738,83 @@ func _swap_controls(a: Control, b: Control) -> void:
 ## DEPRECATED  kept as a compatibility stub
 func _on_sentence_completed():
 	_on_i_finished()
-		
+
+# ─────────────────────────────────────────────
+#  Forfeit Penalty & History
+# ─────────────────────────────────────────────
+
+func _apply_forfeit_penalty() -> void:
+	# Only apply penalty for matchmaking games
+	if not GameManager.is_matchmaking: return
+	if GameManager.user_data.id == 0: return
+	
+	# 60-second penalty for mid-match forfeit (6x lobby dodge penalty)
+	var penalty_ms = 60000
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
+	var body = JSON.stringify({
+		"user_id": GameManager.user_data.id,
+		"duration_ms": penalty_ms
+	})
+	http.request(GameManager.SERVER_URL + "/api/game/matchmaking-penalty", 
+		GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
+	
+	# Update local state so player sees the penalty immediately
+	var now_unix_ms = Time.get_unix_time_from_system() * 1000.0
+	GameManager.matchmaking_penalty_until_unix_ms = now_unix_ms + penalty_ms
+	GameManager.auto_queue_matchmaking = false
+	
+	_log("[Penalty] Applied 60s matchmaking ban for forfeit")
+
+func _save_forfeit_victory() -> void:
+	if GameManager.user_data.id == 0: return
+	var wpm = float(typing.get_wpm())
+	var accuracy = typing.get_accuracy()
+	wpm = clampf(wpm if is_finite(wpm) else 0.0, 0.0, 250.0)
+	accuracy = clampf(accuracy if is_finite(accuracy) else 0.0, 0.0, 100.0)
+	
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
+	var data = {
+		"user_id": GameManager.user_data.id,
+		"username": GameManager.user_data.username,
+		"match_type": "online" if GameManager.is_matchmaking else "custom",
+		"wpm": wpm,
+		"accuracy": accuracy,
+		"typos": typing.typos_count,
+		"won": true,
+		"forfeit": "opponent"
+	}
+	http.request(GameManager.SERVER_URL + "/api/game/history", 
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST, JSON.stringify(data))
+	
+	_log("[History] Saved forfeit victory to match history")
+
+func _save_forfeit_loss() -> void:
+	if GameManager.user_data.id == 0: return
+	var wpm = float(typing.get_wpm())
+	var accuracy = typing.get_accuracy()
+	wpm = clampf(wpm if is_finite(wpm) else 0.0, 0.0, 250.0)
+	accuracy = clampf(accuracy if is_finite(accuracy) else 0.0, 0.0, 100.0)
+	
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
+	var data = {
+		"user_id": GameManager.user_data.id,
+		"username": GameManager.user_data.username,
+		"match_type": "online" if GameManager.is_matchmaking else "custom",
+		"wpm": wpm,
+		"accuracy": accuracy,
+		"typos": typing.typos_count,
+		"won": false,
+		"forfeit": "self"
+	}
+	http.request(GameManager.SERVER_URL + "/api/game/history", 
+		["Content-Type: application/json"],
+		HTTPClient.METHOD_POST, JSON.stringify(data))
+	
+	_log("[History] Saved forfeit loss to match history")

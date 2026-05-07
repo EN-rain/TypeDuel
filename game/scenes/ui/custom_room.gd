@@ -54,6 +54,8 @@ var _matchmaking_forfeit_handled: bool = false
 var _matchmaking_start_sent: bool = false
 var _last_room_seq: int = -1
 var _last_server_now_ms: float = 0.0
+var _opponent_left_lobby: bool = false
+var _was_matched_before_leave: bool = false
 
 # Dynamically built button arrays
 var _char_buttons: Array      = []
@@ -309,9 +311,10 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if code != 200:
 		# Matchmaking forfeits/room closes show up as 404.
 		# If the room is gone but WE didn't initiate the leave, we are the 'innocent' party.
-		# Pass ready=true to avoid getting a penalty ourselves.
 		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled:
-			_handle_matchmaking_forfeit(true)
+			# Show popup that opponent left instead of immediate forfeit
+			_opponent_left_lobby = true
+			_show_opponent_left_popup()
 		else:
 			# Custom room or already handled - just go back
 			_leave_and_menu()
@@ -323,7 +326,8 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if json.get("status") == "finished":
 		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled:
 			# If the room is finished but we are still here, the opponent left/forfeited.
-			_handle_matchmaking_forfeit(true)
+			_opponent_left_lobby = true
+			_show_opponent_left_popup()
 		elif not GameManager.is_matchmaking:
 			_leave_and_menu()
 		return
@@ -341,8 +345,14 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 
 	# 1. Update opponent selections from current poll first
 	if GameManager.is_host:
-		if json.get("guest_id", null) != null:
-			guest_joined = true
+		var guest_id_now = json.get("guest_id", null)
+		if guest_id_now != null:
+			# Guest is present
+			if not guest_joined:
+				# Guest just joined
+				guest_joined = true
+				_was_matched_before_leave = true
+			
 			player2_name.text = str(json.get("guest_name", "Opponent"))
 			
 			var g_char = json.get("guest_character")
@@ -360,7 +370,14 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 			var g_passive = json.get("guest_passive")
 			_opp_passive = str(g_passive) if g_passive != null else ""
 		else:
-			# Guest left
+			# Guest left - check if we were matched before
+			if guest_joined and GameManager.is_matchmaking and not _matchmaking_forfeit_handled:
+				# Opponent left after joining - show popup and return to menu
+				_opponent_left_lobby = true
+				_show_opponent_left_popup()
+				return
+			
+			# Guest hasn't joined yet or already handled
 			guest_joined = false
 			player2_name.text = "Waiting..."
 			player2_tag.text = ""
@@ -578,6 +595,9 @@ func _on_back_pressed():
 			_leave_and_menu()
 			return
 
+	_leave_and_menu()
+
+func _leave_and_menu():
 	if GameManager.is_solo or GameManager.is_host:
 		_delete_room()
 	else:
@@ -695,21 +715,94 @@ func _launch_game_with_countdown() -> void:
 	label.add_theme_constant_override("outline_size", 8)
 	overlay.add_child(label)
 	
-	# Simple fixed countdown — both clients enter this within ~0.5s of each other
+	# Countdown with immediate opponent leave detection
 	for i in range(3, 0, -1):
 		if not is_instance_valid(label): return
-		# If the opponent leaves during the countdown, _on_poll_done will trigger
-		# _handle_matchmaking_forfeit(true), which sets this flag.
-		if _matchmaking_forfeit_handled:
+		# Check if opponent left (immediate detection, not just flag)
+		if _matchmaking_forfeit_handled or _opponent_left_lobby:
 			if is_instance_valid(overlay): overlay.queue_free()
+			print("[Countdown] Opponent left during countdown, aborting")
 			return
 			
 		label.text = str(i)
-		await get_tree().create_timer(1.0).timeout
+		# Use smaller intervals to detect opponent leaving faster
+		for j in range(4):  # Check 4 times per second
+			await get_tree().create_timer(0.25).timeout
+			if _matchmaking_forfeit_handled or _opponent_left_lobby:
+				if is_instance_valid(overlay): overlay.queue_free()
+				return
 	
 	if not is_instance_valid(label): return
+	if _matchmaking_forfeit_handled or _opponent_left_lobby:
+		if is_instance_valid(overlay): overlay.queue_free()
+		return
+	
 	label.text = "GO!"
 	await get_tree().create_timer(0.4).timeout
 	
-	if is_inside_tree():
+	if is_inside_tree() and not _matchmaking_forfeit_handled and not _opponent_left_lobby:
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
+
+
+## Show popup when opponent leaves the lobby, wait 3s, then return to menu without penalty
+func _show_opponent_left_popup() -> void:
+	if _matchmaking_forfeit_handled: return
+	_matchmaking_forfeit_handled = true
+	
+	# Stop polling and heartbeat
+	poll_timer = 999999.0
+	_heartbeat_timer = 999999.0
+	
+	# Create overlay
+	var overlay = Panel.new()
+	overlay.set_anchors_preset(Control.PRESET_CENTER)
+	overlay.custom_minimum_size = Vector2(400, 200)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(overlay)
+	
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 24
+	vbox.offset_top = 24
+	vbox.offset_right = -24
+	vbox.offset_bottom = -24
+	vbox.add_theme_constant_override("separation", 16)
+	overlay.add_child(vbox)
+	
+	var title = Label.new()
+	title.text = "Opponent Left"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_color_override("font_color", Color.ORANGE)
+	vbox.add_child(title)
+	
+	var msg = Label.new()
+	msg.text = "Your opponent has left the lobby.\nReturning to main menu..."
+	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	msg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(msg)
+	
+	var countdown_label = Label.new()
+	countdown_label.text = "3"
+	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	countdown_label.add_theme_font_size_override("font_size", 48)
+	countdown_label.add_theme_color_override("font_color", Color.YELLOW)
+	vbox.add_child(countdown_label)
+	
+	# Leave the room (no penalty for us)
+	_delete_room() if GameManager.is_host else _leave_room()
+	GameManager.current_room = ""
+	
+	# Enable auto-requeue since we're the innocent party
+	GameManager.auto_queue_matchmaking = true
+	GameManager.is_matchmaking = false
+	
+	# 3-second countdown
+	for i in range(3, 0, -1):
+		if not is_instance_valid(countdown_label): return
+		countdown_label.text = str(i)
+		await get_tree().create_timer(1.0).timeout
+	
+	# Return to main menu
+	if is_inside_tree():
+		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
