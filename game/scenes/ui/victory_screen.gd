@@ -107,7 +107,17 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		_on_back_pressed()
 		return
 
-	# Read opponent rematch flag
+	# Durable rematch-complete signal: server resets room to lobby when both agree.
+	# The transient flags are cleared at that point, so we use status instead.
+	# This catches the first-clicker who polled after the flags were already cleared.
+	if status == "lobby" and _i_want_rematch and not _rematch_initiated:
+		_rematch_initiated = true
+		_opp_wants_rematch = true
+		_update_rematch_status()
+		_initiate_rematch()
+		return
+
+	# Read opponent rematch flag (only meaningful while status is still "finished")
 	var prev_opp = _opp_wants_rematch
 	if GameManager.is_host:
 		_opp_wants_rematch = json.get("guest_wants_rematch", false)
@@ -180,8 +190,18 @@ func _send_rematch_request():
 
 	var http = HTTPRequest.new()
 	add_child(http)
-	http.request_completed.connect(func(_r, _c, _h, _b): http.queue_free())
 	http.timeout = 5.0
+	http.request_completed.connect(func(_r, _code, _h, body):
+		if is_instance_valid(http): http.queue_free()
+		# If the server already has both players ready, transition immediately
+		# from this response — don't wait for the next poll cycle.
+		var json = JSON.parse_string(body.get_string_from_utf8())
+		if json and json.get("rematch_ready", false) and not _rematch_initiated:
+			_rematch_initiated = true
+			_opp_wants_rematch = true
+			_update_rematch_status()
+			_initiate_rematch()
+	)
 
 	var body = JSON.stringify({
 		"user_id": GameManager.user_data.id,

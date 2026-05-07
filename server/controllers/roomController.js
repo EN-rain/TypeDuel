@@ -842,8 +842,8 @@ const updateRematch = (req, res) => {
     
     room.seq = (room.seq || 0) + 1;
     _touchRoomPresence(room, actorId);
-    
-    return res.json({ ok: true, room: roomSnapshot(room) });
+
+    return res.json({ ok: true, rematch_ready: !!(room.host_wants_rematch && room.guest_wants_rematch) || room.status === 'lobby', room: roomSnapshot(room) });
 };
 
 module.exports = {

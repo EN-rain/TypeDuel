@@ -159,7 +159,10 @@ func poll(current_state_is_skill_select: bool) -> void:
 		return
 
 	var now = Time.get_ticks_msec() / 1000.0
-	var interval = 0.15 if (current_state_is_skill_select and not _ws_connected) else poll_interval
+	# Skill select always polls fast — the host fast-forward path goes through HTTP
+	# even when WebSocket is connected, so the guest needs frequent polls to catch it.
+	# During typing, WS handles real-time relay so 2s is fine as a safety net.
+	var interval: float = 0.15 if current_state_is_skill_select else poll_interval
 	if now - last_poll_time < interval:
 		return
 	last_poll_time = now
@@ -286,11 +289,24 @@ func emit_skill_pick(chosen_skill: String) -> void:
 func set_phase(phase: String, round_id: int) -> void:
 	if GameManager.current_room == "" or GameManager.user_data.id == 0:
 		return
-	if _ws_connected and phase == "skill_select":
-		_ws_send("phase:skill_select", {
-			"room_code": GameManager.current_room,
-			"round_id": round_id,
-		})
+
+	# WebSocket fast path — broadcast phase change to the room immediately.
+	# This covers both skill_select (new round) and typing (host fast-forward),
+	# so the guest doesn't have to wait for the next HTTP poll to learn about it.
+	if _ws_connected:
+		if phase == "skill_select":
+			_ws_send("phase:skill_select", {
+				"room_code": GameManager.current_room,
+				"round_id":  round_id,
+			})
+		elif phase == "typing":
+			# Host is forcing typing phase (timer expired or opponent can't afford).
+			# Emit a "pass" skill pick so the server's both-picked fast-forward fires,
+			# which in turn broadcasts phase:typing to the guest via WebSocket.
+			_ws_send("skill:pick", {
+				"room_code":    GameManager.current_room,
+				"chosen_skill": "",
+			})
 
 	var payload: Dictionary = { "user_id": GameManager.user_data.id, "phase": phase }
 	if round_id > 0:
