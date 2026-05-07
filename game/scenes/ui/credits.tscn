@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://cph35dnhtskwo"]
+[gd_scene format=3 uid="uid://048ktjm1jtjm"]
 
 [ext_resource type="Script" uid="uid://c55oovgage101" path="res://scenes/ui/credits.gd" id="1_credits_script"]
 [ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="2_jkvjv"]
-[ext_resource type="Texture2D" uid="uid://c1qfj3rwamvrn" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_y0bee"]
+[ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_y0bee"]
 [ext_resource type="Texture2D" uid="uid://irkp0tgnk6xk" path="res://assets/GUI/scrolls/tall.png" id="3_gleon"]
 [ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="3_pqmjv"]
-[ext_resource type="Texture2D" uid="uid://d3jct2xqj1e5l" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="4_e5ls7"]
+[ext_resource type="Texture2D" uid="uid://bqqanitehsl4m" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="4_e5ls7"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_y0bee"]
 texture = ExtResource("4_e5ls7")
