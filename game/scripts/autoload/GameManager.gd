@@ -179,6 +179,9 @@ func get_auth_headers() -> PackedStringArray:
 		return ["Content-Type: application/json"]
 	return ["Authorization: Bearer " + user_data.token, "Content-Type: application/json"]
 
+func get_auth_token() -> String:
+	return user_data.get("token", "")
+
 func send_logout():
 	if user_data.id == 0: return
 	var body = JSON.stringify({ "user_id": user_data.id })

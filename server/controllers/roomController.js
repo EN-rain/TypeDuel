@@ -845,4 +845,12 @@ const updateRematch = (req, res) => {
     return res.json({ ok: true, room: roomSnapshot(room) });
 };
 
-module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom, matchmake, leaveQueue, queueStatus, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP, updateRematch };
+module.exports = {
+    createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom,
+    matchmake, leaveQueue, queueStatus, listRooms,
+    updateSelections, startRoomGame, updatePhase, updateProgress, updateHP, updateRematch,
+    // Shared state for socket handler — same in-memory store, no duplication
+    rooms,
+    _enterTypingPhase,
+    roomSnapshot,
+};

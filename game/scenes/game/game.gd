@@ -746,8 +746,8 @@ func _on_skill_pressed(skill_index: int) -> void:
 				$HUD/OwnSkillSelect/HBoxContainer/Skill2.disabled = true
 			# Sync skill choice immediately so opponent knows we picked
 			if not GameManager.is_solo and GameManager.current_room != "":
-				net.sync_progress_immediate(0, 1, 0, chosen_skill_id)
-				# Force an immediate room poll on next frame to converge phase faster.
+				net.emit_skill_pick(chosen_skill_id)   # WebSocket fast path
+				net.sync_progress_immediate(0, 1, 0, chosen_skill_id)  # HTTP persistence
 				net.last_poll_time = 0.0
 		else:
 			_log("[Decision] ✗ Cannot afford skill '%s' (cost %d, have %d Mana)" % [skill, SkillsManager.SKILL_COSTS.get(skill, 0), SkillsManager.player_mana])

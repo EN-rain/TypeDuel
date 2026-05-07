@@ -12,7 +12,17 @@ const feedbackRoutes = require('./routes/feedback');
 const fs = require('fs');
 const path = require('path');
 
+const http = require('http');
+const { Server: SocketIO } = require('socket.io');
+
 const app = express();
+const httpServer = http.createServer(app);
+const io = new SocketIO(httpServer, {
+    cors: { origin: '*' },
+    // Allow long-polling as transport fallback for environments that block WS
+    transports: ['websocket', 'polling'],
+});
+require('./socket')(io);
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -62,7 +72,7 @@ const initDb = () => {
     });
 };
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log('Connected to SQLite database');
     initDb();
