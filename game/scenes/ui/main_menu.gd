@@ -61,6 +61,9 @@ func _ready():
 	matchmaking_label.hide()
 	matchmaking_time_label.hide()
 
+	# Clean up any stale queue entry from a previous session (e.g. process killed mid-match)
+	_cleanup_stale_session()
+
 	# Auto-requeue after matchmaking forfeit (only if not penalized).
 	if GameManager.auto_queue_matchmaking:
 		GameManager.auto_queue_matchmaking = false
@@ -165,6 +168,18 @@ func _send_heartbeat():
 	http.request_completed.connect(_on_heartbeat_done.bind(http))
 	var body = JSON.stringify({ "user_id": GameManager.user_data.id, "session_id": GameManager.session_id })
 	http.request(GameManager.SERVER_URL + "/api/game/heartbeat", GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
+
+func _cleanup_stale_session() -> void:
+	# Fire-and-forget: remove this user from the matchmaking queue in case
+	# the previous session was killed without sending queue/leave.
+	if GameManager.user_data.id == 0: return
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
+	http.timeout = 5.0
+	http.request(GameManager.SERVER_URL + "/api/rooms/queue/leave",
+		GameManager.get_auth_headers(), HTTPClient.METHOD_POST,
+		JSON.stringify({"user_id": GameManager.user_data.id}))
 
 func _on_heartbeat_done(_result, code, _headers, _body, http: HTTPRequest):
 	if is_instance_valid(http):

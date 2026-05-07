@@ -2,13 +2,13 @@
 
 [ext_resource type="Script" uid="uid://cdsv6vd7esyby" path="res://scenes/ui/custom_room.gd" id="1_custom_room_script"]
 [ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
-[ext_resource type="Texture2D" uid="uid://knxiuy7qi2cg" path="res://assets/GUI/colosseum-bg.png" id="2_xghyf"]
+[ext_resource type="Texture2D" uid="uid://ic0is52jbtpd" path="res://assets/GUI/colosseum-bg.png" id="2_xghyf"]
 [ext_resource type="Texture2D" uid="uid://c2b76rwjodavs" path="res://assets/GUI/FREE RPG SKILL ICONS 32x32/SKILL ICONS.png" id="4_cvmnq"]
 [ext_resource type="Texture2D" uid="uid://ckawbo5yt310e" path="res://assets/GUI/skills.png" id="4_mqf87"]
-[ext_resource type="Texture2D" uid="uid://rfvv3o4lhaev" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_qkbvd"]
+[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_qkbvd"]
 [ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="4_rndi5"]
 [ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="5_qkbvd"]
-[ext_resource type="Texture2D" uid="uid://d3jct2xqj1e5l" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_ugbnh"]
+[ext_resource type="Texture2D" uid="uid://bqqanitehsl4m" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_ugbnh"]
 [ext_resource type="Texture2D" uid="uid://d166euwfpuobv" path="res://assets/sprites/character-idle.png" id="7_10h8c"]
 
 [sub_resource type="Animation" id="Animation_custom_room_intro"]
@@ -514,6 +514,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_ekhvr")
 
 [node name="Character2" type="Button" parent="Characters/VBoxContainer" unique_id=1818998384]
@@ -529,6 +530,7 @@ anchors_preset = -1
 anchor_right = 0.99300003
 anchor_bottom = 1.0
 offset_right = 0.049987793
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_wecuh")
 
 [node name="Character3" type="Button" parent="Characters/VBoxContainer" unique_id=1929784093]
@@ -545,6 +547,7 @@ anchor_right = 0.98700005
 anchor_bottom = 1.0
 offset_right = -0.05000305
 offset_bottom = 3.0
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_cnbj2")
 
 [node name="Skill" type="Control" parent="." unique_id=1150963434]
@@ -587,6 +590,7 @@ anchors_preset = -1
 anchor_right = 0.98700005
 anchor_bottom = 1.0
 offset_right = -0.05000305
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_geusa")
 
 [node name="Skill2" type="Button" parent="Skill/VBoxContainer" unique_id=260171594]
@@ -602,6 +606,7 @@ anchors_preset = -1
 anchor_right = 0.99300003
 anchor_bottom = 1.0
 offset_right = 0.049987793
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_1thcu")
 
 [node name="Skill3" type="Button" parent="Skill/VBoxContainer" unique_id=34176200]
@@ -618,6 +623,7 @@ anchor_right = 0.99300003
 anchor_bottom = 1.0
 offset_right = 0.049987793
 offset_bottom = 1.0
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_miyvt")
 
 [node name="ChatBox" parent="." unique_id=1946247923 instance=ExtResource("2_chat_box")]

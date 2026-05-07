@@ -179,6 +179,8 @@ const queueStatus = (req, res) => {
         const room = rooms[code];
         if (!room.matchmaking) continue;
         if (room.status !== 'lobby') continue;
+        // Both players must be present for a valid match
+        if (!room.host_id || !room.guest_id) continue;
         if (room.host_id == actorId || room.guest_id == actorId) {
             _touchRoomPresence(room, actorId);
             const role = room.host_id == actorId ? 'host' : 'guest';
@@ -422,7 +424,18 @@ const matchmake = async (req, res) => {
         return res.status(429).json({ message: 'Matchmaking penalty active. Please wait before queuing again.' });
     }
 
-    // ── Queue-based matchmaking ──────────────────────────────────────────
+    // Always clean up any stale lobby rooms for this user before queuing.
+    // This handles the case where the client quit without sending DELETE.
+    for (const c in rooms) {
+        const r = rooms[c];
+        if (!r.matchmaking) continue;
+        if (r.status === 'started') continue; // don't touch in-progress games
+        if (r.host_id == actorId || r.guest_id == actorId) {
+            console.log(`[Matchmaking] Cleaning up stale room ${c} for user ${actorId}`);
+            delete rooms[c];
+        }
+    }
+
     // Remove any stale queue entry for this user first
     const existingIdx = matchmakingQueue.findIndex(e => e.user_id == actorId);
     if (existingIdx !== -1) matchmakingQueue.splice(existingIdx, 1);
