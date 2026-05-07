@@ -809,7 +809,12 @@ const updateRematch = (req, res) => {
         room.first_finish_at = 0;
         room.first_finish_by = null;
         room.round_id = 0;
-        
+
+        // Fresh 60s selection window for the rematch
+        if (room.matchmaking) {
+            room.matchmaking_deadline_at = Date.now() + 60000;
+        }
+
         // Clear selections
         room.host_character = null;
         room.host_skills = [];
@@ -820,7 +825,7 @@ const updateRematch = (req, res) => {
         room.host_mutations = [];
         room.host_hp = 100;
         room.host_streak = 0;
-        
+
         room.guest_character = null;
         room.guest_skills = [];
         room.guest_passive = "";
@@ -830,11 +835,11 @@ const updateRematch = (req, res) => {
         room.guest_mutations = [];
         room.guest_hp = 100;
         room.guest_streak = 0;
-        
+
         // Reset rematch flags
         room.host_wants_rematch = false;
         room.guest_wants_rematch = false;
-        
+
         // Clear forfeit if any
         room.forfeit = null;
         room.disconnect = null;

@@ -157,8 +157,9 @@ func _initiate_rematch():
 	GameManager.opponent_name = ""
 	SkillsManager.selected_skills.clear()
 	SkillsManager.selected_passive = ""
-	# Rematch is always a custom room — not matchmaking
-	GameManager.is_matchmaking = false
+	# Keep is_matchmaking as-is — the lobby scene uses it to show the correct UI.
+	# current_room is preserved so custom_room.gd rejoins the existing reset room
+	# instead of creating a new one.
 	get_tree().change_scene_to_file("res://scenes/ui/custom_room.tscn")
 
 func _on_back_pressed():
