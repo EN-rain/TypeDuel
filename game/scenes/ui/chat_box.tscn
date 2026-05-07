@@ -6,24 +6,13 @@
 [ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="3_8duet"]
 [ext_resource type="Texture2D" uid="uid://d2pef68okqu8n" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabC-Sheet.png" id="4_8duet"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
-content_margin_bottom = 4.0
-bg_color = Color(0, 0, 0, 0)
-border_width_bottom = 2
-border_color = Color(1, 1, 1, 0.6)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fake_input"]
 content_margin_bottom = 4.0
 bg_color = Color(0, 0, 0, 0)
 border_width_bottom = 2
 border_color = Color(0, 0, 0, 0.8)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_chatbg"]
-texture = ExtResource("2_ekf4m")
-texture_margin_left = 8.0
-texture_margin_top = 8.0
-texture_margin_right = 8.0
-texture_margin_bottom = 8.0
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8duet"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ekf4m"]
 texture = ExtResource("3_8duet")
@@ -48,6 +37,12 @@ texture = ExtResource("3_8duet")
 expand_margin_top = 5.0
 expand_margin_bottom = 5.0
 region_rect = Rect2(200.70346, 0.26227188, 85.59955, 30.935719)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.6)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_54s74"]
 texture = ExtResource("3_8duet")
@@ -94,21 +89,31 @@ drag_and_drop_selection_enabled = false
 unique_name_in_owner = true
 texture_filter = 1
 layout_mode = 0
-offset_left = -451.0
+offset_left = -494.0
 offset_top = -608.0
-offset_right = -24.0
+offset_right = -67.0
 offset_bottom = 40.0
-theme_override_styles/panel = SubResource("StyleBoxTexture_chatbg")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_8duet")
+
+[node name="TextureRect" type="TextureRect" parent="ChatPanel" unique_id=1811200690]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_ekf4m")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ChatPanel" unique_id=1562125884]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 46.0
-offset_right = -10.0
-offset_bottom = -54.0
+offset_left = 38.0
+offset_top = 94.0
+offset_right = -35.0
+offset_bottom = -88.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -117,6 +122,7 @@ layout_mode = 2
 
 [node name="GlobalBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=923167655]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("2_ttgj5")
@@ -128,6 +134,7 @@ text = "Global"
 
 [node name="LocalBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=123456789]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("2_ttgj5")
@@ -139,6 +146,7 @@ text = "Local"
 
 [node name="FriendBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=807212193]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("2_ttgj5")

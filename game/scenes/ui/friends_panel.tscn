@@ -1,7 +1,10 @@
 [gd_scene format=3 uid="uid://bkqnn57tfo72j"]
 
 [ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="1_7aone"]
-[ext_resource type="Texture2D" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="2_82mst"]
+[ext_resource type="Texture2D" uid="uid://hcq5v2df66mt" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoul9SlicesA-Sheet.png" id="1_82mst"]
+[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="2_82mst"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_82mst"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_eawe5"]
 texture = ExtResource("2_82mst")
@@ -33,16 +36,27 @@ offset_right = 200.0
 offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_82mst")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1485245460]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_82mst")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=546762740]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 15.0
-offset_top = 15.0
-offset_right = -15.0
-offset_bottom = -15.0
+offset_left = 35.0
+offset_top = 62.0
+offset_right = -33.0
+offset_bottom = -74.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
@@ -66,6 +80,7 @@ placeholder_text = "Enter username to add..."
 
 [node name="AddBtn" type="Button" parent="VBoxContainer/SearchHBox" unique_id=8381194]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
 theme_override_fonts/font = ExtResource("1_7aone")
@@ -76,6 +91,7 @@ text = " Add "
 
 [node name="ReqBtn" type="Button" parent="VBoxContainer/SearchHBox" unique_id=8381195]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_7aone")
 theme_override_styles/normal = SubResource("StyleBoxTexture_e00x1")

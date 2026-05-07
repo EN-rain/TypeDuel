@@ -12,14 +12,22 @@ const SKILLS = [
 
 
 @onready var room_code_label  = $RoomCode
-@onready var status_label     = $StatusLabel
-@onready var player1_name     = $Player1Name
-@onready var player2_name     = $Player2Name
-@onready var player2_tag      = $Player2Tag
+@onready var status_label     = $CenterPlaceholder/StatusLabel
+@onready var player1_name     = $CenterPlaceholder/HBoxContainer/Player1Name
+@onready var player2_name     = $CenterPlaceholder/HBoxContainer/Player2Name
+@onready var player2_tag      = $CenterPlaceholder/HBoxContainer2/Player2Tag
 @onready var start_button     = $StartButton
-@onready var player1_tag      = $Player1Tag
+@onready var player1_tag      = $CenterPlaceholder/HBoxContainer2/Player1Tag
 @onready var countdown_timer_label = null  # Created dynamically if needed
 @onready var scene_anim_player = $AnimationPlayer
+
+# Center preview sprites
+@onready var _preview_p1: AnimatedSprite2D = $CenterPlaceholder/HBoxContainer3/Player1/TextureRect/AnimatedSprite2D
+@onready var _preview_p2: AnimatedSprite2D = $CenterPlaceholder/HBoxContainer3/Player2/TextureRect/AnimatedSprite2D
+
+# Info labels
+@onready var _innate_label: Label = $InnateAbility
+@onready var _other_info_label: Label = $OtherInfo
 
 # Character buttons
 @onready var char_button_1 = $Characters/VBoxContainer/Character1
@@ -27,9 +35,9 @@ const SKILLS = [
 @onready var char_button_3 = $Characters/VBoxContainer/Character3
 
 # Skill buttons
-@onready var skill_button_1 = $Skill/VBoxContainer/Skill1
-@onready var skill_button_2 = $Skill/VBoxContainer/Skill2
-@onready var skill_button_3 = $Skill/VBoxContainer/Skill3
+@onready var skill_button_1 = $Skill/hBoxContainer/Skill1
+@onready var skill_button_2 = $Skill/hBoxContainer/Skill2
+@onready var skill_button_3 = $Skill/hBoxContainer/Skill3
 
 # Passive buttons
 @onready var passive_button_1 = $Passive/HBoxContainer/VBoxContainer1/Passive1
@@ -41,6 +49,39 @@ const SKILLS = [
 @export var selected_char_color: Color = Color.GREEN
 @export var selected_skill_color: Color = Color.CYAN
 @export var selected_passive_color: Color = Color.PURPLE
+
+# ── Character preview data ────────────────────────────────────────────────────
+# Maps character name → SpriteFrames resource path and idle animation name.
+# Zephon uses a different idle animation name than the other two.
+const CHAR_SPRITE_FRAMES = {
+	"Riven":  "res://assets/spriteframes/riven.tres",
+	"Zephon": "res://assets/spriteframes/zephone.tres",
+	"Liora":  "res://assets/spriteframes/leora.tres",
+}
+const CHAR_IDLE_ANIM = {
+	"Riven":  "idle",
+	"Zephon": "zephon-idle",
+	"Liora":  "idle",
+}
+
+# ── Innate / skill / passive descriptions ─────────────────────────────────────
+const CHAR_INNATE_TEXT = {
+	"Riven":  "Bloodlust: Every round she deals damage she loses 3HP. Win 2 consecutive rounds to pause self-damage and reset the streak.",
+	"Zephon": "Overdrive: When Mana reaches 9 or higher, gain +5 bonus damage to your attack. Also gains +1 extra Mana per accurate word when WPM > 80.",
+	"Liora":  "Grace: Every round accuracy above 95% heals 3HP. Capped at 15HP total per match.",
+}
+const SKILL_HOVER_TEXT = {
+	"quickslash": "Quickslash (2M): WPM-based attack. Deals more damage the faster you type. Bonus ×1.1 on win, ×1.2 with a win streak, ×1.2 extra on full power.",
+	"whiplash":   "Whiplash (2M): Accuracy-based attack. Deals ×2 damage if the opponent had a win streak. Also drains 1 Mana from the target on win.",
+	"soulbreak":  "Soulbreak (3M): WPM-based heavy attack. Steals 2 Mana from the opponent on win (4 on full power). +15% bonus if you have 8+ Mana.",
+}
+const PASSIVE_HOVER_TEXT = {
+	"reversal": "Reversal: When you finish first, one random untyped word in the opponent's sentence has its letters reversed.",
+	"jumble":   "Jumble: When your Mana reaches 7 or higher, the remaining words in the opponent's sentence are shuffled.",
+	"phantom":  "Phantom: Randomly swaps two untyped words in the opponent's sentence. Stacks up to 3 times with high accuracy.",
+	"stutter":  "Stutter: Duplicates a random word in the opponent's sentence, forcing them to type it twice.",
+	"erosion":  "Erosion: Every 3 accurately typed words, replaces a random character in one of the opponent's upcoming words with an underscore.",
+}
 
 var room_code: String   = ""
 var my_user_id: int     = 0
@@ -111,6 +152,9 @@ func _ready():
 		start_button.hide()
 	else:
 		player1_name.text = my_name
+		player1_tag.text  = "Host"
+		player2_name.text = "Waiting..."
+		player2_tag.text  = "Waiting..."
 		if GameManager.current_room != "":
 			room_code = GameManager.current_room
 			room_code_label.text = room_code
@@ -153,13 +197,6 @@ func _ready():
 	room_code_label.gui_input.connect(_on_room_code_input)
 
 	_setup_ui()
-	_setup_chat()
-
-func _setup_chat():
-	if room_code == "" or not has_node("ChatBox"): return
-	$ChatBox.room_id = room_code
-
-
 
 func _process(delta: float):
 
@@ -419,7 +456,7 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 			# Guest hasn't joined yet or already handled
 			guest_joined = false
 			player2_name.text = "Waiting..."
-			player2_tag.text = ""
+			player2_tag.text = "Waiting..."
 			_opp_character = ""
 			_opp_skills = []
 			_opp_passive = ""
@@ -532,6 +569,49 @@ func _is_local_selection_out_of_sync(room_json: Dictionary) -> bool:
 
 # ── Dynamic UI setup ────────────────────────────────────────────────────────
 
+# ── Preview / info helpers ────────────────────────────────────────────────────
+
+func _update_player_preview(char_name: String) -> void:
+	if not is_instance_valid(_preview_p1): return
+	if char_name == "" or not CHAR_SPRITE_FRAMES.has(char_name):
+		_preview_p1.visible = false
+		return
+	var frames = load(CHAR_SPRITE_FRAMES[char_name]) as SpriteFrames
+	if frames == null: return
+	_preview_p1.sprite_frames = frames
+	var anim = CHAR_IDLE_ANIM.get(char_name, "idle")
+	if _preview_p1.sprite_frames.has_animation(anim):
+		_preview_p1.play(anim)
+	_preview_p1.visible = true
+
+func _update_opponent_preview(char_name: String) -> void:
+	if not is_instance_valid(_preview_p2): return
+	if char_name == "" or not CHAR_SPRITE_FRAMES.has(char_name):
+		_preview_p2.visible = false
+		return
+	var frames = load(CHAR_SPRITE_FRAMES[char_name]) as SpriteFrames
+	if frames == null: return
+	_preview_p2.sprite_frames = frames
+	var anim = CHAR_IDLE_ANIM.get(char_name, "idle")
+	if _preview_p2.sprite_frames.has_animation(anim):
+		_preview_p2.play(anim)
+	_preview_p2.visible = true
+
+func _update_innate_info(char_name: String) -> void:
+	if not is_instance_valid(_innate_label): return
+	if char_name == "" or not CHAR_INNATE_TEXT.has(char_name):
+		_innate_label.text = "Select a character to view innate ability."
+		return
+	_innate_label.text = CHAR_INNATE_TEXT[char_name]
+
+func _show_other_info(text: String) -> void:
+	if not is_instance_valid(_other_info_label): return
+	_other_info_label.text = text
+
+func _clear_other_info() -> void:
+	if not is_instance_valid(_other_info_label): return
+	_other_info_label.text = "Hover a skill or passive to see details."
+
 func _setup_ui():
 	"""Setup button arrays and initial UI state"""
 	# Build button arrays from scene nodes
@@ -548,12 +628,34 @@ func _setup_ui():
 	
 	for i in range(min(GameManager.PASSIVES.size(), _passive_buttons.size())):
 		_passive_buttons[i].text = GameManager.PASSIVES[i]["name"]
-	
+
+	# Hide center previews until characters are selected
+	if is_instance_valid(_preview_p1): _preview_p1.visible = false
+	if is_instance_valid(_preview_p2): _preview_p2.visible = false
+
+	# Wire skill hover signals
+	for i in range(_skill_buttons.size()):
+		var skill_id = SKILLS[i]["id"]
+		_skill_buttons[i].mouse_entered.connect(_show_other_info.bind(SKILL_HOVER_TEXT.get(skill_id, "")))
+		_skill_buttons[i].mouse_exited.connect(_clear_other_info)
+
+	# Wire passive hover signals
+	for i in range(_passive_buttons.size()):
+		var passive_id = GameManager.PASSIVES[i]["id"]
+		_passive_buttons[i].mouse_entered.connect(_show_other_info.bind(PASSIVE_HOVER_TEXT.get(passive_id, "")))
+		_passive_buttons[i].mouse_exited.connect(_clear_other_info)
+
+	# Set initial placeholder text
+	_update_innate_info("")
+	_clear_other_info()
+
 	_refresh_ui()
 
 func _on_char_selected(char_name: String):
 	print("[Lobby] Character selected: %s" % char_name)
 	GameManager.selected_character = char_name
+	_update_player_preview(char_name)
+	_update_innate_info(char_name)
 	_refresh_ui()
 	_sync_selections()
 
@@ -571,7 +673,19 @@ func _on_passive_selected(passive_id: String):
 
 func _refresh_ui():
 	for i in _char_buttons.size():
-		_char_buttons[i].modulate = selected_char_color if GameManager.selected_character == CHARACTERS[i] else Color.WHITE
+		var sprite := _char_buttons[i].get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+		var is_selected = GameManager.selected_character == CHARACTERS[i]
+		# Remove the green tint — use animation state instead:
+		# selected = playing idle, unselected = paused on first frame
+		_char_buttons[i].modulate = Color.WHITE
+		if sprite != null:
+			var anim = CHAR_IDLE_ANIM.get(CHARACTERS[i], "idle")
+			if is_selected:
+				if not sprite.is_playing():
+					sprite.play(anim)
+			else:
+				sprite.stop()
+				sprite.frame = 0
 	for i in _skill_buttons.size():
 		var id = SKILLS[i]["id"]
 		_skill_buttons[i].modulate = selected_skill_color if SkillsManager.selected_skills.has(id) else Color.WHITE
@@ -579,6 +693,10 @@ func _refresh_ui():
 		var id = GameManager.PASSIVES[i]["id"]
 		_passive_buttons[i].modulate = selected_passive_color if SkillsManager.selected_passive == id else Color.WHITE
 	
+	# Sync preview sprites with current selections
+	_update_player_preview(GameManager.selected_character)
+	_update_opponent_preview(_opp_character)
+
 	# Update own tag
 	if GameManager.is_host:
 		if GameManager.selected_character != "":
