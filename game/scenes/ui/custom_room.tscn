@@ -2,13 +2,14 @@
 
 [ext_resource type="Script" uid="uid://cdsv6vd7esyby" path="res://scenes/ui/custom_room.gd" id="1_custom_room_script"]
 [ext_resource type="PackedScene" uid="uid://cw6ya0kyka2o7" path="res://scenes/ui/chat_box.tscn" id="2_chat_box"]
-[ext_resource type="Texture2D" uid="uid://ic0is52jbtpd" path="res://assets/GUI/colosseum-bg.png" id="2_xghyf"]
+[ext_resource type="Texture2D" uid="uid://knxiuy7qi2cg" path="res://assets/GUI/colosseum-bg.png" id="2_xghyf"]
+[ext_resource type="Texture2D" uid="uid://c2b76rwjodavs" path="res://assets/GUI/FREE RPG SKILL ICONS 32x32/SKILL ICONS.png" id="4_cvmnq"]
 [ext_resource type="Texture2D" uid="uid://ckawbo5yt310e" path="res://assets/GUI/skills.png" id="4_mqf87"]
-[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_qkbvd"]
+[ext_resource type="Texture2D" uid="uid://rfvv3o4lhaev" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_qkbvd"]
 [ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="4_rndi5"]
 [ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="5_qkbvd"]
-[ext_resource type="Texture2D" uid="uid://bqqanitehsl4m" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_ugbnh"]
-[ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="7_10h8c"]
+[ext_resource type="Texture2D" uid="uid://d3jct2xqj1e5l" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_ugbnh"]
+[ext_resource type="Texture2D" uid="uid://d166euwfpuobv" path="res://assets/sprites/character-idle.png" id="7_10h8c"]
 
 [sub_resource type="Animation" id="Animation_custom_room_intro"]
 resource_name = "intro"
@@ -47,7 +48,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.6),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(1352, 328), Vector2(1093, 328)]
+"values": [Vector2(1352, 324), Vector2(1093, 324)]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -59,7 +60,7 @@ tracks/3/keys = {
 "times": PackedFloat32Array(0, 0.6),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(1152, 450), Vector2(845, 450)]
+"values": [Vector2(1152, 480), Vector2(845, 480)]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
@@ -263,27 +264,57 @@ texture = ExtResource("5_ugbnh")
 texture = ExtResource("5_ugbnh")
 modulate_color = Color(0.75173104, 0.75173104, 0.75173104, 1)
 
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ekhvr"]
+texture = ExtResource("7_10h8c")
+region_rect = Rect2(18.429283, 14.937465, 24.853252, 23.16632)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_wecuh"]
+texture = ExtResource("7_10h8c")
+region_rect = Rect2(19.828545, 165.77744, 22.467289, 21.44719)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cnbj2"]
+texture = ExtResource("7_10h8c")
+region_rect = Rect2(18.538803, 314.81, 24.458694, 23.647919)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_geusa"]
+texture = ExtResource("4_cvmnq")
+region_rect = Rect2(65.47752, 1.4166317, 29.380013, 28.727123)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_1thcu"]
+texture = ExtResource("4_cvmnq")
+region_rect = Rect2(224.38962, 96.43098, 30.472015, 30.323067)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_miyvt"]
+texture = ExtResource("4_cvmnq")
+region_rect = Rect2(128.2449, 129.28754, 29.262817, 28.83873)
+
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_rndi5"]
 texture = ExtResource("4_mqf87")
 region_rect = Rect2(4.41037, 4.2704926, 273.46075, 262.56982)
+modulate_color = Color(0.56046253, 0.56046253, 0.56046253, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mqf87"]
 texture = ExtResource("4_mqf87")
 region_rect = Rect2(281.82672, 0, 279.60553, 270.43643)
+modulate_color = Color(0.56078434, 0.56078434, 0.56078434, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qkbvd"]
 texture = ExtResource("4_mqf87")
 region_rect = Rect2(564.69745, 0, 279.52765, 270.17004)
+modulate_color = Color(0.56078434, 0.56078434, 0.56078434, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ugbnh"]
 texture = ExtResource("4_mqf87")
 region_rect = Rect2(840.60114, 0, 291.87396, 271.67148)
+modulate_color = Color(0.56078434, 0.56078434, 0.56078434, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_10h8c"]
 texture = ExtResource("4_mqf87")
 region_rect = Rect2(1130.8264, 0, 277.17358, 269.4471)
+modulate_color = Color(0.56078434, 0.56078434, 0.56078434, 1)
 
 [node name="CustomRoom" type="Control" unique_id=508700511]
+modulate = Color(1, 1, 1, 0.6952593)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -308,6 +339,7 @@ texture = ExtResource("2_xghyf")
 libraries/ = SubResource("AnimationLibrary_custom_room")
 
 [node name="BackButton" type="Button" parent="." unique_id=1300449507]
+modulate = Color(1, 1, 1, 0.6952593)
 custom_minimum_size = Vector2(100, 40)
 layout_mode = 0
 offset_left = 20.0
@@ -324,6 +356,7 @@ theme_override_styles/hover = SubResource("StyleBoxTexture_ol8sf")
 text = "Back"
 
 [node name="StatusLabel" type="Label" parent="." unique_id=1720687791]
+modulate = Color(1, 1, 1, 0.6952593)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -342,6 +375,7 @@ text = "Waiting for opponent..."
 horizontal_alignment = 1
 
 [node name="Player1Name" type="Label" parent="." unique_id=973437162]
+modulate = Color(1, 1, 1, 0.6952593)
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 0
 offset_left = 327.0
@@ -353,6 +387,7 @@ text = "You"
 horizontal_alignment = 1
 
 [node name="Player1Tag" type="Label" parent="." unique_id=363448244]
+modulate = Color(1, 1, 1, 0.6952593)
 layout_mode = 0
 offset_left = 326.0
 offset_top = 295.0
@@ -363,6 +398,7 @@ text = "Host"
 horizontal_alignment = 1
 
 [node name="Player2Name" type="Label" parent="." unique_id=1574955879]
+modulate = Color(1, 1, 1, 0.6952593)
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 0
 offset_left = 646.0
@@ -374,6 +410,7 @@ text = "---"
 horizontal_alignment = 1
 
 [node name="Player2Tag" type="Label" parent="." unique_id=594675752]
+modulate = Color(1, 1, 1, 0.6952593)
 layout_mode = 0
 offset_left = 647.0
 offset_top = 272.0
@@ -384,6 +421,7 @@ text = "Waiting..."
 horizontal_alignment = 1
 
 [node name="StartButton" type="Button" parent="." unique_id=1078626780]
+modulate = Color(1, 1, 1, 0.6952593)
 custom_minimum_size = Vector2(200, 55)
 layout_mode = 1
 anchors_preset = 8
@@ -407,6 +445,7 @@ disabled = true
 text = "Start Game"
 
 [node name="VSLabel" type="Label" parent="." unique_id=1982737506]
+modulate = Color(1, 1, 1, 0.6952593)
 layout_mode = 0
 offset_left = 543.0
 offset_top = 345.0
@@ -417,6 +456,7 @@ text = "VS"
 vertical_alignment = 1
 
 [node name="RoomCodeLabel" type="Label" parent="." unique_id=650404980]
+modulate = Color(1, 1, 1, 0.6952593)
 layout_mode = 0
 offset_left = 426.0
 offset_top = 30.0
@@ -428,6 +468,7 @@ text = "YOUR ROOM CODE"
 horizontal_alignment = 1
 
 [node name="RoomCode" type="Label" parent="." unique_id=381480670]
+modulate = Color(1, 1, 1, 0.6952593)
 layout_mode = 0
 offset_left = 426.0
 offset_top = 52.0
@@ -443,8 +484,8 @@ layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_left = 23.0
-offset_right = 63.0
+offset_left = -44.957184
+offset_right = -4.957184
 offset_bottom = 40.0
 grow_vertical = 2
 
@@ -462,29 +503,49 @@ theme_override_constants/separation = 15
 [node name="Character1" type="Button" parent="Characters/VBoxContainer" unique_id=282563812]
 custom_minimum_size = Vector2(150, 80)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("4_rndi5")
 text = "Character 1"
 
-[node name="TextureRect" type="TextureRect" parent="Characters/VBoxContainer/Character1" unique_id=458217733]
+[node name="Avatar" type="Panel" parent="Characters/VBoxContainer/Character1" unique_id=123659787]
+show_behind_parent = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("7_10h8c")
-expand_mode = 1
+theme_override_styles/panel = SubResource("StyleBoxTexture_ekhvr")
 
 [node name="Character2" type="Button" parent="Characters/VBoxContainer" unique_id=1818998384]
 custom_minimum_size = Vector2(150, 80)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("4_rndi5")
 text = "Character 2"
-clip_contents = false
+
+[node name="Avatar" type="Panel" parent="Characters/VBoxContainer/Character2" unique_id=2015934361]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.99300003
+anchor_bottom = 1.0
+offset_right = 0.049987793
+theme_override_styles/panel = SubResource("StyleBoxTexture_wecuh")
 
 [node name="Character3" type="Button" parent="Characters/VBoxContainer" unique_id=1929784093]
 custom_minimum_size = Vector2(150, 80)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("4_rndi5")
 text = "Character 3"
-clip_contents = false
+
+[node name="Avatar" type="Panel" parent="Characters/VBoxContainer/Character3" unique_id=321290753]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.98700005
+anchor_bottom = 1.0
+offset_right = -0.05000305
+offset_bottom = 3.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_cnbj2")
 
 [node name="Skill" type="Control" parent="." unique_id=1150963434]
 layout_mode = 1
@@ -493,10 +554,9 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -59.0
-offset_top = 4.0
-offset_right = -19.0
-offset_bottom = 44.0
+offset_left = 19.927856
+offset_right = 59.927856
+offset_bottom = 40.0
 grow_horizontal = 0
 grow_vertical = 2
 
@@ -517,23 +577,54 @@ theme_override_constants/separation = 15
 [node name="Skill1" type="Button" parent="Skill/VBoxContainer" unique_id=2113046492]
 custom_minimum_size = Vector2(150, 60)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("4_rndi5")
 text = "Skill 1"
+
+[node name="Skill" type="Panel" parent="Skill/VBoxContainer/Skill1" unique_id=1242886133]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.98700005
+anchor_bottom = 1.0
+offset_right = -0.05000305
+theme_override_styles/panel = SubResource("StyleBoxTexture_geusa")
 
 [node name="Skill2" type="Button" parent="Skill/VBoxContainer" unique_id=260171594]
 custom_minimum_size = Vector2(150, 60)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("4_rndi5")
 text = "Skill 2"
+
+[node name="Skill" type="Panel" parent="Skill/VBoxContainer/Skill2" unique_id=1054735213]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.99300003
+anchor_bottom = 1.0
+offset_right = 0.049987793
+theme_override_styles/panel = SubResource("StyleBoxTexture_1thcu")
 
 [node name="Skill3" type="Button" parent="Skill/VBoxContainer" unique_id=34176200]
 custom_minimum_size = Vector2(150, 60)
 layout_mode = 2
+theme_override_fonts/font = ExtResource("4_rndi5")
 text = "Skill 3"
+
+[node name="Skill" type="Panel" parent="Skill/VBoxContainer/Skill3" unique_id=1794694821]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.99300003
+anchor_bottom = 1.0
+offset_right = 0.049987793
+offset_bottom = 1.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_miyvt")
 
 [node name="ChatBox" parent="." unique_id=1946247923 instance=ExtResource("2_chat_box")]
 layout_mode = 1
-offset_left = 10.0
+offset_left = -84.469635
 offset_top = -50.0
-offset_right = 310.0
+offset_right = 215.53036
 offset_bottom = -10.0
 
 [node name="Passive" type="Control" parent="." unique_id=1756940328]
@@ -543,16 +634,17 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -307.0
-offset_top = -198.0
-offset_right = -307.0
+offset_left = -213.44458
+offset_top = -168.0
+offset_right = -212.44458
+offset_bottom = 14.999817
 grow_horizontal = 0
 grow_vertical = 0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Passive" unique_id=1077965648]
 layout_mode = 0
-offset_right = 56.0
-offset_bottom = 40.0
+offset_right = 218.0
+offset_bottom = 144.0
 
 [node name="VBoxContainer1" type="VBoxContainer" parent="Passive/HBoxContainer" unique_id=124835383]
 layout_mode = 2
