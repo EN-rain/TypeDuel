@@ -11,6 +11,7 @@ signal connection_status_changed(online: bool)
 
 var is_online: bool = true
 var _connection_error_overlay: CanvasLayer = null
+var _consecutive_connection_failures: int = 0
 const CONNECTION_LOST_SCENE = preload("res://scenes/ui/connection_lost_overlay.tscn")
 
 const PASSIVES = [
@@ -88,6 +89,8 @@ func _create_persistent_background():
 	get_tree().root.child_entered_tree.connect(_on_scene_changed)
 
 func set_connection_online(online: bool) -> void:
+	if online:
+		_consecutive_connection_failures = 0
 	if online == is_online:
 		return
 	is_online = online
@@ -130,9 +133,17 @@ func _check_connection():
 func _on_connection_check_completed(result, response_code, _headers, _body, http_node):
 	if is_instance_valid(http_node):
 		http_node.queue_free()
-		
-	var currently_online = (result == HTTPRequest.RESULT_SUCCESS and response_code == 200)
-	set_connection_online(currently_online)
+
+	var success = (result == HTTPRequest.RESULT_SUCCESS and response_code == 200)
+	if success:
+		_consecutive_connection_failures = 0
+		set_connection_online(true)
+	else:
+		_consecutive_connection_failures += 1
+		# Require 2 consecutive failures before showing the overlay — avoids
+		# false positives from a single slow or dropped response on stable internet
+		if _consecutive_connection_failures >= 2:
+			set_connection_online(false)
 
 func _create_connection_overlay():
 	_connection_error_overlay = CanvasLayer.new()

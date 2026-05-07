@@ -669,7 +669,18 @@ const updateProgress = (req, res) => {
         if (send_mutation) room.guest_mutations.push(send_mutation);
         // Only store chosen skill during typing phase — prevents stale values from a
         // finished round's sync_progress_immediate bleeding into the next skill-select
-        if (req.body.chosen_skill !== undefined && room.phase === 'typing') room.host_skill = String(req.body.chosen_skill || '');
+        if (req.body.chosen_skill !== undefined && room.phase === 'typing') {
+            const chosen = String(req.body.chosen_skill || '');
+            if (chosen !== '') {
+                if (!VALID_SKILLS.has(chosen)) {
+                    return res.status(400).json({ message: 'Invalid chosen_skill' });
+                }
+                if (!Array.isArray(room.host_skills) || !room.host_skills.includes(chosen)) {
+                    return res.status(400).json({ message: 'chosen_skill is not in host loadout' });
+                }
+            }
+            room.host_skill = chosen;
+        }
     } else if (room.guest_id == actorId) {
         if (progressNum !== undefined && Number.isFinite(progressNum)) room.guest_progress = Math.min(1.0, Math.max(0.0, progressNum));
         if (typosNum !== undefined && Number.isFinite(typosNum)) room.guest_typos = Math.min(MAX_TYPOS, Math.max(0, Math.floor(typosNum)));
@@ -684,7 +695,18 @@ const updateProgress = (req, res) => {
         if (send_mutation) room.host_mutations.push(send_mutation);
         // Only store chosen skill during typing phase — prevents stale values from a
         // finished round's sync_progress_immediate bleeding into the next skill-select
-        if (req.body.chosen_skill !== undefined && room.phase === 'typing') room.guest_skill = String(req.body.chosen_skill || '');
+        if (req.body.chosen_skill !== undefined && room.phase === 'typing') {
+            const chosen = String(req.body.chosen_skill || '');
+            if (chosen !== '') {
+                if (!VALID_SKILLS.has(chosen)) {
+                    return res.status(400).json({ message: 'Invalid chosen_skill' });
+                }
+                if (!Array.isArray(room.guest_skills) || !room.guest_skills.includes(chosen)) {
+                    return res.status(400).json({ message: 'chosen_skill is not in guest loadout' });
+                }
+            }
+            room.guest_skill = chosen;
+        }
     } else {
         return res.status(403).json({ message: 'Not in this room' });
     }
@@ -803,4 +825,3 @@ const updateRematch = (req, res) => {
 };
 
 module.exports = { createRoom, joinRoom, getRoomStatus, closeRoom, leaveRoom, matchmake, leaveQueue, queueStatus, listRooms, updateSelections, startRoomGame, updatePhase, updateProgress, updateHP, updateRematch };
-

@@ -512,6 +512,11 @@ func _on_room_polled(room: Dictionary) -> void:
 	if _server_phase == "typing" and _server_typing_started_at_ms > 0.0:
 		_typing_go_at_ms = _server_typing_started_at_ms
 	net.apply_hp_from_room(room)
+	# Opponent mana: sync from server regardless of phase so fast-forward
+	# can detect when opponent has spent their mana during skill_select
+	if net.opp_mana >= 0 and SkillsManager.opponent_mana != net.opp_mana:
+		_log("[ManaSync] Updating opponent mana from server: %d → %d" % [SkillsManager.opponent_mana, net.opp_mana])
+		SkillsManager.opponent_mana = net.opp_mana
 	# Phase transitions
 	if _server_phase == "typing" and current_state == GameState.SKILL_SELECT and _server_round_id <= _last_resolved_round_id:
 		return
@@ -533,11 +538,6 @@ func _on_room_polled(room: Dictionary) -> void:
 			_log("[Net] Phase->skill_select (server, from RESOLVING) | round_id=%d" % _server_round_id)
 			start_skill_phase(false)
 	if current_state != GameState.TYPING: return
-	# Opponent mana: use server-synced value (real-time sync enabled)
-	if net.opp_mana >= 0:
-		if SkillsManager.opponent_mana != net.opp_mana:
-			_log("[ManaSync] Updating opponent mana from server: %d → %d" % [SkillsManager.opponent_mana, net.opp_mana])
-		SkillsManager.opponent_mana = net.opp_mana
 	# Apply incoming mutations
 	for mut in net.consume_new_mutations():
 		typing.apply_mutation(mut)

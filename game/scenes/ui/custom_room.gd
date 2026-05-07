@@ -60,6 +60,7 @@ var _opp_passive: String      = ""
 var _matchmaking_deadline_unix_ms: float = 0.0
 var _matchmaking_forfeit_handled: bool = false
 var _matchmaking_start_sent: bool = false
+var _matchmaking_start_retry_at: float = 0.0  # earliest time to retry after a 409
 var _last_room_seq: int = -1
 var _last_server_now_ms: float = 0.0
 var _opponent_left_lobby: bool = false
@@ -201,7 +202,8 @@ func _process_matchmaking_rules():
 	# Auto-start when both ready
 	if my_ready and opp_ready:
 		status_label.text = "Both ready! Starting..."
-		if GameManager.is_host and not _matchmaking_start_sent:
+		var now_sec = Time.get_ticks_msec() / 1000.0
+		if GameManager.is_host and not _matchmaking_start_sent and now_sec >= _matchmaking_start_retry_at:
 			_matchmaking_start_sent = true
 			var role = "HOST" if GameManager.is_host else "GUEST"
 			print("[Lobby][%s] Both players ready, sending start request..." % role)
@@ -335,16 +337,15 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		http.queue_free()
 	_poll_in_flight = false
 	if code != 200:
-		# Matchmaking forfeits/room closes show up as 404.
-		# If the room is gone but WE didn't initiate the leave, we are the 'innocent' party.
-		# Ignore 404s during the grace period — room may not be fully set up yet.
 		var past_grace = (Time.get_ticks_msec() / 1000.0) >= _lobby_ready_time
 		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled and past_grace:
-			# Show popup that opponent left instead of immediate forfeit
-			_opponent_left_lobby = true
-			_show_opponent_left_popup()
+			# Only treat as "opponent left" if we ourselves are fully ready.
+			# If we're still selecting, a transient server error shouldn't end the match.
+			if _is_me_ready():
+				_opponent_left_lobby = true
+				_show_opponent_left_popup()
+			# else: ignore — likely a transient error while we're still setting up
 		else:
-			# Custom room or already handled - just go back
 			_leave_and_menu()
 		return
 	var json = JSON.parse_string(body.get_string_from_utf8())
@@ -361,9 +362,10 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if json.get("status") == "finished":
 		var past_grace = (Time.get_ticks_msec() / 1000.0) >= _lobby_ready_time
 		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled and past_grace:
-			# If the room is finished but we are still here, the opponent left/forfeited.
-			_opponent_left_lobby = true
-			_show_opponent_left_popup()
+			if _is_me_ready():
+				_opponent_left_lobby = true
+				_show_opponent_left_popup()
+			# else: ignore transient finished state while we're still selecting
 		elif not GameManager.is_matchmaking:
 			_leave_and_menu()
 		return
@@ -644,10 +646,10 @@ func _on_start_notified(_result, code, _headers, body, http: HTTPRequest):
 			print("[Lobby][HOST] Match start time set: %f" % GameManager.match_start_time)
 	elif code == 409:
 		# Server rejected start — players not fully ready on server side yet.
-		# (The "already started" case now returns 200 with already_started:true.)
-		# Reset so _process_matchmaking_rules retries once the re-sync completes.
+		# Reset flag but enforce a 1s cooldown before retrying to avoid hammering the server.
 		print("[Lobby][HOST] 409 — not ready on server yet, will retry after sync")
 		_matchmaking_start_sent = false
+		_matchmaking_start_retry_at = Time.get_ticks_msec() / 1000.0 + 1.0
 	else:
 		# Unexpected error — reset so the host can retry
 		print("[Lobby][HOST] Start request failed (code=%d) — resetting for retry" % code)
