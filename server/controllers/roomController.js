@@ -667,9 +667,10 @@ const updateProgress = (req, res) => {
             room.host_typing_start = Date.now();
         }
         if (send_mutation) room.guest_mutations.push(send_mutation);
-        // Only store chosen skill during typing phase — prevents stale values from a
-        // finished round's sync_progress_immediate bleeding into the next skill-select
-        if (req.body.chosen_skill !== undefined && room.phase === 'typing') {
+        // Store chosen skill during skill_select and typing.
+        // skill_select is needed for host fast-forward when both players have chosen.
+        // Stale values are cleared on phase transitions in updatePhase().
+        if (req.body.chosen_skill !== undefined && (room.phase === 'skill_select' || room.phase === 'typing')) {
             const chosen = String(req.body.chosen_skill || '');
             if (chosen !== '') {
                 if (!VALID_SKILLS.has(chosen)) {
@@ -693,9 +694,10 @@ const updateProgress = (req, res) => {
             room.guest_typing_start = Date.now();
         }
         if (send_mutation) room.host_mutations.push(send_mutation);
-        // Only store chosen skill during typing phase — prevents stale values from a
-        // finished round's sync_progress_immediate bleeding into the next skill-select
-        if (req.body.chosen_skill !== undefined && room.phase === 'typing') {
+        // Store chosen skill during skill_select and typing.
+        // skill_select is needed for host fast-forward when both players have chosen.
+        // Stale values are cleared on phase transitions in updatePhase().
+        if (req.body.chosen_skill !== undefined && (room.phase === 'skill_select' || room.phase === 'typing')) {
             const chosen = String(req.body.chosen_skill || '');
             if (chosen !== '') {
                 if (!VALID_SKILLS.has(chosen)) {
