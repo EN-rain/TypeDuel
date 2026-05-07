@@ -16,32 +16,15 @@ func _ready():
 	$AnimationPlayer.play("fade_in")
 
 	display_name_input.text = GameManager.user_data.display_name
+	%UsernameDisplay.text = GameManager.user_data.username
+	%UsernameDisplay.editable = false
 	http_request.request_completed.connect(_on_request_completed)
 	upload_request.request_completed.connect(_on_upload_completed)
 
 	load_current_pfp()
 
 func load_current_pfp():
-	var icon = GameManager.user_data.profile_icon
-	if icon == "default" or icon == "":
-		return
-
-	pfp_rect.texture = null
-
-	var url = GameManager.SERVER_URL + "/uploads/" + icon
-	var loader = HTTPRequest.new()
-	add_child(loader)
-	loader.request_completed.connect(func(_result, response_code, _headers, body):
-		if response_code == 200:
-			var image = Image.new()
-			var error = image.load_png_from_buffer(body)
-			if error != OK:
-				error = image.load_jpg_from_buffer(body)
-			if error == OK:
-				pfp_rect.texture = ImageTexture.create_from_image(image)
-		loader.queue_free()
-	)
-	loader.request(url)
+	GameManager.load_pfp_into(GameManager.user_data.profile_icon, pfp_rect, self)
 
 func _on_change_pfp_button_pressed():
 	file_dialog.popup_centered()

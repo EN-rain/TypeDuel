@@ -44,7 +44,6 @@ var _friends_badge_timer: float = 0.0
 var current_friends_data = []
 var showing_requests = false
 var _last_friends_render_signature: String = ""
-var _avatar_texture_cache: Dictionary = {}
 
 func _enter_tree():
 	# Seek animation to t=0 before first frame so nodes start invisible — prevents blink
@@ -773,35 +772,7 @@ func _create_friend_entry(data: Dictionary):
 	name_label.text = data.display_name if data.display_name else data.username
 	
 	# Set Profile Icon
-	if data.get("profile_icon") and data.profile_icon != "default":
-		var icon_name = data.profile_icon
-		if _avatar_texture_cache.has(icon_name):
-			avatar_icon.texture = _avatar_texture_cache[icon_name]
-		else:
-			var url = GameManager.SERVER_URL + "/uploads/" + icon_name
-			var loader = HTTPRequest.new()
-			var avatar_ref = weakref(avatar_icon)
-			add_child(loader)
-			loader.request_completed.connect(func(_result, response_code, _headers, body):
-				if response_code == 200:
-					var image = Image.new()
-					var error = image.load_png_from_buffer(body)
-					if error != OK:
-						error = image.load_jpg_from_buffer(body)
-					
-					if error == OK:
-						var texture = ImageTexture.create_from_image(image)
-						_avatar_texture_cache[icon_name] = texture
-						var avatar_target = avatar_ref.get_ref()
-						if avatar_target and is_instance_valid(avatar_target):
-							avatar_target.texture = texture
-				if is_instance_valid(loader):
-					loader.queue_free()
-			)
-			loader.request(url)
-	else:
-		# Use a placeholder or nothing
-		avatar_icon.texture = null
+	GameManager.load_pfp_into(data.get("profile_icon", "default"), avatar_icon, self)
 	
 	if data.get("status", "") == "pending":
 		status_label.text = "Pending"

@@ -1,27 +1,15 @@
 [gd_scene format=3 uid="uid://bpbh12tqu7abl"]
 
 [ext_resource type="Script" uid="uid://cm08hoggnme0a" path="res://scenes/ui/account.gd" id="1_settings_script"]
-[ext_resource type="Texture2D" uid="uid://bnh4575ochhxl" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/rf1.png" id="2_7pacj"]
 [ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_8j5j1"]
 [ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="3_4j7lo"]
 [ext_resource type="Texture2D" uid="uid://cfjp1slue2lno" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderA-Sheet.png" id="3_c0ciy"]
+[ext_resource type="Texture2D" uid="uid://clfvkogrp5e3k" path="res://assets/GUI/def.png" id="6_22geo"]
 [ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="6_khvee"]
-[ext_resource type="Texture2D" uid="uid://dekw8dbcmnkrx" path="res://assets/GUI/FREE RPG SKILL ICONS 32x32/Gold Skill Border.png" id="6_txnlg"]
-[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="7_txnlg"]
 [ext_resource type="Texture2D" uid="uid://bdct065ju36yh" path="res://assets/GUI/tinyRPG_manaSoulGUI_v_1_0/goldenbutton.png" id="8_22geo"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4j7lo"]
 texture = ExtResource("3_c0ciy")
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_22geo"]
-texture = ExtResource("6_txnlg")
-region_rect = Rect2(1.7775116, 1.771703, 40.20414, 40.1454)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_txnlg"]
-texture = ExtResource("7_txnlg")
-expand_margin_top = 10.0
-expand_margin_bottom = 10.0
-region_rect = Rect2(202.08957, 0, 82.379486, 31.776203)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_account_input"]
 content_margin_bottom = 4.0
@@ -163,19 +151,6 @@ offset_bottom = 20.0
 grow_horizontal = 0
 grow_vertical = 2
 
-[node name="Border" type="Panel" parent="Control" unique_id=133364715]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.70900005
-anchor_top = 0.404
-anchor_right = 0.70900005
-anchor_bottom = 0.404
-offset_left = -408.36002
-offset_top = -140.16
-offset_right = -149.36
-offset_bottom = 83.84
-theme_override_styles/panel = SubResource("StyleBoxTexture_22geo")
-
 [node name="PFP" type="TextureRect" parent="Control" unique_id=645872083]
 unique_name_in_owner = true
 clip_contents = true
@@ -185,30 +160,28 @@ anchor_left = 0.6197917
 anchor_top = 0.25925925
 anchor_right = 0.7934028
 anchor_bottom = 0.56790125
-offset_left = -470.79166
-offset_top = -206.37038
-offset_right = -127.736115
-offset_bottom = 131.28395
+offset_left = -605.7917
+offset_top = -236.37038
+offset_right = -262.7361
+offset_bottom = 101.28395
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
-texture = ExtResource("2_7pacj")
+texture = ExtResource("6_22geo")
 expand_mode = 1
 stretch_mode = 6
 
 [node name="ChangePFPButton" type="Button" parent="Control" unique_id=1638788306]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = -365.0
-offset_top = 179.0
-offset_right = -165.0
-offset_bottom = 229.0
+offset_left = -500.0
+offset_top = 149.0
+offset_right = -300.0
+offset_bottom = 199.0
 theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("3_4j7lo")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_txnlg")
-theme_override_styles/hover = SubResource("StyleBoxTexture_txnlg")
 text = " "
 
 [node name="TextureRect" type="TextureRect" parent="Control/ChangePFPButton" unique_id=603264184]
@@ -219,7 +192,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("8_22geo")
-metadata/_edit_lock_ = true
 
 [node name="Label" type="Label" parent="Control/ChangePFPButton" unique_id=1372425677]
 layout_mode = 1
@@ -239,7 +211,6 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("3_4j7lo")
 text = "Change"
-metadata/_edit_lock_ = true
 
 [node name="Control2" type="Control" parent="." unique_id=1143818297]
 unique_name_in_owner = true
@@ -259,9 +230,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -100.0
-offset_top = -25.0
+offset_top = 35.0
 offset_right = 100.0
-offset_bottom = 25.0
+offset_bottom = 85.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
@@ -269,8 +240,6 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("3_4j7lo")
 theme_override_font_sizes/font_size = 20
-theme_override_styles/pressed = SubResource("StyleBoxTexture_txnlg")
-theme_override_styles/hover = SubResource("StyleBoxTexture_txnlg")
 text = "Save Changes"
 
 [node name="TextureRect" type="TextureRect" parent="Control2/SaveButton" unique_id=1367325995]
@@ -324,6 +293,28 @@ theme_override_fonts/font = ExtResource("6_khvee")
 theme_override_font_sizes/font_size = 32
 text = "Account"
 horizontal_alignment = 1
+
+[node name="UsernameLabel" type="Label" parent="Control2/VBoxContainer" unique_id=1477476891]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+text = "Username:"
+
+[node name="UsernameDisplay" type="LineEdit" parent="Control2/VBoxContainer" unique_id=1477476893]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_uneditable_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.5)
+theme_override_colors/caret_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_styles/normal = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_account_input")
+placeholder_text = "Username"
+editable = false
 
 [node name="DisplayNameLabel" type="Label" parent="Control2/VBoxContainer" unique_id=1477476892]
 layout_mode = 2

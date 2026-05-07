@@ -34,7 +34,6 @@ var accepted_friends_data: Array = []
 var poll_timer: float = 0.0
 var is_expanded: bool = false
 
-var pfp_cache: Dictionary = {}
 var pfp_popup: PopupMenu
 var current_target_username: String = ""
 # Tracks messages we've already shown optimistically to prevent poll duplicates
@@ -330,30 +329,7 @@ func _on_pfp_popup_id_pressed(id: int):
 				break
 
 func _load_pfp_into(icon_name: String, rect: TextureRect):
-	if icon_name == "default" or icon_name == "":
-		return # Could set a default 👤 texture here
-		
-	if pfp_cache.has(icon_name):
-		rect.texture = pfp_cache[icon_name]
-		return
-		
-	var url = GameManager.SERVER_URL + "/uploads/" + icon_name
-	var loader = HTTPRequest.new()
-	add_child(loader)
-	loader.request_completed.connect(func(_result, response_code, _headers, body):
-		if response_code == 200:
-			var image = Image.new()
-			var err = image.load_png_from_buffer(body)
-			if err != OK: err = image.load_jpg_from_buffer(body)
-			
-			if err == OK:
-				var tex = ImageTexture.create_from_image(image)
-				pfp_cache[icon_name] = tex
-				if is_instance_valid(rect):
-					rect.texture = tex
-		loader.queue_free()
-	)
-	loader.request(url)
+	GameManager.load_pfp_into(icon_name, rect, self)
 
 func _on_send_pressed(text: String):
 	if text.strip_edges() == "": return
@@ -456,6 +432,8 @@ func _on_sidebar_friends_received(_res, code, _headers, body, http):
 				
 				if f.get("profile_icon", "default") != "default":
 					_load_pfp_into(f.profile_icon, pfp_rect)
+				else:
+					pfp_rect.texture = GameManager.DEFAULT_PFP
 				
 				var info_vbox = VBoxContainer.new()
 				info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -512,8 +490,8 @@ func _mark_dm_read(dm_room: String):
 	http.request(GameManager.SERVER_URL + "/api/chat/mark-read", GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
 
 func _load_pfp_into_button(icon_name: String, btn: Button):
-	if pfp_cache.has(icon_name):
-		btn.icon = pfp_cache[icon_name]
+	if GameManager._pfp_cache.has(icon_name):
+		btn.icon = GameManager._pfp_cache[icon_name]
 		return
 	var url = GameManager.SERVER_URL + "/uploads/" + icon_name
 	var loader = HTTPRequest.new()
@@ -526,7 +504,7 @@ func _load_pfp_into_button(icon_name: String, btn: Button):
 			if err == OK:
 				img.resize(24, 24)
 				var tex = ImageTexture.create_from_image(img)
-				pfp_cache[icon_name] = tex
+				GameManager._pfp_cache[icon_name] = tex
 				if is_instance_valid(btn): btn.icon = tex
 		loader.queue_free()
 	)

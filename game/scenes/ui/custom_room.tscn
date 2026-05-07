@@ -244,6 +244,7 @@ texture = ExtResource("4_mqf87")
 region_rect = Rect2(1130.8264, 0, 277.17358, 269.4471)
 
 [node name="CustomRoom" type="Control" unique_id=508700511]
+modulate = Color(1, 1, 1, 0)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -269,6 +270,7 @@ texture = ExtResource("2_xghyf")
 libraries/ = SubResource("AnimationLibrary_custom_room")
 
 [node name="BackButton" type="Button" parent="." unique_id=1300449507]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(100, 40)
 layout_mode = 0
 offset_left = 20.0
@@ -300,6 +302,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="StatusLabel" type="Label" parent="CenterPlaceholder" unique_id=1720687791]
+modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -326,6 +329,7 @@ grow_horizontal = 2
 theme_override_constants/separation = 200
 
 [node name="Player1Name" type="Label" parent="CenterPlaceholder/HBoxContainer" unique_id=973437162]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("4_rndi5")
@@ -334,6 +338,7 @@ text = "You"
 horizontal_alignment = 1
 
 [node name="Player2Name" type="Label" parent="CenterPlaceholder/HBoxContainer" unique_id=1574955879]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("4_rndi5")
@@ -354,6 +359,7 @@ grow_horizontal = 2
 theme_override_constants/separation = 200
 
 [node name="Player1Tag" type="Label" parent="CenterPlaceholder/HBoxContainer2" unique_id=363448244]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -363,6 +369,7 @@ text = "Host"
 horizontal_alignment = 1
 
 [node name="Player2Tag" type="Label" parent="CenterPlaceholder/HBoxContainer2" unique_id=594675752]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -462,6 +469,7 @@ theme_override_fonts/font = ExtResource("4_rndi5")
 text = "Choose 2 Skills"
 
 [node name="StartButton" type="Button" parent="." unique_id=1078626780]
+modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(200, 55)
 layout_mode = 1
 anchors_preset = 7
@@ -485,6 +493,7 @@ disabled = true
 text = "Start Game"
 
 [node name="VSLabel" type="Label" parent="." unique_id=1982737506]
+modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -503,6 +512,7 @@ text = "VS"
 vertical_alignment = 1
 
 [node name="RoomCodeLabel" type="Label" parent="." unique_id=650404980]
+modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -518,6 +528,7 @@ text = "YOUR ROOM CODE"
 horizontal_alignment = 1
 
 [node name="RoomCode" type="Label" parent="." unique_id=381480670]
+modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -537,7 +548,7 @@ layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_left = 23.0
+offset_left = -300.0
 offset_right = 63.0
 offset_bottom = 40.0
 grow_vertical = 2
@@ -601,7 +612,7 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -20.0
-offset_top = -40.0
+offset_top = 200.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -680,7 +691,7 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -1.0
+offset_left = 300.0
 offset_top = -91.49991
 offset_bottom = 91.49991
 grow_horizontal = 0
@@ -768,10 +779,10 @@ layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = -138.0
+offset_left = 25.0
+offset_top = -142.0
 offset_right = 353.0
-offset_bottom = 19.0
+offset_bottom = -21.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rndi5")
 autowrap_mode = 3
@@ -785,7 +796,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -344.0
 offset_top = -182.0
-offset_bottom = 28.0
+offset_right = -14.0
+offset_bottom = -17.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rndi5")

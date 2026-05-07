@@ -192,6 +192,47 @@ func send_logout():
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
 	http.request(SERVER_URL + "/api/auth/logout", headers, HTTPClient.METHOD_POST, body)
 
+# ── Profile picture loading ───────────────────────────────────────────────────
+# Shared cache so every scene reuses already-fetched textures.
+const DEFAULT_PFP = preload("res://assets/GUI/def.png")
+var _pfp_cache: Dictionary = {}
+
+## Load a profile icon into a TextureRect.
+## Falls back to def.png immediately, then replaces with the real image once fetched.
+## Caller just passes the icon_name string from user_data.profile_icon.
+func load_pfp_into(icon_name: String, rect: TextureRect, host_node: Node = null) -> void:
+	if not is_instance_valid(rect):
+		return
+	if icon_name == "" or icon_name == "default":
+		rect.texture = DEFAULT_PFP
+		return
+	if _pfp_cache.has(icon_name):
+		rect.texture = _pfp_cache[icon_name]
+		return
+	# Show default while loading
+	rect.texture = DEFAULT_PFP
+	var url = SERVER_URL + "/uploads/" + icon_name
+	var loader = HTTPRequest.new()
+	var parent = host_node if is_instance_valid(host_node) else self
+	parent.add_child(loader)
+	var rect_ref = weakref(rect)
+	loader.request_completed.connect(func(_result, response_code, _headers, body):
+		if response_code == 200:
+			var image = Image.new()
+			var err = image.load_png_from_buffer(body)
+			if err != OK:
+				err = image.load_jpg_from_buffer(body)
+			if err == OK:
+				var tex = ImageTexture.create_from_image(image)
+				_pfp_cache[icon_name] = tex
+				var target = rect_ref.get_ref()
+				if target and is_instance_valid(target):
+					target.texture = tex
+		if is_instance_valid(loader):
+			loader.queue_free()
+	)
+	loader.request(url)
+
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		send_logout()

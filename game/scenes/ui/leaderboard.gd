@@ -2,6 +2,7 @@ extends Control
 
 @onready var list = $VBoxContainer/ScrollContainer/List
 @onready var http_request = $HTTPRequest
+@onready var my_rank_label = $VBoxContainer/MyRankLabel
 
 var BASE_URL: String:
 	get: return GameManager.SERVER_URL + "/api/game/leaderboard"
@@ -35,10 +36,15 @@ func _on_request_completed(result, response_code, headers, body):
 	for child in list.get_children():
 		child.queue_free()
 		
-	# Populate list
+	# Populate list and find current user's rank
 	var font = load("res://assets/fonts/pixel_operator/PixelOperator-Bold.ttf")
+	var my_rank = -1
+	var my_username = GameManager.user_data.username
 	var rank = 1
 	for entry in data:
+		if entry.get("username", "") == my_username:
+			my_rank = rank
+
 		var row = HBoxContainer.new()
 		row.add_theme_constant_override("separation", 40)
 		
