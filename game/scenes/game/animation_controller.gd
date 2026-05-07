@@ -152,6 +152,13 @@ func play_combat_anims(skill_id: String, opp_skill_id: String = "", finish_mode:
 
 	print("[AnimController] player_has_skill=%s | opp_has_skill=%s | any_skill=%s" % [player_has_skill, opp_has_skill, any_skill])
 
+	# If no skills at all, skip all animations and just stay idle
+	if not any_skill:
+		print("[AnimController] No skills - staying idle, skipping combat sequence")
+		_in_combat_sequence = false
+		await get_tree().create_timer(0.5).timeout
+		return
+
 	if any_skill and hud_anim and hud_anim.has_animation("anim"):
 		hud_anim.play("anim")
 		await hud_anim.animation_finished

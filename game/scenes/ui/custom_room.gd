@@ -18,18 +18,25 @@ const SKILLS = [
 @onready var player2_tag      = $Player2Tag
 @onready var start_button     = $StartButton
 @onready var player1_tag      = $Player1Tag
-@onready var char_container   = $Characters/VBoxContainer
-@onready var skill_container  = $Skill/VBoxContainer
 @onready var countdown_timer_label = null  # Created dynamically if needed
 @onready var scene_anim_player = $AnimationPlayer
 
-@onready var _manual_passive_buttons = [
-	$Passive/HBoxContainer/VBoxContainer1/Passive1,
-	$Passive/HBoxContainer/VBoxContainer1/Passive2,
-	$Passive/HBoxContainer/VBoxContainer2/Passive3,
-	$Passive/HBoxContainer/VBoxContainer2/Passive4,
-	$Passive/HBoxContainer/VBoxContainer3/Passive5
-]
+# Character buttons
+@onready var char_button_1 = $Characters/VBoxContainer/Character1
+@onready var char_button_2 = $Characters/VBoxContainer/Character2
+@onready var char_button_3 = $Characters/VBoxContainer/Character3
+
+# Skill buttons
+@onready var skill_button_1 = $Skill/VBoxContainer/Skill1
+@onready var skill_button_2 = $Skill/VBoxContainer/Skill2
+@onready var skill_button_3 = $Skill/VBoxContainer/Skill3
+
+# Passive buttons
+@onready var passive_button_1 = $Passive/HBoxContainer/VBoxContainer1/Passive1
+@onready var passive_button_2 = $Passive/HBoxContainer/VBoxContainer1/Passive2
+@onready var passive_button_3 = $Passive/HBoxContainer/VBoxContainer2/Passive3
+@onready var passive_button_4 = $Passive/HBoxContainer/VBoxContainer2/Passive4
+@onready var passive_button_5 = $Passive/HBoxContainer/VBoxContainer3/Passive5
 
 @export var selected_char_color: Color = Color.GREEN
 @export var selected_skill_color: Color = Color.CYAN
@@ -186,6 +193,8 @@ func _process_matchmaking_rules():
 		status_label.text = "Both ready! Starting..."
 		if GameManager.is_host and not _matchmaking_start_sent:
 			_matchmaking_start_sent = true
+			var role = "HOST" if GameManager.is_host else "GUEST"
+			print("[Lobby][%s] Both players ready, sending start request..." % role)
 			_on_start_pressed()
 		if countdown_timer_label:
 			countdown_timer_label.text = "Starting..."
@@ -414,6 +423,7 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if json.get("status") == "started":
 		# Guard: only process game start once
 		if _launching:
+			print("[Lobby] Already launching, skipping duplicate start trigger")
 			return
 			
 		# Ensure opponent data is set before launching
@@ -437,7 +447,9 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		GameManager.opponent_passive = _opp_passive
 		GameManager.match_start_time = float(json.get("started_at", 0))
 		
-		print("[Lobby] Game started detected! | Me: %s (%s) | Opp: %s (%s) | StartTime: %f" % [
+		var role = "HOST" if GameManager.is_host else "GUEST"
+		print("[Lobby][%s] Game start detected | Me: %s (%s) | Opp: %s (%s) | StartTime: %f" % [
+			role,
 			GameManager.selected_character, 
 			SkillsManager.selected_passive, 
 			GameManager.opponent_character, 
@@ -446,45 +458,31 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		])
 		
 		if is_inside_tree():
+			print("[Lobby][%s] Launching countdown..." % role)
 			_launch_game_with_countdown()
+		else:
+			print("[Lobby][%s] ERROR: Not in tree, cannot launch!" % role)
 		return
 
 # ── Dynamic UI setup ────────────────────────────────────────────────────────
 
 func _setup_ui():
-	for c in char_container.get_children(): c.queue_free()
-	for c in skill_container.get_children(): c.queue_free()
+	"""Setup button arrays and initial UI state"""
+	# Build button arrays from scene nodes
+	_char_buttons = [char_button_1, char_button_2, char_button_3]
+	_skill_buttons = [skill_button_1, skill_button_2, skill_button_3]
+	_passive_buttons = [passive_button_1, passive_button_2, passive_button_3, passive_button_4, passive_button_5]
 	
-	_char_buttons.clear()
-	_skill_buttons.clear()
-	_passive_buttons.clear()
-
-	for char_name in CHARACTERS:
-		var btn = Button.new()
-		btn.text = char_name
-		btn.custom_minimum_size = Vector2(0, 50)
-		char_container.add_child(btn)
-		btn.pressed.connect(_on_char_selected.bind(char_name))
-		_char_buttons.append(btn)
-
-	for skill in SKILLS:
-		var btn = Button.new()
-		btn.text = skill["name"]
-		btn.custom_minimum_size = Vector2(0, 40)
-		skill_container.add_child(btn)
-		btn.pressed.connect(_on_skill_selected.bind(skill["id"]))
-		_skill_buttons.append(btn)
-		
-	for i in range(GameManager.PASSIVES.size()):
-		if i < _manual_passive_buttons.size():
-			var btn = _manual_passive_buttons[i]
-			btn.text = GameManager.PASSIVES[i]["name"]
-			# Disconnect any old connections if _setup_ui is called multiple times
-			if btn.pressed.is_connected(_on_passive_selected):
-				btn.pressed.disconnect(_on_passive_selected)
-			btn.pressed.connect(_on_passive_selected.bind(GameManager.PASSIVES[i]["id"]))
-			_passive_buttons.append(btn)
-		
+	# Update button texts from data
+	for i in range(min(CHARACTERS.size(), _char_buttons.size())):
+		_char_buttons[i].text = CHARACTERS[i]
+	
+	for i in range(min(SKILLS.size(), _skill_buttons.size())):
+		_skill_buttons[i].text = SKILLS[i]["name"]
+	
+	for i in range(min(GameManager.PASSIVES.size(), _passive_buttons.size())):
+		_passive_buttons[i].text = GameManager.PASSIVES[i]["name"]
+	
 	_refresh_ui()
 
 func _on_char_selected(char_name: String):
@@ -558,7 +556,8 @@ func _on_start_pressed():
 		print("[Solo] Starting game against AI: %s (Passive: %s)" % [GameManager.opponent_character, GameManager.opponent_passive])
 		_launch_game_with_countdown()
 		return
-		
+	
+	print("[Lobby][HOST] Sending start request to server for room: %s" % room_code)
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_start_notified.bind(http))
@@ -568,10 +567,15 @@ func _on_start_pressed():
 func _on_start_notified(_result, code, _headers, body, http: HTTPRequest):
 	if is_instance_valid(http):
 		http.queue_free()
+	
+	print("[Lobby][HOST] Start request response: code=%d" % code)
+	
 	if code == 200:
 		var json = JSON.parse_string(body.get_string_from_utf8())
 		if json and json.get("room", null) != null:
 			GameManager.match_start_time = float(json.room.get("started_at", 0))
+			print("[Lobby][HOST] Match start time set: %f" % GameManager.match_start_time)
+	
 	GameManager.opponent_character = _opp_character
 	GameManager.opponent_passive = _opp_passive
 	# Don't launch here — let the poll detect status=="started" so both clients
@@ -662,7 +666,13 @@ var _launching: bool = false
 var _countdown_canvas: CanvasLayer = null
 
 func _launch_game_with_countdown() -> void:
-	if _launching: return
+	var role = "HOST" if GameManager.is_host else "GUEST"
+	
+	if _launching:
+		print("[Lobby][%s] _launch_game_with_countdown called but already launching" % role)
+		return
+	
+	print("[Lobby][%s] Starting countdown sequence..." % role)
 	_launching = true
 	
 	# Snap animation to fully-visible end state so lobby shows behind the overlay
@@ -715,34 +725,46 @@ func _launch_game_with_countdown() -> void:
 	label.add_theme_constant_override("outline_size", 8)
 	overlay.add_child(label)
 	
+	print("[Lobby][%s] Countdown overlay created, starting 3-2-1..." % role)
+	
 	# Countdown with immediate opponent leave detection
 	for i in range(3, 0, -1):
-		if not is_instance_valid(label): return
+		if not is_instance_valid(label): 
+			print("[Lobby][%s] Label invalid during countdown" % role)
+			return
 		# Check if opponent left (immediate detection, not just flag)
 		if _matchmaking_forfeit_handled or _opponent_left_lobby:
 			if is_instance_valid(overlay): overlay.queue_free()
-			print("[Countdown] Opponent left during countdown, aborting")
+			print("[Lobby][%s] Opponent left during countdown, aborting" % role)
 			return
 			
 		label.text = str(i)
+		print("[Lobby][%s] Countdown: %d" % [role, i])
 		# Use smaller intervals to detect opponent leaving faster
 		for j in range(4):  # Check 4 times per second
 			await get_tree().create_timer(0.25).timeout
 			if _matchmaking_forfeit_handled or _opponent_left_lobby:
 				if is_instance_valid(overlay): overlay.queue_free()
+				print("[Lobby][%s] Opponent left during countdown (sub-check)" % role)
 				return
 	
-	if not is_instance_valid(label): return
+	if not is_instance_valid(label):
+		print("[Lobby][%s] Label invalid before GO" % role)
+		return
 	if _matchmaking_forfeit_handled or _opponent_left_lobby:
 		if is_instance_valid(overlay): overlay.queue_free()
+		print("[Lobby][%s] Opponent left before GO" % role)
 		return
 	
 	label.text = "GO!"
+	print("[Lobby][%s] GO! Transitioning to game scene..." % role)
 	await get_tree().create_timer(0.4).timeout
 	
 	if is_inside_tree() and not _matchmaking_forfeit_handled and not _opponent_left_lobby:
+		print("[Lobby][%s] Changing to game scene" % role)
 		get_tree().change_scene_to_file("res://scenes/game/game.tscn")
-
+	else:
+		print("[Lobby][%s] Cannot change scene - not in tree or opponent left" % role)
 
 ## Show popup when opponent leaves the lobby, wait 3s, then return to menu without penalty
 func _show_opponent_left_popup() -> void:

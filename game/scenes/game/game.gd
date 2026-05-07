@@ -40,7 +40,6 @@ var _local_first_finish_by: String      = ""
 var _host_typing_phase_requested: bool  = false
 var _host_skill_phase_requested: bool   = false
 var _opp_skills: Array                  = []
-var _last_opp_words: int                = 0
 @onready var typing_label       = $HUD/TypingText
 @onready var skill_select       = $HUD/OwnSkillSelect
 @onready var countdown_label    = $HUD/CountdownText
@@ -157,6 +156,13 @@ func start_skill_phase(announce_phase: bool = false) -> void:
 		pass
 	
 	_log("[Phase] SKILL SELECT | round=%d | mana=%d | opp_mana=%d | skills=%s" % [current_round, SkillsManager.player_mana, SkillsManager.opponent_mana, str(SkillsManager.selected_skills)])
+	
+	# Re-enable skill buttons for new round
+	if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1"):
+		$HUD/OwnSkillSelect/HBoxContainer/Skill1.disabled = false
+	if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
+		$HUD/OwnSkillSelect/HBoxContainer/Skill2.disabled = false
+	
 	if _can_pick_any_skill():
 		skill_select.show()
 	else:
@@ -178,8 +184,7 @@ func start_typing_phase(announce_phase: bool = false) -> void:
 	_local_first_finish_at_ms = 0.0
 	_local_first_finish_by   = ""
 	net.reset_mutation_index()
-	net.opp_mana = -1  # Reset to use estimation until server syncs
-	_last_opp_words = 0
+	net.opp_mana = -1  # Reset to -1 until server syncs first value
 	if GameManager.is_solo or GameManager.current_room == "":
 		current_round += 1
 	else:
@@ -269,9 +274,12 @@ func _process_skill_select(delta: float) -> void:
 				start_typing_phase()
 		elif GameManager.is_host and _server_phase == "skill_select" and not _host_typing_phase_requested:
 			if _should_host_fast_forward():
-				_log("[Phase] Fast-forward: neither player can cast")
+				# Message already logged in _should_host_fast_forward()
 				_host_typing_phase_requested = true
 				net.set_phase("typing", max(1, _server_round_id))
+	
+	# Update skill button states every frame to reflect current mana
+	_update_skill_buttons()
 	_update_bars()
 
 func _process_typing(delta: float) -> void:
@@ -369,15 +377,23 @@ func _update_stats_hud() -> void:
 		var sentence_len = float(typing.target_sentence.length())
 		var opp_chars = opp_prog * sentence_len
 		var opp_words = opp_chars / 5.0
-		# Use the server typing phase start as the elapsed baseline for the opponent.
-		# We don't know exactly when they started typing, but the phase start is the
-		# earliest possible moment — this gives a conservative (slightly low) WPM estimate.
-		var elapsed_min := 0.0
-		if not GameManager.is_solo and GameManager.current_room != "" and _server_typing_started_at_ms > 0.0:
-			var now_ms := _get_synced_ms()
-			if now_ms > _server_typing_started_at_ms:
-				elapsed_min = (now_ms - _server_typing_started_at_ms) / 60000.0
-		var opp_wpm = int(opp_words / elapsed_min) if elapsed_min > 0 else 0
+		
+		# Calculate opponent WPM
+		var opp_wpm := 0
+		if opp_prog >= 0.999:
+			# Opponent finished - use their finish time to lock WPM
+			if _server_first_finish_at_ms > 0.0 and _server_typing_started_at_ms > 0.0:
+				var finish_elapsed_min = (_server_first_finish_at_ms - _server_typing_started_at_ms) / 60000.0
+				opp_wpm = int(opp_words / finish_elapsed_min) if finish_elapsed_min > 0 else 0
+		else:
+			# Opponent still typing - calculate real-time WPM
+			var elapsed_min := 0.0
+			if not GameManager.is_solo and GameManager.current_room != "" and _server_typing_started_at_ms > 0.0:
+				var now_ms := _get_synced_ms()
+				if now_ms > _server_typing_started_at_ms:
+					elapsed_min = (now_ms - _server_typing_started_at_ms) / 60000.0
+			opp_wpm = int(opp_words / elapsed_min) if elapsed_min > 0 else 0
+		
 		var opp_total = opp_chars + float(net.opp_typos)
 		var opp_acc = clampf((opp_chars / opp_total) * 100.0, 0.0, 100.0) if opp_total > 0 else 100.0
 		var t2 = "WPM: %d | Typos: %d | Acc: %.1f%%" % [opp_wpm, net.opp_typos, opp_acc]
@@ -465,20 +481,11 @@ func _on_room_polled(room: Dictionary) -> void:
 			_log("[Net] Phase->skill_select (server, from RESOLVING) | round_id=%d" % _server_round_id)
 			start_skill_phase(false)
 	if current_state != GameState.TYPING: return
-	# Opponent mana: use server-synced value if available, otherwise estimate from word progress
+	# Opponent mana: use server-synced value (real-time sync enabled)
 	if net.opp_mana >= 0:
-		# Server has synced opponent mana (authoritative after skills fire)
 		if SkillsManager.opponent_mana != net.opp_mana:
 			_log("[ManaSync] Updating opponent mana from server: %d → %d" % [SkillsManager.opponent_mana, net.opp_mana])
 		SkillsManager.opponent_mana = net.opp_mana
-	else:
-		# Estimate from word progress (used before first sync)
-		var total_words = float(typing.target_sentence.length()) / 5.0
-		var cur_opp_words = int(floor(net.opp_progress * total_words))
-		if cur_opp_words > _last_opp_words:
-			for i in range(cur_opp_words - _last_opp_words):
-				SkillsManager.on_opponent_accurate_word()
-			_last_opp_words = cur_opp_words
 	# Apply incoming mutations
 	for mut in net.consume_new_mutations():
 		typing.apply_mutation(mut)
@@ -602,24 +609,24 @@ func _resolve_and_advance(finish_mode: String) -> void:
 	var result = combat.resolve(finish_mode, chosen_skill_id, net.opp_progress, _server_first_finish_at_ms, current_round)
 	_update_bars()  # Reflect HP/mana changes from resolution immediately
 	
-	# Determine opponent's effective skill for animation
-	# If opponent didn't finish (we got full_power/buff) or we didn't finish (dnf/debuff),
-	# the non-finisher's skill shouldn't show in animation
+	# Determine which skills should show in animation based on who finished
+	var my_skill_for_anim = chosen_skill_id
 	var opp_skill_for_anim = net.opp_chosen_skill
+	
 	if finish_mode == "full_power":
-		# We finished, opponent didn't → opponent's skill shouldn't show
+		# We finished, opponent didn't → hide opponent's skill
 		_log("[Decision] Opponent DNF → opponent skill hidden in animation")
 		opp_skill_for_anim = ""
 	elif finish_mode == "dnf":
-		# Opponent finished, we didn't → our skill already cancelled above, opponent's shows
+		# Opponent finished, we didn't → hide our skill
 		_log("[Decision] We DNF → our skill hidden in animation")
-		pass
+		my_skill_for_anim = ""
 	
-	_log("[Combat] Resolving | Mode: %s | Our skill: %s | Opp skill: %s" % [finish_mode, chosen_skill_id if chosen_skill_id != "" else "none", opp_skill_for_anim if opp_skill_for_anim != "" else "none"])
+	_log("[Combat] Resolving | Mode: %s | Our skill: %s | Opp skill: %s" % [finish_mode, my_skill_for_anim if my_skill_for_anim != "" else "none", opp_skill_for_anim if opp_skill_for_anim != "" else "none"])
 	
 	# Wait for combat animations to complete (including HUD animation backwards)
 	await anim.play_combat_anims(
-		chosen_skill_id,
+		my_skill_for_anim,
 		opp_skill_for_anim,
 		finish_mode
 	)
@@ -679,7 +686,7 @@ func _should_host_fast_forward() -> bool:
 	# Check if opponent has synced their choice via progress updates
 	var opp_picked = net.opp_chosen_skill != ""
 	if opp_picked: 
-		_log("[FastForward] ✓ Both done (we picked, opp picked '%s')" % net.opp_chosen_skill)
+		_log("[FastForward] ✓ Both players picked skills")
 		return true
 	
 	# If we don't know opponent's skills yet, we can't assume they can't pick — wait
@@ -696,7 +703,7 @@ func _should_host_fast_forward() -> bool:
 	
 	# Only fast-forward if opponent can't pick anything either (both players can't pick)
 	if not opp_can_pick:
-		_log("[FastForward] ✓ Both done (neither can afford skills)")
+		_log("[FastForward] ✓ Neither player can afford skills")
 		return true
 	else:
 		_log("[FastForward] ✗ Waiting (opp can still pick, opp_mana=%d)" % SkillsManager.opponent_mana)
