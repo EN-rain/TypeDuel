@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cirnekwfcu8xu"]
+
+[ext_resource type="Script" path="res://scripts/autoload/SoundManager.gd" id="1_g5net"]
+
+[node name="SoundManager" type="Node" unique_id=261832742]
+script = ExtResource("1_g5net")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1332808494]

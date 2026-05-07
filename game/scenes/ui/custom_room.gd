@@ -124,6 +124,7 @@ func _enter_tree():
 			ap.seek(0.0, true)
 
 func _ready():
+	SoundManager.play_music(preload("res://assets/bg-music/as_fast_as_you_can_2.31_low.ogg"))
 	if scene_anim_player != null and scene_anim_player.has_animation(&"intro"):
 		scene_anim_player.play(&"intro")
 
