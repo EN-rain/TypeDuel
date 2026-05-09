@@ -3,7 +3,7 @@ extends Node
 ## Global Game Manager Singleton
 ## Register this in Project Settings > Autoload as 'Game' or 'GameManager'
 
-const SERVER_URL = "http://34.126.180.170:3000"
+const SERVER_URL = "https://typeduel-267041003037.asia-southeast1.run.app"
 
 signal game_started
 signal game_ended(results: Dictionary)
@@ -235,6 +235,8 @@ func load_pfp_into(icon_name: String, rect: TextureRect, host_node: Node = null)
 	
 func save_match_history(data: Dictionary) -> void:
 	if user_data.id == 0: return
+	if not bool(data.get("is_solo", false)):
+		return
 	
 	var req = HTTPRequest.new()
 	add_child(req)

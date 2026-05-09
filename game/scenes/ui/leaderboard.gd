@@ -93,5 +93,10 @@ func _on_request_completed(result, response_code, headers, body):
 		list.add_child(row)
 		rank += 1
 
+	if my_rank > 0:
+		my_rank_label.text = "My Rank: #%d" % my_rank
+	else:
+		my_rank_label.text = "My Rank: Unranked"
+
 func _on_back_button_pressed():
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

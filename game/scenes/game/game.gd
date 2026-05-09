@@ -73,6 +73,7 @@ func _deferred_init() -> void:
 		GameManager.selected_character, GameManager.opponent_character,
 		GameManager.current_room, _role_tag()])
 	if not GameManager.is_solo and GameManager.current_room != "":
+		VoiceManager.join_room(GameManager.current_room)
 		seed(GameManager.current_room.hash())
 	else:
 		randomize()
@@ -150,6 +151,7 @@ func start_skill_phase(announce_phase: bool = false) -> void:
 	snap_timer     = 10.0
 	round_timer    = 60.0
 	net.opp_chosen_skill = ""  # Clear opponent's skill choice from previous round
+	net.opp_skill_picked = false
 	_skill_phase_local_start_ms = float(Time.get_ticks_msec())
 	
 	# Use server round_id if available, otherwise increment local counter
@@ -567,21 +569,15 @@ func _on_opponent_forfeited() -> void:
 	if _victory_shown: return
 	_log("[Victory] Opponent forfeited — we win")
 	_victory_shown = true
+	VoiceManager.leave_room()
 	GameManager.current_room = ""
-	
-	# Save match history as a win by forfeit
-	_save_forfeit_victory()
-	
 	combat.show_opponent_forfeited_overlay($HUD)
 
 func _on_you_forfeited() -> void:
 	if _victory_shown: return
 	_victory_shown = true
+	VoiceManager.leave_room()
 	GameManager.current_room = ""
-	
-	# Save match history as a loss by forfeit
-	_save_forfeit_loss()
-	
 	# Apply penalty for forfeiting
 	_apply_forfeit_penalty()
 	
@@ -590,6 +586,7 @@ func _on_you_forfeited() -> void:
 func _on_match_ended(_reason: String) -> void:
 	if _victory_shown: return
 	_victory_shown = true
+	VoiceManager.leave_room()
 	GameManager.current_room = ""
 	combat.show_match_ended_overlay($HUD, _reason)
 
@@ -762,9 +759,9 @@ func _should_host_fast_forward() -> bool:
 	if not i_am_done: return false
 
 	# Opponent already synced their skill pick
-	var opp_picked = net.opp_chosen_skill != ""
+	var opp_picked = net.opp_skill_picked
 	if opp_picked:
-		_log("[FastForward] ✓ Both players picked skills")
+		_log("[FastForward] ✓ Both players committed their skill choice")
 		return true
 
 	# Wait a short moment before fallback fast-forward checks so late first polls can arrive.
@@ -846,10 +843,9 @@ func _on_forfeit_pressed() -> void:
 	_pause_visible = false
 	if is_instance_valid(_pause_panel): _pause_panel.visible = false
 	if not GameManager.is_solo and GameManager.current_room != "":
-		# Save forfeit loss to history and apply penalty
-		_save_forfeit_loss()
 		_apply_forfeit_penalty()
 		net.delete_room()
+		VoiceManager.leave_room()
 		GameManager.current_room = ""
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
@@ -915,45 +911,3 @@ func _apply_forfeit_penalty() -> void:
 	GameManager.auto_queue_matchmaking = false
 	
 	_log("[Penalty] Applied 60s matchmaking ban for forfeit")
-
-func _save_forfeit_victory() -> void:
-	if GameManager.user_data.id == 0: return
-	var wpm = float(typing.get_wpm())
-	var accuracy = typing.get_accuracy()
-	wpm = clampf(wpm if is_finite(wpm) else 0.0, 0.0, 250.0)
-	accuracy = clampf(accuracy if is_finite(accuracy) else 0.0, 0.0, 100.0)
-	
-	var data = {
-		"user_id": GameManager.user_data.id,
-		"username": GameManager.user_data.username,
-		"match_type": "online" if GameManager.is_matchmaking else "custom",
-		"wpm": wpm,
-		"accuracy": accuracy,
-		"typos": typing.typos_count,
-		"won": true,
-		"forfeit": "opponent"
-	}
-	GameManager.save_match_history(data)
-	
-	_log("[History] Saved forfeit victory to match history")
-
-func _save_forfeit_loss() -> void:
-	if GameManager.user_data.id == 0: return
-	var wpm = float(typing.get_wpm())
-	var accuracy = typing.get_accuracy()
-	wpm = clampf(wpm if is_finite(wpm) else 0.0, 0.0, 250.0)
-	accuracy = clampf(accuracy if is_finite(accuracy) else 0.0, 0.0, 100.0)
-	
-	var data = {
-		"user_id": GameManager.user_data.id,
-		"username": GameManager.user_data.username,
-		"match_type": "online" if GameManager.is_matchmaking else "custom",
-		"wpm": wpm,
-		"accuracy": accuracy,
-		"typos": typing.typos_count,
-		"won": false,
-		"forfeit": "self"
-	}
-	GameManager.save_match_history(data)
-	
-	_log("[History] Saved forfeit loss to match history")

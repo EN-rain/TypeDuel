@@ -21,6 +21,11 @@ func _ready():
 	http_request.request_completed.connect(_on_request_completed)
 	upload_request.request_completed.connect(_on_upload_completed)
 
+	# Button press shrink animation
+	_connect_press_anim(save_button)
+	_connect_press_anim(%ChangePFPButton)
+	_connect_press_anim($BackButton)
+
 	load_current_pfp()
 
 func load_current_pfp():
@@ -53,7 +58,8 @@ func _on_file_dialog_file_selected(path):
 
 func _upload_buffer(buffer: PackedByteArray):
 	var boundary = "GodotFileUploadBoundary"
-	var headers = ["Content-Type: multipart/form-data; boundary=" + boundary]
+	var headers = GameManager.get_auth_headers()
+	headers.append("Content-Type: multipart/form-data; boundary=" + boundary)
 
 	var body = PackedByteArray()
 	body.append_array(("--" + boundary + "\r\n").to_utf8_buffer())
@@ -92,7 +98,7 @@ func _on_save_button_pressed():
 		"newPassword": new_pass
 	})
 
-	http_request.request(UPDATE_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+	http_request.request(UPDATE_URL, GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
 	save_button.disabled = true
 	status_label.text = "Updating..."
 
@@ -108,3 +114,18 @@ func _on_request_completed(_result, response_code, _headers, body):
 
 func _on_back_button_pressed():
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+func _connect_press_anim(button: Button) -> void:
+	if button == null: return
+	button.button_down.connect(_on_btn_shrink.bind(button))
+	button.button_up.connect(_on_btn_grow.bind(button))
+
+func _on_btn_shrink(btn: Button) -> void:
+	btn.pivot_offset = btn.size / 2.0
+	var tween = create_tween()
+	tween.tween_property(btn, "scale", Vector2(0.9, 0.9), 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+func _on_btn_grow(btn: Button) -> void:
+	btn.pivot_offset = btn.size / 2.0
+	var tween = create_tween()
+	tween.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)

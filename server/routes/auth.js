@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const authMiddleware = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 
@@ -18,8 +19,8 @@ const upload = multer({ storage: storage });
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.post('/logout', authController.logout);
-router.post('/update', authController.updateProfile);
-router.post('/upload-pfp', upload.single('pfp'), authController.uploadPfp);
+router.post('/logout', authMiddleware, authController.logout);
+router.post('/update', authMiddleware, authController.updateProfile);
+router.post('/upload-pfp', authMiddleware, upload.single('pfp'), authController.uploadPfp);
 
 module.exports = router;

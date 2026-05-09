@@ -272,6 +272,8 @@ func show_match_ended_overlay(hud: Node, reason: String) -> void:
 # ─────────────────────────────────────────────
 
 func _save_match_history(won: bool) -> void:
+	if not GameManager.is_solo:
+		return
 	if GameManager.user_data.id == 0: return
 	var wpm = float(typing_handler.get_wpm())
 	var accuracy = typing_handler.get_accuracy()
@@ -281,7 +283,8 @@ func _save_match_history(won: bool) -> void:
 	var data = {
 		"user_id":    GameManager.user_data.id,
 		"username":   GameManager.user_data.username,
-		"match_type": "custom" if GameManager.is_solo else ("online" if GameManager.is_matchmaking else "custom"),
+		"match_type": "custom",
+		"is_solo":    true,
 		"wpm":        wpm,
 		"accuracy":   accuracy,
 		"typos":      typing_handler.typos_count,

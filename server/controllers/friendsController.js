@@ -1,10 +1,15 @@
 const db = require('../config/db');
 
 exports.sendRequest = (req, res) => {
-    const { user_id, friend_username } = req.body;
+    const user_id = req.user && req.user.id;
+    const { friend_username } = req.body;
+    if (!user_id) return res.status(401).json({ message: "Unauthorized" });
+    if (typeof friend_username !== "string" || friend_username.trim() === "") {
+        return res.status(400).json({ message: "friend_username required" });
+    }
     
     // 1. Find the friend's user ID
-    db.get("SELECT id FROM users WHERE username = ?", [friend_username], (err, friend) => {
+    db.get("SELECT id FROM users WHERE username = ?", [friend_username.trim()], (err, friend) => {
         if (err) return res.status(500).json({ message: "Database error" });
         if (!friend) return res.status(404).json({ message: "User not found" });
         if (friend.id === user_id) return res.status(400).json({ message: "You can't add yourself" });
@@ -26,7 +31,9 @@ exports.sendRequest = (req, res) => {
 };
 
 exports.acceptRequest = (req, res) => {
-    const { user_id, friend_id } = req.body;
+    const user_id = req.user && req.user.id;
+    const { friend_id } = req.body;
+    if (!user_id) return res.status(401).json({ message: "Unauthorized" });
     db.run("UPDATE friends SET status = 'accepted' WHERE user_id = ? AND friend_id = ? AND status = 'pending'", 
         [friend_id, user_id], function(err) {
         if (err) return res.status(500).json({ message: "Database error" });
@@ -36,7 +43,9 @@ exports.acceptRequest = (req, res) => {
 };
 
 exports.removeFriend = (req, res) => {
-    const { user_id, friend_id } = req.body;
+    const user_id = req.user && req.user.id;
+    const { friend_id } = req.body;
+    if (!user_id) return res.status(401).json({ message: "Unauthorized" });
     db.run("DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)", 
         [user_id, friend_id, friend_id, user_id], function(err) {
         if (err) return res.status(500).json({ message: "Database error" });
@@ -47,6 +56,9 @@ exports.removeFriend = (req, res) => {
 exports.getFriends = (req, res) => {
     const user_id = parseInt(req.params.user_id, 10);
     if (isNaN(user_id)) return res.status(400).json({ message: "Invalid user_id" });
+    if (!req.user || user_id !== Number(req.user.id)) {
+        return res.status(403).json({ message: "Cannot read another user's friends" });
+    }
     const query = `
         SELECT 
             f.id as relation_id, 

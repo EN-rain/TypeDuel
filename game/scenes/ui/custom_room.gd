@@ -111,6 +111,7 @@ var _last_server_now_ms: float = 0.0
 var _opponent_left_lobby: bool = false
 var _was_matched_before_leave: bool = false
 var _sync_in_flight: bool = false
+var _creating_room: bool = false
 
 # Dynamically built button arrays
 var _char_buttons: Array      = []
@@ -169,6 +170,7 @@ func _ready():
 			room_code = _generate_code()
 			GameManager.current_room = room_code
 			room_code_label.text = room_code
+			_creating_room = true
 			_create_room()
 
 	if GameManager.is_solo:
@@ -204,6 +206,8 @@ func _ready():
 
 	status_label.add_theme_font_override("font", PIXEL_FONT)
 	_setup_ui()
+	if not GameManager.is_solo and room_code != "" and not _creating_room:
+		VoiceManager.join_room(room_code)
 
 func _process(delta: float):
 
@@ -282,6 +286,13 @@ func _process_matchmaking_rules():
 
 func _is_me_ready() -> bool:
 	return GameManager.selected_character != "" and SkillsManager.selected_skills.size() >= 2 and SkillsManager.selected_passive != ""
+
+func _room_has_leave_signal(room_json: Dictionary) -> bool:
+	var forfeit = room_json.get("forfeit", null)
+	if forfeit is Dictionary:
+		var reason = str(forfeit.get("reason", ""))
+		return reason == "leave" or reason == "disconnect_timeout"
+	return false
 
 func _is_opp_ready() -> bool:
 	if GameManager.is_solo: return true
@@ -381,14 +392,19 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 		http.queue_free()
 	_poll_in_flight = false
 	if code != 200:
+		if code != 404:
+			return
 		var past_grace = (Time.get_ticks_msec() / 1000.0) >= _lobby_ready_time
 		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled and past_grace:
-			# Only treat as "opponent left" if we ourselves are fully ready.
-			# If we're still selecting, a transient server error shouldn't end the match.
-			if _is_me_ready():
+			# If we are matched and the room is gone, it means opponent left.
+			# We only ignore it during selection to avoid transient errors, but if it's
+			# persistent (repeated 404), we must treat it as authoritative.
+			# After 10s of lobby life, we stop being "graceful" about selections.
+			var selection_grace = (Time.get_ticks_msec() / 1000.0) < (_lobby_ready_time + 7.0)
+			if _is_me_ready() or not selection_grace:
 				_opponent_left_lobby = true
 				_show_opponent_left_popup()
-			# else: ignore — likely a transient error while we're still setting up
+			# else: ignore for a few more seconds to see if it recovers
 		else:
 			_leave_and_menu()
 		return
@@ -404,9 +420,12 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 
 	# 0. Check for room termination (forfeit/finish) before updating data
 	if json.get("status") == "finished":
+		if not _room_has_leave_signal(json):
+			return
 		var past_grace = (Time.get_ticks_msec() / 1000.0) >= _lobby_ready_time
 		if GameManager.is_matchmaking and not _matchmaking_forfeit_handled and past_grace:
-			if _is_me_ready():
+			var selection_grace = (Time.get_ticks_msec() / 1000.0) < (_lobby_ready_time + 7.0)
+			if _is_me_ready() or not selection_grace:
 				_opponent_left_lobby = true
 				_show_opponent_left_popup()
 			# else: ignore transient finished state while we're still selecting
@@ -841,6 +860,7 @@ func _on_room_code_input(event):
 
 func _delete_room():
 	if room_code == "": return
+	VoiceManager.leave_room()
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
@@ -849,6 +869,7 @@ func _delete_room():
 
 func _leave_room():
 	if room_code == "": return
+	VoiceManager.leave_room()
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(func(_r,_c,_h,_b): http.queue_free())
@@ -870,10 +891,13 @@ func _create_room():
 func _on_room_created(_result, code, _headers, _body, http: HTTPRequest):
 	if is_instance_valid(http):
 		http.queue_free()
+	_creating_room = false
 	if code != 200:
 		status_label.text = "Failed to create room (code %d)." % code
 	else:
 		print("[Room] Created OK: ", room_code)
+		if not GameManager.is_solo:
+			VoiceManager.join_room(room_code)
 
 func _generate_code() -> String:
 	const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"

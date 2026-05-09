@@ -35,7 +35,8 @@ const getOnlineCount = (req, res) => {
 };
 
 const heartbeat = (req, res) => {
-    const { user_id, session_id } = req.body;
+    const { session_id } = req.body;
+    const user_id = req.user && req.user.id;
     if (!user_id && !session_id) return res.status(400).json({ message: 'user_id or session_id required' });
     
     let key;
@@ -64,15 +65,19 @@ const isUserOnline = (userId) => {
 };
 
 const saveMatchHistory = (req, res) => {
-    const { user_id, username, match_type, wpm, accuracy, typos, won } = req.body;
-    if (!user_id) return res.status(400).json({ message: 'user_id required' });
+    if (!req.body || req.body.is_solo !== true) {
+        return res.status(403).json({ message: 'Only server-authoritative results may be saved for multiplayer matches' });
+    }
+    const { username, match_type, wpm, accuracy, typos, won } = req.body;
+    const user_id = req.user && req.user.id;
+    if (!user_id) return res.status(401).json({ message: 'Not authenticated' });
 
     const userIdNum = Number(user_id);
     if (!Number.isFinite(userIdNum) || userIdNum <= 0) {
         return res.status(400).json({ message: 'user_id must be a positive number' });
     }
 
-    const safeUsername = (typeof username === 'string' && username.trim() !== '') ? username.trim() : null;
+    const safeUsername = (typeof username === 'string' && username.trim() !== '') ? username.trim() : String(userIdNum);
     const safeMatchType = (match_type === 'online' || match_type === 'custom') ? match_type : 'online';
 
     const wpmNum = Number(wpm);
@@ -114,46 +119,69 @@ const getMatchHistory = (req, res) => {
         return res.status(400).json({ message: 'Invalid user_id' });
     }
     
-    // Get all matches
-    db.all("SELECT * FROM match_history WHERE user_id = ? ORDER BY created_at DESC", [userIdNum], (err, rows) => {
-        if (err) {
-            console.error("Error fetching match history:", err.message);
-            return res.status(500).json({ message: 'Error fetching match history' });
+    // Authorization: User can read their own history, OR if they are friends
+    const requesterId = req.user && req.user.id;
+    if (!requesterId) return res.status(401).json({ message: 'Not authenticated' });
+
+    const isOwnHistory = userIdNum === Number(requesterId);
+    
+    const checkAccess = () => {
+        if (isOwnHistory) return Promise.resolve(true);
+        return new Promise((resolve) => {
+            db.get("SELECT status FROM friends WHERE ((user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)) AND status = 'accepted'",
+                [requesterId, userIdNum, userIdNum, requesterId], (err, row) => {
+                    if (err || !row) resolve(false);
+                    else resolve(true);
+                });
+        });
+    };
+
+    checkAccess().then(hasAccess => {
+        if (!hasAccess) {
+            return res.status(403).json({ message: 'Cannot read history: Not friends' });
         }
 
-        // Sanitize null/invalid values so the Godot UI doesn't crash on formatting.
-        rows = rows.map(r => ({
-            ...r,
-            match_type: (r.match_type === 'online' || r.match_type === 'custom') ? r.match_type : 'online',
-            wpm: Number.isFinite(Number(r.wpm)) ? Number(r.wpm) : 0,
-            accuracy: Number.isFinite(Number(r.accuracy)) ? Number(r.accuracy) : 0,
-            typos: Number.isFinite(Number(r.typos)) ? Number(r.typos) : 0,
-            won: !!r.won,
-        }));
-        
-        // Calculate overall stats
-        let totalWpm = 0;
-        let totalAccuracy = 0;
-        let totalTypos = 0;
-        let totalWins = 0;
-        
-        rows.forEach(row => {
-            totalWpm += row.wpm;
-            totalAccuracy += row.accuracy;
-            totalTypos += row.typos;
-            if (row.won) totalWins++;
+        // Get all matches
+        db.all("SELECT * FROM match_history WHERE user_id = ? ORDER BY created_at DESC", [userIdNum], (err, rows) => {
+            if (err) {
+                console.error("Error fetching match history:", err.message);
+                return res.status(500).json({ message: 'Error fetching match history' });
+            }
+
+            // Sanitize null/invalid values so the Godot UI doesn't crash on formatting.
+            rows = rows.map(r => ({
+                ...r,
+                match_type: (r.match_type === 'online' || r.match_type === 'custom') ? r.match_type : 'online',
+                wpm: Number.isFinite(Number(r.wpm)) ? Number(r.wpm) : 0,
+                accuracy: Number.isFinite(Number(r.accuracy)) ? Number(r.accuracy) : 0,
+                typos: Number.isFinite(Number(r.typos)) ? Number(r.typos) : 0,
+                won: !!r.won,
+            }));
+            
+            // Calculate overall stats
+            let totalWpm = 0;
+            let totalAccuracy = 0;
+            let totalTypos = 0;
+            let totalWins = 0;
+            
+            rows.forEach(row => {
+                totalWpm += row.wpm;
+                totalAccuracy += row.accuracy;
+                totalTypos += row.typos;
+                if (row.won) totalWins++;
+            });
+            
+            const count = rows.length;
+            const stats = {
+                total_matches: count,
+                total_wins: totalWins,
+                avg_wpm: count > 0 ? (totalWpm / count) : 0,
+                avg_accuracy: count > 0 ? (totalAccuracy / count) : 0,
+                total_typos: totalTypos
+            };
+            
+            res.json({ stats, history: rows });
         });
-        
-        const count = rows.length;
-        const stats = {
-            total_matches: count,
-            total_wins: totalWins,
-            avg_wpm: count > 0 ? (totalWpm / count) : 0,
-            avg_accuracy: count > 0 ? (totalAccuracy / count) : 0,
-            total_typos: totalTypos
-        };
-        
-        res.json({ stats, history: rows });
     });
 };
 
@@ -185,6 +213,9 @@ const applyMatchmakingPenalty = (req, res) => {
 
 // DEV ONLY: clear all online sessions instantly (for debug resets)
 const clearAllOnline = (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(404).json({ message: 'Not found' });
+    }
     const count = onlinePlayers.size;
     onlinePlayers.clear();
     console.log(`[DEV] Cleared ${count} online session(s).`);

@@ -68,7 +68,6 @@ tracks/4/keys = {
 
 [sub_resource type="Animation" id="Animation_intro"]
 resource_name = "intro"
-loop_mode = 0
 step = 0.03
 tracks/0/type = "value"
 tracks/0/imported = false

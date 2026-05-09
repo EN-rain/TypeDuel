@@ -13,8 +13,8 @@ config_version=5
 config/name="TypeDuel"
 run/main_scene="res://scenes/ui/login_scene.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="uid://bkla1a7hqvneg"
 boot_splash/show_image=false
+config/icon="uid://bkla1a7hqvneg"
 
 [autoload]
 
@@ -23,6 +23,7 @@ SkillsManager="*res://scripts/autoload/SkillsManager.gd"
 HPManager="*res://scripts/autoload/HPManager.gd"
 ManaManager="*res://scripts/autoload/ManaManager.gd"
 TransitionManager="*res://scripts/autoload/TransitionManager.gd"
+VoiceManager="*res://scripts/autoload/VoiceManager.gd"
 SoundManager="*res://scenes/music/sound_manager.tscn"
 
 [display]
@@ -37,6 +38,6 @@ window/stretch/aspect="expand"
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+rendering_device/driver.windows="d3d12"
 2d/snap/snap_2d_transforms_to_pixel=true
 2d/snap/snap_2d_vertices_to_pixel=true
-rendering_device/driver.windows="d3d12"

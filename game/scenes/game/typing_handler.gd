@@ -154,13 +154,6 @@ func handle_key(event: InputEventKey, can_type: bool) -> void:
 
 func _handle_backspace() -> void:
 	if current_index <= 0: return
-	var was_typo = typed_statuses.size() > 0 and not typed_statuses.back()
-	if was_typo:
-		typos_in_current_word = max(0, typos_in_current_word - 1)
-		typos_count           = max(0, typos_count - 1)
-		total_keystrokes      = max(0, total_keystrokes - 1)
-	else:
-		total_keystrokes = max(0, total_keystrokes - 1)
 	current_index -= 1
 	typed_statuses.pop_back()
 	update_ui()

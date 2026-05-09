@@ -95,10 +95,9 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if not json:
 		return
 
-	# Check if opponent left mid-screen (room still exists but status finished/forfeit)
+	# Check if opponent left mid-screen. Finished alone is normal post-match state.
 	var status = json.get("status", "")
-	if status == "finished" and not _i_want_rematch:
-		# They left without rematching
+	if status == "finished" and _room_has_leave_signal(json):
 		_opp_left = true
 		var opp_name = GameManager.opponent_name if GameManager.opponent_name != "" else "Opponent"
 		rematch_status_label.text = "%s Left..." % opp_name
@@ -133,6 +132,13 @@ func _on_poll_done(_result, code, _headers, body, http: HTTPRequest):
 	if _i_want_rematch and _opp_wants_rematch and not _rematch_initiated:
 		_rematch_initiated = true
 		_initiate_rematch()
+
+func _room_has_leave_signal(room_json: Dictionary) -> bool:
+	var forfeit = room_json.get("forfeit", null)
+	if forfeit is Dictionary:
+		var reason = str(forfeit.get("reason", ""))
+		return reason == "leave" or reason == "disconnect_timeout"
+	return false
 
 func _update_rematch_status():
 	if not is_instance_valid(rematch_status_label):
@@ -195,6 +201,13 @@ func _send_rematch_request():
 	http.timeout = 5.0
 	http.request_completed.connect(func(_r, _code, _h, body):
 		if is_instance_valid(http): http.queue_free()
+		if _code != 200:
+			_i_want_rematch = false
+			rematch_button.disabled = false
+			rematch_button.text = "Rematch"
+			rematch_status_label.text = "Rematch failed. Try again."
+			rematch_status_label.modulate = Color.RED
+			return
 		# If the server already has both players ready, transition immediately
 		# from this response — don't wait for the next poll cycle.
 		var json = JSON.parse_string(body.get_string_from_utf8())
@@ -245,6 +258,11 @@ func _leave_room():
 
 func _on_match_again_pressed():
 	if GameManager.is_matchmaking:
+		if GameManager.current_room != "":
+			if GameManager.is_host:
+				_delete_room()
+			else:
+				_leave_room()
 		GameManager.current_room = ""
 		GameManager.auto_queue_matchmaking = true
 		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

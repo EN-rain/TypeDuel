@@ -1,19 +1,27 @@
 const db = require('../config/db');
 
 exports.sendMessage = (req, res) => {
-    const { user_id, username, room_id, message } = req.body;
+    const user_id = req.user && req.user.id;
+    const { room_id, message } = req.body;
     
-    if (!user_id || !username || !room_id || !message) {
+    if (!user_id || !room_id || typeof message !== 'string' || message.trim() === '') {
         return res.status(400).json({ message: 'Missing fields' });
     }
+    if (message.length > 1000) {
+        return res.status(400).json({ message: 'Message is too long' });
+    }
 
-    const query = `INSERT INTO chat_messages (user_id, username, room_id, message) VALUES (?, ?, ?, ?)`;
-    db.run(query, [user_id, username, room_id, message], function(err) {
-        if (err) {
-            console.error('Error sending message:', err.message);
-            return res.status(500).json({ message: 'Database error' });
-        }
-        res.status(201).json({ id: this.lastID });
+    db.get('SELECT username, display_name FROM users WHERE id = ?', [user_id], (userErr, user) => {
+        if (userErr || !user) return res.status(500).json({ message: 'Database error' });
+        const username = user.display_name || user.username;
+        const query = `INSERT INTO chat_messages (user_id, username, room_id, message) VALUES (?, ?, ?, ?)`;
+        db.run(query, [user_id, username, room_id, message.trim()], function(err) {
+            if (err) {
+                console.error('Error sending message:', err.message);
+                return res.status(500).json({ message: 'Database error' });
+            }
+            res.status(201).json({ id: this.lastID });
+        });
     });
 };
 
@@ -42,7 +50,8 @@ exports.getMessages = (req, res) => {
 };
 
 exports.markRead = (req, res) => {
-    const { room_id, reader_user_id } = req.body;
+    const { room_id } = req.body;
+    const reader_user_id = req.user && req.user.id;
     if (!room_id || !reader_user_id) {
         return res.status(400).json({ message: 'Missing fields' });
     }

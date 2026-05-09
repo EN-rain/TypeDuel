@@ -24,6 +24,7 @@ var server_time_offset_ms: float = 0.0
 var opp_progress: float = 0.0
 var opp_typos: int = 0
 var opp_chosen_skill: String = ""
+var opp_skill_picked: bool = false
 var opp_skills: Array = []
 var opp_mutations: Array = []
 var opp_mana: int = -1
@@ -108,6 +109,7 @@ func _on_ws_message(raw: String) -> void:
 		"skill:picked":
 			if _is_opponent_role(str(json.get("role", ""))):
 				opp_chosen_skill = str(json.get("chosen_skill", ""))
+				opp_skill_picked = bool(json.get("picked", true))
 		"typing:progress":
 			if _is_opponent_role(str(json.get("role", ""))):
 				opp_progress = float(json.get("progress", opp_progress))
@@ -248,12 +250,16 @@ func _apply_phase(room: Dictionary) -> void:
 	server_first_finish_at_ms = float(room.get("first_finish_at", server_first_finish_at_ms))
 	server_first_finish_by = "" if room.get("first_finish_by", null) == null else str(room.get("first_finish_by"))
 	server_round_id = int(room.get("round_id", server_round_id))
+	if server_phase == "skill_select":
+		opp_skill_picked = false
+		opp_chosen_skill = ""
 
 func _apply_opponent_data(room: Dictionary) -> void:
 	if GameManager.is_host:
 		opp_progress = float(room.get("guest_progress", 0.0))
 		opp_typos = int(room.get("guest_typos", 0))
 		opp_chosen_skill = str(room.get("guest_skill", ""))
+		opp_skill_picked = bool(room.get("guest_skill_picked", false))
 		opp_mutations = room.get("host_mutations", [])
 		opp_skills = room.get("guest_skills", [])
 		if room.has("guest_mana"):
@@ -262,6 +268,7 @@ func _apply_opponent_data(room: Dictionary) -> void:
 		opp_progress = float(room.get("host_progress", 0.0))
 		opp_typos = int(room.get("host_typos", 0))
 		opp_chosen_skill = str(room.get("host_skill", ""))
+		opp_skill_picked = bool(room.get("host_skill_picked", false))
 		opp_mutations = room.get("guest_mutations", [])
 		opp_skills = room.get("host_skills", [])
 		if room.has("host_mana"):
@@ -300,12 +307,9 @@ func set_phase(phase: String, round_id: int) -> void:
 				"round_id":  round_id,
 			})
 		elif phase == "typing":
-			# Host is forcing typing phase (timer expired or opponent can't afford).
-			# Emit a "pass" skill pick so the server's both-picked fast-forward fires,
-			# which in turn broadcasts phase:typing to the guest via WebSocket.
-			_ws_send("skill:pick", {
-				"room_code":    GameManager.current_room,
-				"chosen_skill": "",
+			_ws_send("phase:typing", {
+				"room_code": GameManager.current_room,
+				"round_id": round_id,
 			})
 
 	var payload: Dictionary = { "user_id": GameManager.user_data.id, "phase": phase }
@@ -343,12 +347,14 @@ func sync_progress_with_queue(current_index: int, sentence_length: int, typos: i
 	if accuracy_warning_visible:
 		progress = minf(progress, 0.98)
 
+	var mutation: Dictionary = {}
 	if mutation_queue.size() > 0:
-		var mutation = mutation_queue.pop_front()
+		mutation = mutation_queue.front()
 		_mutation_seq += 1
 		mutation["seq"] = _mutation_seq
 		_pending_mutations[_mutation_seq] = mutation
 		if _ws_connected:
+			mutation_queue.pop_front()
 			_ws_send("typing:mutation", { "room_code": GameManager.current_room, "mutation": mutation })
 
 	if _ws_connected:
@@ -361,7 +367,7 @@ func sync_progress_with_queue(current_index: int, sentence_length: int, typos: i
 		})
 		return
 
-	_http_progress(progress, typos, chosen_skill)
+	_http_progress(progress, typos, chosen_skill, mutation, mutation_queue)
 
 func sync_progress_immediate(current_index: int, sentence_length: int, typos: int, chosen_skill: String) -> void:
 	if GameManager.current_room == "" or GameManager.user_data.id == 0:
@@ -379,7 +385,7 @@ func sync_progress_immediate(current_index: int, sentence_length: int, typos: in
 		})
 	_http_progress(progress, typos, chosen_skill)
 
-func _http_progress(progress: float, typos: int, chosen_skill: String) -> void:
+func _http_progress(progress: float, typos: int, chosen_skill: String, mutation: Dictionary = {}, mutation_queue: Array = []) -> void:
 	var payload: Dictionary = {
 		"user_id": GameManager.user_data.id,
 		"progress": progress,
@@ -387,12 +393,18 @@ func _http_progress(progress: float, typos: int, chosen_skill: String) -> void:
 		"mana": SkillsManager.player_mana,
 		"chosen_skill": chosen_skill,
 	}
+	if not mutation.is_empty():
+		payload["send_mutation"] = mutation
 	var http = HTTPRequest.new()
 	add_child(http)
 	http.timeout = POLL_TIMEOUT_SEC
 	http.request_completed.connect(func(_r, _c, _h, body):
 		if is_instance_valid(http):
 			http.queue_free()
+		if _c >= 200 and _c < 300 and not mutation.is_empty() and mutation_queue.size() > 0:
+			var queued = mutation_queue.front()
+			if queued is Dictionary and int(queued.get("seq", -1)) == int(mutation.get("seq", -2)):
+				mutation_queue.pop_front()
 		var json = JSON.parse_string(body.get_string_from_utf8())
 		if json is Dictionary and json.get("room", null) is Dictionary:
 			_apply_room_snapshot(json.get("room"), -1.0, -1.0)

@@ -11,6 +11,6 @@ router.get('/history/:user_id', authMiddleware, gameController.getMatchHistory);
 // apply server-side matchmaking penalty on forfeit
 router.post('/matchmaking-penalty', authMiddleware, gameController.applyMatchmakingPenalty);
 // DEV ONLY: instantly clear all online sessions (use during debug resets)
-router.post('/dev/clear-online', gameController.clearAllOnline);
+router.post('/dev/clear-online', authMiddleware, gameController.clearAllOnline);
 
 module.exports = router;

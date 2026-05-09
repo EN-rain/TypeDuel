@@ -208,7 +208,7 @@ func _on_messages_received(_result, code, _headers, body, http: HTTPRequest, roo
 				var is_pending = false
 				for i in _pending_sent.size():
 					var p = _pending_sent[i]
-					if p.room_key == room_name and p.text == msg.message and p.username == msg.username:
+					if p.room_key == room_name and p.text == msg.message and int(p.get("user_id", 0)) == int(msg.get("user_id", 0)):
 						_pending_sent.remove_at(i)
 						is_pending = true
 						break
@@ -242,8 +242,7 @@ func _on_messages_received(_result, code, _headers, body, http: HTTPRequest, roo
 
 
 func _add_message_to_vbox(msg: Dictionary):
-	var my_name = GameManager.user_data.display_name if GameManager.user_data.display_name != "" else GameManager.user_data.username
-	var is_mine = (msg.username == my_name or msg.username == GameManager.user_data.username)
+	var is_mine = int(msg.get("user_id", 0)) == int(GameManager.user_data.id)
 	
 	# Outer row: PFP | Content  (or Content | PFP for own messages)
 	var row = HBoxContainer.new()
@@ -363,7 +362,7 @@ func _on_send_pressed(text: String):
 		last_message_ids[state_key] = 0
 	
 	# Register as pending so the poll doesn't show it again
-	_pending_sent.append({ "room_key": state_key, "username": my_name, "text": text })
+	_pending_sent.append({ "room_key": state_key, "user_id": GameManager.user_data.id, "text": text })
 	
 	message_histories[state_key].append(local_msg)
 	_add_message_to_vbox(local_msg)
@@ -388,9 +387,25 @@ func _on_send_pressed(text: String):
 					last_message_ids[state_key] = max(last_message_ids[state_key], json.id)
 				else:
 					last_message_ids[state_key] = json.id
+		else:
+			_remove_failed_optimistic_message(state_key, local_msg)
 		http.queue_free()
 	)
 	http.request(GameManager.SERVER_URL + "/api/chat/send", GameManager.get_auth_headers(), HTTPClient.METHOD_POST, body)
+
+func _remove_failed_optimistic_message(state_key: String, local_msg: Dictionary) -> void:
+	for i in range(_pending_sent.size() - 1, -1, -1):
+		var p = _pending_sent[i]
+		if p.room_key == state_key and p.text == local_msg.message and int(p.get("user_id", 0)) == int(local_msg.user_id):
+			_pending_sent.remove_at(i)
+			break
+	if message_histories.has(state_key):
+		for i in range(message_histories[state_key].size() - 1, -1, -1):
+			var msg = message_histories[state_key][i]
+			if int(msg.get("id", 0)) == -1 and msg.get("message", "") == local_msg.message and int(msg.get("user_id", 0)) == int(local_msg.user_id):
+				message_histories[state_key].remove_at(i)
+				break
+	_rebuild_chat_view()
 
 func _fetch_friends_for_sidebar():
 	var http = HTTPRequest.new()
@@ -412,7 +427,7 @@ func _on_sidebar_friends_received(_res, code, _headers, body, http):
 		for f in json:
 			var is_online = bool(f.get("is_online", false))
 			var has_chat = int(f.get("has_chat", 0)) == 1
-			if f.status == "accepted" and (is_online or has_chat):
+			if f.status == "accepted":
 				accepted_friends_data.append(f)
 				
 				# Build a proper row: [PFP] [Name]

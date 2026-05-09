@@ -1,6 +1,8 @@
 // In-memory room store
 // rooms[code] = { code, host_id, host_name, guest_id, guest_name, created_at }
 const rooms = {};
+const db = require('../config/db');
+const characterData = require('../data/characters.json');
 
 const ROOM_TTL_MS = 10 * 60 * 1000; // rooms expire after 10 minutes
 
@@ -66,11 +68,7 @@ function _maybeAutoForfeitRoom(room) {
     if (by === 'host') { winner = 'guest'; loser = 'host'; }
     else if (by === 'guest') { winner = 'host'; loser = 'guest'; }
 
-    room.forfeit = { at: now, by, winner, loser, reason: 'disconnect_timeout' };
-    room.status = 'finished';
-    room.phase = 'finished';
-    room.seq = (room.seq || 0) + 1;
-    room.last_activity_at = now;
+    _finishRoomByForfeit(room, by, 'disconnect_timeout', now);
 }
 
 function _assertBodyUserMatchesActor(req, res) {
@@ -89,6 +87,137 @@ const VALID_CHARACTERS = new Set(['Riven', 'Zephon', 'Liora']);
 const VALID_SKILLS     = new Set(['quickslash', 'whiplash', 'soulbreak']);
 const VALID_PASSIVES   = new Set(['reversal', 'jumble', 'phantom', 'stutter', 'erosion']);
 const VALID_PHASES     = new Set(['lobby', 'skill_select', 'typing', 'resolving', 'finished']);
+const NOMINAL_SENTENCE_CHARS = 100;
+
+function _characterHp(characterName) {
+    const characters = Array.isArray(characterData.characters) ? characterData.characters : [];
+    const character = characters.find(c => c.name === characterName);
+    return character ? Number(character.hp) || 100 : 100;
+}
+
+function _upsertLeaderboardRow(userId, username, won, stats) {
+    if (!won) return;
+    db.get('SELECT id FROM leaderboard WHERE user_id = ?', [userId], (err, row) => {
+        if (err) {
+            console.error('[MatchResult] Leaderboard lookup failed:', err.message);
+            return;
+        }
+        if (row) {
+            db.run(
+                'UPDATE leaderboard SET wins = wins + 1, wpm = ?, accuracy = ?, username = ?, date = CURRENT_TIMESTAMP WHERE user_id = ?',
+                [stats.wpm, stats.accuracy, username, userId],
+                (updateErr) => {
+                    if (updateErr) console.error('[MatchResult] Leaderboard update failed:', updateErr.message);
+                }
+            );
+            return;
+        }
+        db.run(
+            'INSERT INTO leaderboard (user_id, username, wins, wpm, accuracy) VALUES (?, ?, 1, ?, ?)',
+            [userId, username, stats.wpm, stats.accuracy],
+            (insertErr) => {
+                if (insertErr) console.error('[MatchResult] Leaderboard insert failed:', insertErr.message);
+            }
+        );
+    });
+}
+
+function _derivePlayerStats(room, role, endedAt) {
+    const progress = Math.min(1, Math.max(0, Number(room[`${role}_progress`]) || 0));
+    const typos = Math.min(500, Math.max(0, Math.floor(Number(room[`${role}_typos`]) || 0)));
+    const startedAt =
+        Number(room[`${role}_typing_start`]) ||
+        Number(room.typing_started_at) ||
+        Number(room.phase_started_at) ||
+        Number(room.started_at) ||
+        endedAt;
+    const finishedAt =
+        progress >= 0.999 && room.first_finish_by === role && Number(room.first_finish_at) > 0
+            ? Number(room.first_finish_at)
+            : endedAt;
+    const elapsedMs = Math.max(1000, finishedAt - startedAt);
+    const typedChars = progress * NOMINAL_SENTENCE_CHARS;
+    const elapsedMin = elapsedMs / 60000;
+    const wpm = Math.min(250, Math.max(0, (typedChars / 5) / elapsedMin));
+    const totalInput = typedChars + typos;
+    const accuracy = totalInput > 0 ? (typedChars / totalInput) * 100 : 100;
+
+    return {
+        typos,
+        wpm: Number(wpm.toFixed(1)),
+        accuracy: Number(Math.min(100, Math.max(0, accuracy)).toFixed(1)),
+    };
+}
+
+function _persistMatchResults(room, endedAt = Date.now()) {
+    if (!room || room.history_saved) return;
+    if (!room.host_id || !room.guest_id) return;
+
+    let winner = '';
+    if (room.forfeit && typeof room.forfeit.winner === 'string') {
+        winner = room.forfeit.winner;
+    } else {
+        const hostHp = Number(room.host_hp);
+        const guestHp = Number(room.guest_hp);
+        const hostDead = Number.isFinite(hostHp) && hostHp <= 0;
+        const guestDead = Number.isFinite(guestHp) && guestHp <= 0;
+        if (hostDead && guestDead) winner = 'guest';
+        else if (guestDead) winner = 'host';
+        else if (hostDead) winner = 'guest';
+    }
+    if (winner !== 'host' && winner !== 'guest') return;
+
+    room.history_saved = true;
+    room.finished_at = endedAt;
+
+    const matchType = room.matchmaking ? 'online' : 'custom';
+    const hostName = room.host_name || 'Player';
+    const guestName = room.guest_name || 'Player';
+    const hostStats = _derivePlayerStats(room, 'host', endedAt);
+    const guestStats = _derivePlayerStats(room, 'guest', endedAt);
+
+    const rows = [
+        {
+            userId: room.host_id,
+            username: hostName,
+            won: winner === 'host',
+            stats: hostStats,
+        },
+        {
+            userId: room.guest_id,
+            username: guestName,
+            won: winner === 'guest',
+            stats: guestStats,
+        },
+    ];
+
+    for (const row of rows) {
+        db.run(
+            'INSERT INTO match_history (user_id, username, match_type, wpm, accuracy, typos, won) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [row.userId, row.username, matchType, row.stats.wpm, row.stats.accuracy, row.stats.typos, row.won ? 1 : 0],
+            (err) => {
+                if (err) {
+                    console.error('[MatchResult] Failed to save match history:', err.message);
+                    return;
+                }
+                _upsertLeaderboardRow(row.userId, row.username, row.won, row.stats);
+            }
+        );
+    }
+}
+
+function _enterSkillSelectPhase(room, nowMs, roundId = null) {
+    const now = nowMs || Date.now();
+    room.phase = 'skill_select';
+    room.phase_started_at = now;
+    room.host_skill = '';
+    room.guest_skill = '';
+    room.host_skill_picked = false;
+    room.guest_skill_picked = false;
+    if (Number(roundId) > 0) {
+        room.round_id = Number(roundId);
+    }
+}
 
 // import penalty helpers from gameController
 const { isMatchmakingPenalized, setMatchmakingPenalty } = require('./gameController');
@@ -121,6 +250,35 @@ function _enterTypingPhase(room, nowMs) {
     room.guest_typing_start = 0;
     room.host_mutations = [];
     room.guest_mutations = [];
+}
+
+function _finishRoomByForfeit(room, by, reason = 'leave', nowMs = Date.now()) {
+    if (!room || room.status === 'finished') return;
+    const winner = by === 'host' ? 'guest' : 'host';
+    room.forfeit = { at: nowMs, by, winner, loser: by, reason };
+    room.status = 'finished';
+    room.phase = 'finished';
+    room.finished_at = nowMs;
+    room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = nowMs;
+    _persistMatchResults(room, nowMs);
+}
+
+function _finishRoomFromHp(room, nowMs = Date.now()) {
+    if (!room || room.status === 'finished') return false;
+    const hostHp = Number(room.host_hp);
+    const guestHp = Number(room.guest_hp);
+    const hostDead = Number.isFinite(hostHp) && hostHp <= 0;
+    const guestDead = Number.isFinite(guestHp) && guestHp <= 0;
+    if (!hostDead && !guestDead) return false;
+
+    room.status = 'finished';
+    room.phase = 'finished';
+    room.finished_at = nowMs;
+    room.seq = (room.seq || 0) + 1;
+    room.last_activity_at = nowMs;
+    _persistMatchResults(room, nowMs);
+    return true;
 }
 
 // Evict stale queue entries every 30s
@@ -161,8 +319,10 @@ function _makeMatchmakingRoom(code, hostId, hostName, guestId, guestName) {
         guest_typing_start: 0,
         host_mutations:  [],
         host_skill:      "",
+        host_skill_picked: false,
         guest_mutations: [],
         guest_skill:     "",
+        guest_skill_picked: false,
         phase:           'lobby',
         phase_started_at: 0,
         typing_started_at: 0,
@@ -173,6 +333,8 @@ function _makeMatchmakingRoom(code, hostId, hostName, guestId, guestName) {
         guest_hp:          0,
         host_streak:       0,
         guest_streak:      0,
+        finished_at:       0,
+        history_saved:     false,
         host_last_seen_at: Date.now(),
         guest_last_seen_at: Date.now(),
         forfeit:           null,
@@ -263,10 +425,12 @@ const createRoom = (req, res) => {
         host_typos:     0,
         host_mutations: [],
         host_skill:     "",
+        host_skill_picked: false,
         guest_progress: 0.0,
         guest_typos:    0,
         guest_mutations:[],
         guest_skill:    "",
+        guest_skill_picked: false,
         // Phase sync (authoritative timers)
         phase:          'lobby',      // lobby, skill_select, typing, resolving, finished
         phase_started_at: 0,
@@ -278,6 +442,8 @@ const createRoom = (req, res) => {
         guest_hp:          0,
         host_streak:       0,
         guest_streak:      0,
+        finished_at:       0,
+        history_saved:     false,
         host_last_seen_at: Date.now(),
         guest_last_seen_at: 0,
         // Rematch tracking
@@ -359,11 +525,7 @@ const closeRoom = (req, res) => {
     if (room.status === 'started') {
         // In-game forfeit â€” guest wins. Penalty (if any) is applied by the client only for
         // matchmaking mode; custom-room hosts are not penalized.
-        room.forfeit = { at: Date.now(), by: 'host', winner: 'guest', loser: 'host', reason: 'leave' };
-        room.status = 'finished';
-        room.phase = 'finished';
-        room.seq = (room.seq || 0) + 1;
-        room.last_activity_at = Date.now();
+        _finishRoomByForfeit(room, 'host', 'leave', Date.now());
         return res.json({ ok: true, room: roomSnapshot(room) });
     }
     // Lobby: just delete the room. No forfeit, no penalty.
@@ -389,11 +551,7 @@ const leaveRoom = (req, res) => {
     if (room.host_id == actorId) {
         if (room.status === 'started') {
             // In-game forfeit â€” guest wins.
-            room.forfeit = { at: Date.now(), by: 'host', winner: 'guest', loser: 'host', reason: 'leave' };
-            room.status = 'finished';
-            room.phase = 'finished';
-            room.seq = (room.seq || 0) + 1;
-            room.last_activity_at = Date.now();
+            _finishRoomByForfeit(room, 'host', 'leave', Date.now());
             return res.json({ ok: true, room: roomSnapshot(room) });
         }
         // Lobby: host is leaving their own room â€” delete it silently. No forfeit, no penalty.
@@ -407,11 +565,7 @@ const leaveRoom = (req, res) => {
 
     if (room.status === 'started') {
         // In-game forfeit â€” host wins.
-        room.forfeit = { at: Date.now(), by: 'guest', winner: 'host', loser: 'guest', reason: 'leave' };
-        room.status = 'finished';
-        room.phase = 'finished';
-        room.seq = (room.seq || 0) + 1;
-        room.last_activity_at = Date.now();
+        _finishRoomByForfeit(room, 'guest', 'leave', Date.now());
         return res.json({ ok: true, room: roomSnapshot(room) });
     }
 
@@ -572,6 +726,8 @@ const startRoomGame = (req, res) => {
 
     room.status = 'started';
     room.started_at = Date.now();
+    room.finished_at = 0;
+    room.history_saved = false;
     room.forfeit = null;
     room.disconnect = { host_suspect_at: 0, guest_suspect_at: 0 };
 
@@ -592,9 +748,8 @@ const startRoomGame = (req, res) => {
     room.guest_typing_start = 0;
     room.host_mutations = [];
     room.guest_mutations = [];
-    // HP is set by host client via /hp once the game scene initializes.
-    room.host_hp = room.host_hp || 0;
-    room.guest_hp = room.guest_hp || 0;
+    room.host_hp = _characterHp(room.host_character);
+    room.guest_hp = _characterHp(room.guest_character);
     room.seq = (room.seq || 0) + 1;
     _touchRoomPresence(room, actorId);
     return res.json({ ok: true, room: roomSnapshot(room) });
@@ -627,16 +782,10 @@ const updatePhase = (req, res) => {
         room.round_id = round_id;
     }
     if (phase === 'skill_select') {
-        // Clear per-round picked skills immediately when entering selection.
-        // Without this, stale host_skill/guest_skill from the prior round can
-        // make the host fast-forward think both players already picked.
-        room.host_skill = "";
-        room.guest_skill = "";
+        _enterSkillSelectPhase(room, now, round_id);
     }
     if (phase === 'typing') {
         _enterTypingPhase(room, now);
-        room.host_skill = "";
-        room.guest_skill = "";
     }
 
     room.seq = (room.seq || 0) + 1;
@@ -687,6 +836,7 @@ const updateProgress = (req, res) => {
                 }
             }
             room.host_skill = chosen;
+            room.host_skill_picked = true;
         }
     } else if (room.guest_id == actorId) {
         if (progressNum !== undefined && Number.isFinite(progressNum)) room.guest_progress = Math.min(1.0, Math.max(0.0, progressNum));
@@ -714,6 +864,7 @@ const updateProgress = (req, res) => {
                 }
             }
             room.guest_skill = chosen;
+            room.guest_skill_picked = true;
         }
     } else {
         return res.status(403).json({ message: 'Not in this room' });
@@ -722,7 +873,7 @@ const updateProgress = (req, res) => {
     // Authoritative fast-forward: once both players choose a skill in skill_select,
     // transition immediately to typing on the server.
     let phaseTransitioned = false;
-    if (room.phase === 'skill_select' && room.host_skill && room.guest_skill) {
+    if (room.phase === 'skill_select' && room.host_skill_picked && room.guest_skill_picked) {
         _enterTypingPhase(room, Date.now());
         phaseTransitioned = true;
     }
@@ -772,6 +923,7 @@ const updateHP = (req, res) => {
     if (guest_streak !== undefined) room.guest_streak = Number(guest_streak) || 0;
     room.seq = (room.seq || 0) + 1;
     _touchRoomPresence(room, actorId); //presence: refresh idle timer / last seen
+    _finishRoomFromHp(room, Date.now());
     if (process.env.LOG_ROOMS === 'true') {
         console.log(`[rooms] ${code} hp host=${room.host_hp} guest=${room.guest_hp} streaks=${room.host_streak}/${room.guest_streak}`);
     }
@@ -820,20 +972,22 @@ const updateRematch = (req, res) => {
         room.host_skills = [];
         room.host_passive = "";
         room.host_skill = "";
+        room.host_skill_picked = false;
         room.host_progress = 0.0;
         room.host_typos = 0;
         room.host_mutations = [];
-        room.host_hp = 100;
+        room.host_hp = room.host_character ? _characterHp(room.host_character) : 0;
         room.host_streak = 0;
 
         room.guest_character = null;
         room.guest_skills = [];
         room.guest_passive = "";
         room.guest_skill = "";
+        room.guest_skill_picked = false;
         room.guest_progress = 0.0;
         room.guest_typos = 0;
         room.guest_mutations = [];
-        room.guest_hp = 100;
+        room.guest_hp = room.guest_character ? _characterHp(room.guest_character) : 0;
         room.guest_streak = 0;
 
         // Reset rematch flags
@@ -843,6 +997,8 @@ const updateRematch = (req, res) => {
         // Clear forfeit if any
         room.forfeit = null;
         room.disconnect = null;
+        room.finished_at = 0;
+        room.history_saved = false;
     }
     
     room.seq = (room.seq || 0) + 1;
@@ -858,5 +1014,8 @@ module.exports = {
     // Shared state for socket handler â€” same in-memory store, no duplication
     rooms,
     _enterTypingPhase,
+    _enterSkillSelectPhase,
+    _finishRoomByForfeit,
+    _finishRoomFromHp,
     roomSnapshot,
 };

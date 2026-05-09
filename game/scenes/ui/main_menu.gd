@@ -68,14 +68,14 @@ func _ready():
 	matchmaking_label.hide()
 	matchmaking_time_label.hide()
 
-	# Clean up any stale queue entry from a previous session (e.g. process killed mid-match)
-	_cleanup_stale_session()
-
 	# Auto-requeue after matchmaking forfeit (only if not penalized).
 	if GameManager.auto_queue_matchmaking:
 		GameManager.auto_queue_matchmaking = false
 		if not GameManager.is_matchmaking_penalized():
 			call_deferred("_on_play_online_pressed")
+	else:
+		# Clean up any stale queue entry from a previous session.
+		_cleanup_stale_session()
 
 	_play_intro_animation()
 	
@@ -622,7 +622,7 @@ func _on_friends_list_received(_result, code, _headers, body, http):
 		current_friends_data = json
 		for f in current_friends_data:
 			var uid = int(f.get("user_id", 0))
-			if old_counts.has(uid):
+			if old_counts.has(uid) and not f.has("unread_count"):
 				f["unread_count"] = old_counts[uid]
 
 		for f in current_friends_data:

@@ -15,7 +15,15 @@
  */
 
 const jwt = require('jsonwebtoken');
-const { rooms, _enterTypingPhase, roomSnapshot } = require('../controllers/roomController');
+const {
+    rooms,
+    _enterTypingPhase,
+    _enterSkillSelectPhase,
+    _finishRoomByForfeit,
+    _finishRoomFromHp,
+    roomSnapshot,
+} = require('../controllers/roomController');
+const { getJwtSecret } = require('../utils/jwtSecret');
 
 const VALID_SKILLS = new Set(['quickslash', 'whiplash', 'soulbreak']);
 
@@ -24,7 +32,7 @@ function _authSocket(socket) {
     const token = socket.handshake.auth?.token || socket.handshake.query?.token;
     if (!token) return null;
     try {
-        return jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        return jwt.verify(token, getJwtSecret());
     } catch {
         return null;
     }
@@ -79,8 +87,10 @@ module.exports = (io) => {
 
             if (room.host_id == userId) {
                 room.host_skill = chosen;
+                room.host_skill_picked = true;
             } else {
                 room.guest_skill = chosen;
+                room.guest_skill_picked = true;
             }
             room.seq = (room.seq || 0) + 1;
 
@@ -88,14 +98,26 @@ module.exports = (io) => {
             io.to(code).emit('skill:picked', {
                 role: room.host_id == userId ? 'host' : 'guest',
                 chosen_skill: chosen,
+                picked: true,
             });
 
             // If both players have committed, advance to typing immediately
-            if (room.host_skill !== '' && room.guest_skill !== '') {
+            if (room.host_skill_picked && room.guest_skill_picked) {
                 _enterTypingPhase(room, Date.now());
                 room.seq = (room.seq || 0) + 1;
                 io.to(code).emit('phase:typing', roomSnapshot(room));
             }
+        });
+
+        socket.on('phase:typing', ({ room_code }) => {
+            const code = _normalizeCode(room_code);
+            const room = rooms[code];
+            if (!room || room.status !== 'started') return;
+            if (room.host_id != userId) return;
+
+            _enterTypingPhase(room, Date.now());
+            room.seq = (room.seq || 0) + 1;
+            io.to(code).emit('phase:typing', roomSnapshot(room));
         });
 
         // ── typing:progress ───────────────────────────────────────────────────
@@ -209,6 +231,7 @@ module.exports = (io) => {
             room.host_streak = Number(host_streak) || 0;
             room.guest_streak = Number(guest_streak) || 0;
             room.seq = (room.seq || 0) + 1;
+            _finishRoomFromHp(room, Date.now());
 
             // Broadcast to both so guest gets HP update without polling
             io.to(code).emit('hp:sync', {
@@ -227,12 +250,7 @@ module.exports = (io) => {
             if (!room || room.status !== 'started') return;
             if (room.host_id != userId) return;
 
-            const now = Date.now();
-            room.phase            = 'skill_select';
-            room.phase_started_at = now;
-            room.host_skill       = '';
-            room.guest_skill      = '';
-            if (typeof round_id === 'number' && round_id > 0) room.round_id = round_id;
+            _enterSkillSelectPhase(room, Date.now(), round_id);
             room.seq = (room.seq || 0) + 1;
 
             io.to(code).emit('phase:skill_select', roomSnapshot(room));
@@ -245,12 +263,9 @@ module.exports = (io) => {
             if (!room || room.status !== 'started') return;
             if (room.host_id != userId && room.guest_id != userId) return;
 
-            const by     = room.host_id == userId ? 'host' : 'guest';
+            const by = room.host_id == userId ? 'host' : 'guest';
             const winner = by === 'host' ? 'guest' : 'host';
-            room.forfeit = { at: Date.now(), by, winner, loser: by, reason: 'leave' };
-            room.status  = 'finished';
-            room.phase   = 'finished';
-            room.seq     = (room.seq || 0) + 1;
+            _finishRoomByForfeit(room, by, 'leave', Date.now());
 
             io.to(code).emit('forfeit', { by, winner, loser: by, reason: 'leave' });
         });
