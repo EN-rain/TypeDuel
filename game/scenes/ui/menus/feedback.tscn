@@ -1,0 +1,114 @@
+[gd_scene format=3 uid="uid://dobbtxmcr2uv1"]
+
+[ext_resource type="Script" uid="uid://dt2jffk7y5kd4" path="res://scenes/ui/menus/feedback.gd" id="1_feedback_script"]
+[ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="2_ay7y4"]
+[ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_pp8x5"]
+[ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="3_pp8x5"]
+[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_vq46c"]
+[ext_resource type="Texture2D" uid="uid://bqqanitehsl4m" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_3lw1g"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vuj66"]
+texture = ExtResource("4_vq46c")
+texture_margin_right = 1.9784472
+region_rect = Rect2(201.47156, 1.5506582, 81.899445, 30.036427)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vnncu"]
+texture = ExtResource("5_3lw1g")
+expand_margin_left = 100.0
+expand_margin_right = 100.0
+
+[node name="Feedback" type="Control" unique_id=1062343851]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_feedback_script")
+
+[node name="Background" type="TextureRect" parent="." unique_id=1715080668]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_pp8x5")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1468023480]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="VBoxContainer" unique_id=1063750420]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("2_ay7y4")
+theme_override_font_sizes/font_size = 32
+text = "Feedback"
+horizontal_alignment = 1
+
+[node name="DescLabel" type="Label" parent="VBoxContainer" unique_id=150133875]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_pp8x5")
+text = "Share your thoughts, bug reports, or suggestions:"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="FeedbackInput" type="TextEdit" parent="VBoxContainer" unique_id=1034480296]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_pp8x5")
+placeholder_text = "Type your feedback here..."
+wrap_mode = 2
+
+[node name="SendButton" type="Button" parent="VBoxContainer" unique_id=1158601868]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_pp8x5")
+theme_override_styles/normal = SubResource("StyleBoxTexture_vuj66")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_vuj66")
+theme_override_styles/hover = SubResource("StyleBoxTexture_vuj66")
+text = "Send Feedback"
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer" unique_id=535636411]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+horizontal_alignment = 1
+
+[node name="BackButton" type="Button" parent="VBoxContainer" unique_id=246756668]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_pp8x5")
+theme_override_styles/normal = SubResource("StyleBoxTexture_vnncu")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_vnncu")
+theme_override_styles/hover = SubResource("StyleBoxTexture_vnncu")
+text = "Back to Menu"
+
+[node name="HTTPRequest" type="HTTPRequest" parent="." unique_id=1798075969]
+
+[connection signal="pressed" from="VBoxContainer/SendButton" to="." method="_on_send_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="request_completed" from="HTTPRequest" to="." method="_on_request_completed"]

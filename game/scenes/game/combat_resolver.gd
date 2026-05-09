@@ -185,7 +185,7 @@ func show_victory(entity: String, hud: Node) -> void:
 	# Minimum 0.6s so the hurt→death transition is always visible.
 	await get_tree().create_timer(maxf(death_wait, 0.6)).timeout
 
-	var victory_scene = load("res://scenes/ui/victory_screen.tscn").instantiate()
+	var victory_scene = load("res://scenes/ui/hud/victory_screen.tscn").instantiate()
 	get_tree().paused = false
 	victory_scene.process_mode = Node.PROCESS_MODE_ALWAYS
 	hud.add_child(victory_scene)
@@ -223,7 +223,7 @@ func show_opponent_forfeited_overlay(hud: Node) -> void:
 
 	var leave_btn = Button.new()
 	leave_btn.text = "Leave Now"
-	leave_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn"))
+	leave_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/menus/main_menu.tscn"))
 	vbox.add_child(leave_btn)
 
 	var t = 10
@@ -235,7 +235,7 @@ func show_opponent_forfeited_overlay(hud: Node) -> void:
 			countdown_lbl.text = "Returning to main menu in %d..." % t
 		if t > 0:
 			timer = get_tree().create_timer(1.0)
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	get_tree().change_scene_to_file("res://scenes/ui/menus/main_menu.tscn")
 
 func show_match_ended_overlay(hud: Node, reason: String) -> void:
 	var overlay = Panel.new()
@@ -264,7 +264,7 @@ func show_match_ended_overlay(hud: Node, reason: String) -> void:
 
 	var leave_btn = Button.new()
 	leave_btn.text = "Return to Main Menu"
-	leave_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn"))
+	leave_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/menus/main_menu.tscn"))
 	vbox.add_child(leave_btn)
 
 # ─────────────────────────────────────────────

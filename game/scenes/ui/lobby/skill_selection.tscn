@@ -1,0 +1,137 @@
+[gd_scene format=3 uid="uid://dvhr3ib2bt6ui"]
+
+[ext_resource type="Script" path="res://scenes/ui/lobby/skill_selection.gd" id="1_skill_selection_script"]
+
+[node name="SkillSelection" type="Control" unique_id=1495751273]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_skill_selection_script")
+
+[node name="Title" type="Label" parent="." unique_id=493720343]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -244.0
+offset_right = 244.0
+offset_bottom = 88.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 64
+text = "Select Your Skill"
+horizontal_alignment = 1
+
+[node name="BackButton" type="Button" parent="." unique_id=1271959788]
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 120.0
+offset_bottom = 70.0
+text = "Back"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=318605541]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -469.0
+offset_top = -120.0
+offset_right = 469.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 30
+
+[node name="QuickStrike" type="Button" parent="HBoxContainer" unique_id=1540811535]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Quick Strike"
+
+[node name="DrainTouch" type="Button" parent="HBoxContainer" unique_id=1044311472]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Drain Touch"
+
+[node name="Whiplash" type="Button" parent="HBoxContainer" unique_id=594255832]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Whiplash"
+
+[node name="Soulbreak" type="Button" parent="HBoxContainer" unique_id=2083404031]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Soulbreak"
+
+[node name="Rupture" type="Button" parent="HBoxContainer" unique_id=1159814342]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Rupture"
+
+[node name="Deathmark" type="Button" parent="HBoxContainer" unique_id=1474410182]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Deathmark"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=94622344]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 77.0
+offset_top = -50.5
+offset_right = 208.0
+offset_bottom = 50.5
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Character1" type="Button" parent="VBoxContainer" unique_id=601925813]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "PLAYER NAME 1"
+
+[node name="Character2" type="Button" parent="VBoxContainer" unique_id=1402121066]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "PLAYER NAME 2"
+
+[node name="Character3" type="Button" parent="VBoxContainer" unique_id=1684248812]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "PLAYER NAME 3"
+
+[node name="StartButton" type="Button" parent="." unique_id=987654321]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = 100.0
+offset_right = 100.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+text = "START DUEL"
+
+[connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]
+[connection signal="pressed" from="HBoxContainer/QuickStrike" to="." method="_on_skill_pressed" binds= ["quick_strike"]]
+[connection signal="pressed" from="HBoxContainer/DrainTouch" to="." method="_on_skill_pressed" binds= ["drain_touch"]]
+[connection signal="pressed" from="HBoxContainer/Whiplash" to="." method="_on_skill_pressed" binds= ["whiplash"]]
+[connection signal="pressed" from="HBoxContainer/Soulbreak" to="." method="_on_skill_pressed" binds= ["soulbreak"]]
+[connection signal="pressed" from="HBoxContainer/Rupture" to="." method="_on_skill_pressed" binds= ["rupture"]]
+[connection signal="pressed" from="HBoxContainer/Deathmark" to="." method="_on_skill_pressed" binds= ["deathmark"]]
+[connection signal="pressed" from="StartButton" to="." method="_on_start_game_pressed"]

@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://djx2bxxv1c"]
+
+[ext_resource type="Script" uid="uid://dspkx2usgn4qi" path="res://scenes/ui/hud/victory_screen.gd" id="1_vsc"]
+[ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="2_lcvyk"]
+[ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="3_1x1dp"]
+[ext_resource type="Texture2D" uid="uid://dt4lthgpb54f" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabA-Sheet.png" id="4_ndp4s"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_1x1dp"]
+texture = ExtResource("4_ndp4s")
+region_rect = Rect2(125.82886, 0, 62.340668, 32)
+
+[node name="VictoryScreen" type="Control" unique_id=1459629132]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_vsc")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=965567592]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.784314)
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=2142499346]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=521819700]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ResultLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=2133031157]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_lcvyk")
+theme_override_font_sizes/font_size = 64
+text = "VICTORY!"
+horizontal_alignment = 1
+
+[node name="RematchStatusLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=1949782452]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=882289000]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="BackButton" type="Button" parent="CenterContainer/VBoxContainer/HBoxContainer" unique_id=987618154]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_1x1dp")
+theme_override_styles/normal = SubResource("StyleBoxTexture_1x1dp")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_1x1dp")
+theme_override_styles/hover = SubResource("StyleBoxTexture_1x1dp")
+text = "Back to Menu"
+
+[node name="RematchButton" type="Button" parent="CenterContainer/VBoxContainer/HBoxContainer" unique_id=697300194]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_1x1dp")
+theme_override_styles/normal = SubResource("StyleBoxTexture_1x1dp")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_1x1dp")
+theme_override_styles/hover = SubResource("StyleBoxTexture_1x1dp")
+text = "Rematch"
+
+[node name="MatchAgainButton" type="Button" parent="CenterContainer/VBoxContainer/HBoxContainer" unique_id=1741772620]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_1x1dp")
+theme_override_styles/normal = SubResource("StyleBoxTexture_1x1dp")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_1x1dp")
+theme_override_styles/hover = SubResource("StyleBoxTexture_1x1dp")
+text = "Match Again"
+
+[connection signal="pressed" from="CenterContainer/VBoxContainer/HBoxContainer/BackButton" to="." method="_on_back_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/HBoxContainer/RematchButton" to="." method="_on_rematch_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/HBoxContainer/MatchAgainButton" to="." method="_on_match_again_pressed"]

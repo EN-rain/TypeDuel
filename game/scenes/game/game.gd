@@ -1,17 +1,19 @@
 extends Control
 
 ## Game - thin orchestrator.
-## Heavy logic lives in four child components:
+## Heavy logic lives in five child components:
 ##   AnimationController  - sprites, animations, passive popups
 ##   NetworkSync          - HTTP polling, progress sync, phase PATCH
 ##   TypingHandler        - keyboard input, sentence, mutations, typing UI
 ##   CombatResolver       - round resolution, HP application, victory screens
+##   GameHUD              - HP/mana bars, stats labels, countdown, pause panel
 
 # Component references
 @onready var anim:   Node = $AnimationController
 @onready var net:    Node = $NetworkSync
 @onready var typing: Node = $TypingHandler
 @onready var combat: Node = $CombatResolver
+var hud: Node = null  # Created in _ready()
 
 enum GameState { SKILL_SELECT, TYPING, RESOLVING }
 var current_state: int = GameState.SKILL_SELECT
@@ -54,21 +56,24 @@ var _opp_skills: Array                  = []
 @onready var mana_bar_opp       = $HUD/Stats/EnemyMana
 var SERVER: String:
 	get: return GameManager.SERVER_URL
-var _pause_panel: Panel  = null
-var _pause_visible: bool = false
 
 # ─────────────────────────
 # Lifecycle
 # ─────────────────────────────────────────────
 
 func _ready() -> void:
-	SoundManager.play_music(preload("res://assets/bg-music/fight_looped.wav"))
-	_build_pause_panel()
+	SoundManager.play_music("battle")
+	# Create GameHUD component
+	hud = preload("res://scenes/game/game_hud.gd").new()
+	add_child(hud)
+	hud.init(hp_bar_own, hp_bar_opp, mana_bar_own, mana_bar_opp,
+		stats_label, opp_stats_label, countdown_label, $HUD)
+	hud.on_forfeit = _on_forfeit_pressed
 	call_deferred("_deferred_init")
 
 func _deferred_init() -> void:
 	HPManager.init_game()
-	_update_bars()
+	hud.update_bars()
 	_log("[Init] Game scene loaded | char=%s | opp=%s | room=%s | role=%s" % [
 		GameManager.selected_character, GameManager.opponent_character,
 		GameManager.current_room, _role_tag()])
@@ -101,11 +106,6 @@ func _deferred_init() -> void:
 	if stats_label:     stats_label.show()
 	if opp_stats_label: opp_stats_label.show()
 	if accuracy_warning: accuracy_warning.hide()
-	# Disable percentage display on all bars — values are raw numbers, not percentages.
-	if hp_bar_own:   hp_bar_own.show_percentage   = false
-	if hp_bar_opp:   hp_bar_opp.show_percentage   = false
-	if mana_bar_own: mana_bar_own.show_percentage = false
-	if mana_bar_opp: mana_bar_opp.show_percentage = false
 	if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill1"):
 		$HUD/OwnSkillSelect/HBoxContainer/Skill1.pressed.connect(_on_skill_pressed.bind(1))
 	if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2"):
@@ -281,7 +281,7 @@ func _process_skill_select(delta: float) -> void:
 	else:
 		skill_timer -= delta
 	if countdown_label:
-		_set_countdown("Choose Skill: %d" % max(0, int(ceil(skill_timer))))
+		hud.set_countdown("Choose Skill: %d" % max(0, int(ceil(skill_timer))))
 	if skill_timer <= 0:
 		if not GameManager.is_solo and GameManager.current_room != "":
 			# Host drives the typing phase transition on timer expiry.
@@ -307,7 +307,7 @@ func _process_skill_select(delta: float) -> void:
 	
 	# Update skill button states every frame to reflect current mana
 	_update_skill_buttons()
-	_update_bars()
+	hud.update_bars()
 
 func _process_typing(delta: float) -> void:
 	# Input is blocked until _typing_go_at_ms (handled in _unhandled_input).
@@ -342,10 +342,10 @@ func _process_typing(delta: float) -> void:
 	# Snap resolution
 	if snap_active:
 		if countdown_label:
-			_set_countdown((" You: %d" if (enemy_finished and not i_finished) else " Opp: %d") % max(0, int(ceil(snap_timer))))
+			hud.set_countdown((" You: %d" if (enemy_finished and not i_finished) else " Opp: %d") % max(0, int(ceil(snap_timer))))
 		if i_finished and enemy_finished:
 			snap_active = false
-			if countdown_label: countdown_label.hide(); _last_countdown_text = ""
+			if countdown_label: countdown_label.hide()
 			_log("[Decision] ✓ Both finished within 10s → BUFF mode")
 			_resolve_and_advance("buff"); return
 		if snap_timer <= 0.0:
@@ -368,19 +368,19 @@ func _process_typing(delta: float) -> void:
 					_log("[Decision] ✓ Server confirms opponent finished → BUFF mode (not FULL_POWER)")
 					enemy_finished = true
 					snap_active = false
-					if countdown_label: countdown_label.hide(); _last_countdown_text = ""
+					if countdown_label: countdown_label.hide()
 					_resolve_and_advance("buff")
 				else:
 					_log("[Decision] ✓ Opponent DNF (we finished, they didn't) → FULL_POWER mode")
 					_resolve_and_advance("full_power")
 			return
 	else:
-		if countdown_label: _set_countdown("%d" % max(0, int(ceil(round_timer))))
+		if countdown_label: hud.set_countdown("%d" % max(0, int(ceil(round_timer))))
 		if round_timer <= 0.0:
 			_log("[Decision] ✗ 60s timer expired, neither finished → NO_ATTACK mode (-5 HP both)")
 			_resolve_and_advance("no_attack"); return
 	# Stats HUD
-	_update_stats_hud()
+	hud.update_stats_hud(typing, net, _server_typing_started_at_ms, _server_first_finish_at_ms, _get_synced_ms)
 	# Progress bars
 	own_progress_bar.max_value = 1.0
 	var own_prog = typing.get_progress()
@@ -391,76 +391,10 @@ func _process_typing(delta: float) -> void:
 	enemy_progress_bar.max_value = 1.0
 	enemy_progress_bar.value     = net.opp_progress
 	# HP / Mana bars
-	_update_bars()
+	hud.update_bars()
 	net.sync_progress_with_queue(typing.current_index, typing.target_sentence.length(),
 		typing.typos_count, chosen_skill_id, typing.queued_mutations,
 		accuracy_warning != null and accuracy_warning.visible)
-
-var _last_countdown_text: String = ""
-var _last_stats_text: String = ""
-var _last_opp_stats_text: String = ""
-
-func _set_countdown(text: String) -> void:
-	if countdown_label and _last_countdown_text != text:
-		_last_countdown_text = text
-		countdown_label.text = text
-
-func _update_bars() -> void:
-	if hp_bar_own:
-		hp_bar_own.max_value = HPManager.player_max_hp
-		hp_bar_own.value     = HPManager.player_hp
-		var lbl = hp_bar_own.get_node_or_null("OwnHpLabel")
-		if lbl: lbl.text = "%d" % int(HPManager.player_hp)
-	if hp_bar_opp:
-		hp_bar_opp.max_value = HPManager.opponent_max_hp
-		hp_bar_opp.value     = HPManager.opponent_hp
-		var lbl = hp_bar_opp.get_node_or_null("EnemyHpLabel")
-		if lbl: lbl.text = "%d" % int(HPManager.opponent_hp)
-	if mana_bar_own:
-		mana_bar_own.max_value = 10
-		mana_bar_own.value     = SkillsManager.player_mana
-		var lbl = mana_bar_own.get_node_or_null("OwnManaLabel")
-		if lbl: lbl.text = "%d" % SkillsManager.player_mana
-	if mana_bar_opp:
-		mana_bar_opp.max_value = 10
-		mana_bar_opp.value     = SkillsManager.opponent_mana
-		var lbl = mana_bar_opp.get_node_or_null("EnemyManaLabel")
-		if lbl: lbl.text = "%d" % SkillsManager.opponent_mana
-
-func _update_stats_hud() -> void:
-	if stats_label:
-		var t = "WPM: %d | Typos: %d | Acc: %.1f%%" % [typing.get_wpm(), typing.typos_count, typing.get_accuracy()]
-		if t != _last_stats_text:
-			_last_stats_text = t
-			stats_label.text = t
-	if opp_stats_label:
-		var opp_prog = net.opp_progress
-		var sentence_len = float(typing.target_sentence.length())
-		var opp_chars = opp_prog * sentence_len
-		var opp_words = opp_chars / 5.0
-		
-		# Calculate opponent WPM
-		var opp_wpm := 0
-		if opp_prog >= 0.999:
-			# Opponent finished - use their finish time to lock WPM
-			if _server_first_finish_at_ms > 0.0 and _server_typing_started_at_ms > 0.0:
-				var finish_elapsed_min = (_server_first_finish_at_ms - _server_typing_started_at_ms) / 60000.0
-				opp_wpm = int(opp_words / finish_elapsed_min) if finish_elapsed_min > 0 else 0
-		else:
-			# Opponent still typing - calculate real-time WPM
-			var elapsed_min := 0.0
-			if not GameManager.is_solo and GameManager.current_room != "" and _server_typing_started_at_ms > 0.0:
-				var now_ms := _get_synced_ms()
-				if now_ms > _server_typing_started_at_ms:
-					elapsed_min = (now_ms - _server_typing_started_at_ms) / 60000.0
-			opp_wpm = int(opp_words / elapsed_min) if elapsed_min > 0 else 0
-		
-		var opp_total = opp_chars + float(net.opp_typos)
-		var opp_acc = clampf((opp_chars / opp_total) * 100.0, 0.0, 100.0) if opp_total > 0 else 100.0
-		var t2 = "WPM: %d | Typos: %d | Acc: %.1f%%" % [opp_wpm, net.opp_typos, opp_acc]
-		if t2 != _last_opp_stats_text:
-			_last_opp_stats_text = t2
-			opp_stats_label.text = t2
 
 # 
 # Input
@@ -479,7 +413,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
-			_toggle_pause_panel(); return
+			hud.toggle_pause_panel(); return
 
 	if current_state != GameState.TYPING: return
 	if not GameManager.is_solo and GameManager.current_room != "" and _server_phase == "typing" and _server_typing_started_at_ms > 0.0:
@@ -581,7 +515,7 @@ func _on_you_forfeited() -> void:
 	# Apply penalty for forfeiting
 	_apply_forfeit_penalty()
 	
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	get_tree().change_scene_to_file("res://scenes/ui/menus/main_menu.tscn")
 
 func _on_match_ended(_reason: String) -> void:
 	if _victory_shown: return
@@ -627,7 +561,7 @@ func _on_i_finished() -> void:
 	
 	if enemy_finished:
 		snap_active = false
-		if countdown_label: countdown_label.hide(); _last_countdown_text = ""
+		if countdown_label: countdown_label.hide()
 		net.sync_progress_immediate(typing.current_index, typing.target_sentence.length(), typing.typos_count, chosen_skill_id)
 		_log("[Decision] ✓ Finished SECOND → DEBUFF mode")
 		_resolve_and_advance("debuff")
@@ -653,7 +587,7 @@ func _resolve_and_advance(finish_mode: String) -> void:
 	if current_state == GameState.RESOLVING: return
 	current_state = GameState.RESOLVING
 	_last_resolved_round_id = max(_last_resolved_round_id, _server_round_id)
-	if countdown_label:  countdown_label.hide(); _last_countdown_text = ""
+	if countdown_label:  countdown_label.hide()
 	if typing_label:     typing_label.hide(); typing_label.modulate.a = 1.0
 	# Keep stats labels visible during combat resolution so players can see their performance
 	
@@ -672,7 +606,7 @@ func _resolve_and_advance(finish_mode: String) -> void:
 				[chosen_skill_id, correct_letters, typing.total_keystrokes, required])
 	
 	var _result = combat.resolve(finish_mode, chosen_skill_id, net.opp_progress, _server_first_finish_at_ms, current_round)
-	_update_bars()  # Reflect HP/mana changes from resolution immediately
+	hud.update_bars()  # Reflect HP/mana changes from resolution immediately
 	
 	# Sync HP to server immediately after resolution so polling doesn't overwrite
 	# correct local HP with stale server values during the animation window.
@@ -805,49 +739,15 @@ func _update_skill_icons() -> void:
 		var s2 = SkillsManager.selected_skills[1]
 		if has_node("HUD/OwnSkillSelect/HBoxContainer/Skill2/TextureRect"):
 			$HUD/OwnSkillSelect/HBoxContainer/Skill2/TextureRect.texture = SkillsManager.SKILL_ICONS.get(s2)
-# 
-
-func _build_pause_panel() -> void:
-	_pause_panel = Panel.new()
-	_pause_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_pause_panel.custom_minimum_size = Vector2(320, 180)
-	_pause_panel.visible = false
-	_pause_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	$HUD.add_child(_pause_panel)
-	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 24; vbox.offset_top = 24
-	vbox.offset_right = -24; vbox.offset_bottom = -24
-	vbox.add_theme_constant_override("separation", 16)
-	_pause_panel.add_child(vbox)
-	var title = Label.new()
-	title.text = "Game Paused"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
-	vbox.add_child(title)
-	var btn_resume = Button.new()
-	btn_resume.text = "Resume"
-	btn_resume.pressed.connect(_toggle_pause_panel)
-	vbox.add_child(btn_resume)
-	var btn_leave = Button.new()
-	btn_leave.text = "Forfeit & Leave"
-	btn_leave.pressed.connect(_on_forfeit_pressed)
-	vbox.add_child(btn_leave)
-
-func _toggle_pause_panel() -> void:
-	_pause_visible = !_pause_visible
-	if is_instance_valid(_pause_panel):
-		_pause_panel.visible = _pause_visible
 
 func _on_forfeit_pressed() -> void:
-	_pause_visible = false
-	if is_instance_valid(_pause_panel): _pause_panel.visible = false
+	# Called by GameHUD when "Forfeit & Leave" button is pressed
 	if not GameManager.is_solo and GameManager.current_room != "":
 		_apply_forfeit_penalty()
 		net.delete_room()
 		VoiceManager.leave_room()
 		GameManager.current_room = ""
-	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+	get_tree().change_scene_to_file("res://scenes/ui/menus/main_menu.tscn")
 
 # ─────────────────────────────────────────────
 # Utilities
@@ -869,7 +769,6 @@ func _fade_in_typing_label() -> void:
 	await tween.finished
 	if countdown_label and current_state == GameState.TYPING:
 		countdown_label.show()
-		_last_countdown_text = ""  # force re-render
 
 func _swap_controls(a: Control, b: Control) -> void:
 	if a == null or b == null: return

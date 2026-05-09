@@ -5,8 +5,8 @@ extends CanvasLayer
 ## Usage: TransitionManager.to("res://path/scene.tscn")
 ##        TransitionManager.to_game("res://scenes/game/game.tscn")
 
-const TRANSITION_SCENE     = preload("res://scenes/ui/transition.tscn")
-const TRANSITION_TWO_SCENE = preload("res://scenes/ui/TransitionTwo.tscn")
+const TRANSITION_SCENE     = preload("res://scenes/ui/transitions/transition.tscn")
+const TRANSITION_TWO_SCENE = preload("res://scenes/ui/transitions/transition_two.tscn")
 
 var _transition: Control = null
 var _anim: AnimationPlayer = null

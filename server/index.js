@@ -78,6 +78,9 @@ httpServer.listen(PORT, () => {
     console.log('Connected to SQLite database');
     initDb();
 
+    // Start room cleanup interval (auto-forfeit + TTL eviction)
+    require('./controllers/roomController').startCleanup();
+
     // only purge global chat messages, not DMs.
     // DM room IDs follow the pattern 'dm_<id>_<id>'; global chat uses 'global'.
     // This prevents users losing private conversation history.

@@ -21,3 +21,6 @@ server/data/feedback.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Kilo
+.kilocode/

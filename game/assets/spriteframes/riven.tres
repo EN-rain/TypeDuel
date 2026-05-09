@@ -1,11 +1,11 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://dmfjwy3sta5qw"]
 
-[ext_resource type="Texture2D" uid="uid://cwqutpp1dqojn" path="res://assets/sprites/character-death.png" id="1_xpc20"]
-[ext_resource type="Texture2D" uid="uid://6q51tqrtb03x" path="res://assets/sprites/character-hurt.png" id="2_x5cv0"]
-[ext_resource type="Texture2D" uid="uid://d166euwfpuobv" path="res://assets/sprites/character-idle.png" id="3_fldip"]
-[ext_resource type="Texture2D" uid="uid://bli5tth4ovr8t" path="res://assets/sprites/character-quickslash.png" id="4_b66h7"]
-[ext_resource type="Texture2D" uid="uid://tknjl8pqs5y5" path="res://assets/sprites/character-soulbreak.png" id="5_3ty54"]
-[ext_resource type="Texture2D" uid="uid://ch84dyxvdl7k0" path="res://assets/sprites/character-whipsplash.png" id="6_2s6e3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/character-death.png" id="1_xpc20"]
+[ext_resource type="Texture2D" path="res://assets/sprites/character-hurt.png" id="2_x5cv0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/character-idle.png" id="3_fldip"]
+[ext_resource type="Texture2D" path="res://assets/sprites/character-quickslash.png" id="4_b66h7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/character-soulbreak.png" id="5_3ty54"]
+[ext_resource type="Texture2D" path="res://assets/sprites/character-whipsplash.png" id="6_2s6e3"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_scv06"]
 atlas = ExtResource("1_xpc20")

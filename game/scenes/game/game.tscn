@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bmsqrto3isa4a" path="res://scenes/game/game.gd" id="1_game_gd"]
 [ext_resource type="Texture2D" uid="uid://cru6ltepkd3fr" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Assets/Tiles.png" id="3_lakwo"]
-[ext_resource type="Texture2D" uid="uid://ic0is52jbtpd" path="res://assets/GUI/colosseum-bg.png" id="6_bdhmt"]
+[ext_resource type="Texture2D" uid="uid://ic0is52jbtpd" path="res://assets/gui/colosseum-bg.png" id="6_bdhmt"]
 [ext_resource type="Script" uid="uid://dmr300ctl4yd8" path="res://scenes/game/animation_controller.gd" id="10_anim_ctrl"]
 [ext_resource type="Script" uid="uid://bgn84alc3smp5" path="res://scenes/game/network_sync.gd" id="11_net_sync"]
 [ext_resource type="Script" uid="uid://frxg518kays6" path="res://scenes/game/typing_handler.gd" id="12_typing"]

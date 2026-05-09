@@ -1,0 +1,390 @@
+[gd_scene format=3 uid="uid://bpbh12tqu7abl"]
+
+[ext_resource type="Script" uid="uid://cm08hoggnme0a" path="res://scenes/ui/menus/account.gd" id="1_settings_script"]
+[ext_resource type="Texture2D" uid="uid://dexwtfdpn8fs7" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_8j5j1"]
+[ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="3_4j7lo"]
+[ext_resource type="Texture2D" uid="uid://cfjp1slue2lno" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderA-Sheet.png" id="3_c0ciy"]
+[ext_resource type="Texture2D" uid="uid://clfvkogrp5e3k" path="res://assets/gui/def.png" id="6_22geo"]
+[ext_resource type="FontFile" uid="uid://cd48lc408i0qx" path="res://assets/fonts/pixel_operator/PixelOperator8-Bold.ttf" id="6_khvee"]
+[ext_resource type="Texture2D" uid="uid://bdct065ju36yh" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/goldenbutton.png" id="8_22geo"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4j7lo"]
+texture = ExtResource("3_c0ciy")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_account_input"]
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Animation" id="Animation_account_reset"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Control:modulate:a")
+tracks/0/interp = 1
+tracks/0/loop_wrap = false
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Control2:modulate:a")
+tracks/1/interp = 1
+tracks/1/loop_wrap = false
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BackButton:modulate:a")
+tracks/2/interp = 1
+tracks/2/loop_wrap = false
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_account_fadein"]
+resource_name = "fade_in"
+length = 0.4
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Control:modulate:a")
+tracks/0/interp = 2
+tracks/0/loop_wrap = false
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Control2:modulate:a")
+tracks/1/interp = 2
+tracks/1/loop_wrap = false
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("BackButton:modulate:a")
+tracks/2/interp = 2
+tracks/2/loop_wrap = false
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_account"]
+_data = {
+&"RESET": SubResource("Animation_account_reset"),
+&"fade_in": SubResource("Animation_account_fadein")
+}
+
+[node name="Account" type="Control" unique_id=1832984600]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings_script")
+
+[node name="Bg" type="TextureRect" parent="." unique_id=1887144098]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_8j5j1")
+metadata/_edit_lock_ = true
+
+[node name="BackButton" type="Button" parent="." unique_id=849240718]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 1
+offset_right = 300.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_styles/normal = SubResource("StyleBoxTexture_4j7lo")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_4j7lo")
+theme_override_styles/hover = SubResource("StyleBoxTexture_4j7lo")
+text = "Back to Menu"
+
+[node name="Control" type="Control" parent="." unique_id=50217605]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -40.0
+offset_top = -20.0
+offset_bottom = 20.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="PFP" type="TextureRect" parent="Control" unique_id=645872083]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6197917
+anchor_top = 0.25925925
+anchor_right = 0.7934028
+anchor_bottom = 0.56790125
+offset_left = -605.7917
+offset_top = -236.37038
+offset_right = -262.7361
+offset_bottom = 101.28395
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+texture = ExtResource("6_22geo")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ChangePFPButton" type="Button" parent="Control" unique_id=1638788306]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = -500.0
+offset_top = 149.0
+offset_right = -300.0
+offset_bottom = 199.0
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+text = " "
+
+[node name="TextureRect" type="TextureRect" parent="Control/ChangePFPButton" unique_id=603264184]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("8_22geo")
+
+[node name="Label" type="Label" parent="Control/ChangePFPButton" unique_id=1372425677]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -29.0
+offset_top = -11.5
+offset_right = 29.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+text = "Change"
+
+[node name="Control2" type="Control" parent="." unique_id=1143818297]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SaveButton" type="Button" parent="Control2" unique_id=1321472439]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 100.0
+offset_top = 500.0
+offset_right = 300.0
+offset_bottom = 550.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_font_sizes/font_size = 20
+text = "Save Changes"
+
+[node name="TextureRect" type="TextureRect" parent="Control2/SaveButton" unique_id=1367325995]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("8_22geo")
+metadata/_edit_lock_ = true
+
+[node name="Label" type="Label" parent="Control2/SaveButton" unique_id=1897483491]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -29.0
+offset_top = -11.5
+offset_right = 29.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+text = "Save Changes"
+metadata/_edit_lock_ = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control2" unique_id=26434344]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 68.0
+offset_top = -200.0
+offset_right = 368.0
+offset_bottom = 200.0
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="Control2/VBoxContainer" unique_id=2117485580]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("6_khvee")
+theme_override_font_sizes/font_size = 32
+text = "Account"
+horizontal_alignment = 1
+
+[node name="UsernameLabel" type="Label" parent="Control2/VBoxContainer" unique_id=1477476891]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+text = "Username:"
+
+[node name="UsernameDisplay" type="LineEdit" parent="Control2/VBoxContainer" unique_id=1477476893]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_uneditable_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.5)
+theme_override_colors/caret_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_styles/normal = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_account_input")
+placeholder_text = "Username"
+editable = false
+
+[node name="DisplayNameLabel" type="Label" parent="Control2/VBoxContainer" unique_id=1477476892]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+text = "In-game Name:"
+
+[node name="DisplayNameInput" type="LineEdit" parent="Control2/VBoxContainer" unique_id=1310931705]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.5)
+theme_override_colors/caret_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_styles/normal = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_account_input")
+placeholder_text = "Enter in-game name"
+
+[node name="PasswordLabel" type="Label" parent="Control2/VBoxContainer" unique_id=885569531]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_4j7lo")
+text = "Change Password:"
+
+[node name="PasswordInput" type="LineEdit" parent="Control2/VBoxContainer" unique_id=1072349181]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.5)
+theme_override_colors/caret_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_4j7lo")
+theme_override_styles/normal = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_account_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_account_input")
+placeholder_text = "New password"
+secret = true
+
+[node name="StatusLabel" type="Label" parent="Control2/VBoxContainer" unique_id=1819294478]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+horizontal_alignment = 1
+
+[node name="HTTPRequest" type="HTTPRequest" parent="." unique_id=1940745539]
+unique_name_in_owner = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1940745540]
+libraries/ = SubResource("AnimationLibrary_account")
+
+[node name="FileDialog" type="FileDialog" parent="." unique_id=1203934336]
+unique_name_in_owner = true
+oversampling_override = 1.0
+title = "Open a File"
+initial_position = 2
+size = Vector2i(600, 400)
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.png", "*.jpg", "*.jpeg")
+
+[node name="UploadRequest" type="HTTPRequest" parent="." unique_id=203356162]
+unique_name_in_owner = true
+
+[connection signal="pressed" from="BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="Control/ChangePFPButton" to="." method="_on_change_pfp_button_pressed"]
+[connection signal="pressed" from="Control2/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="file_selected" from="FileDialog" to="." method="_on_file_dialog_file_selected"]
+[connection signal="request_completed" from="HTTPRequest" to="." method="_on_request_completed"]
+[connection signal="request_completed" from="UploadRequest" to="." method="_on_upload_completed"]

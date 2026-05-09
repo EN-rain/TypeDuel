@@ -1,0 +1,225 @@
+[gd_scene format=3 uid="uid://cw6ya0kyka2o7"]
+
+[ext_resource type="Script" uid="uid://bycn2sw6cvv86" path="res://scenes/ui/social/chat_box.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://hcq5v2df66mt" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoul9SlicesA-Sheet.png" id="2_ekf4m"]
+[ext_resource type="FontFile" uid="uid://bicshrxinrma8" path="res://assets/fonts/pixel_operator/PixelOperator-Bold.ttf" id="2_ttgj5"]
+[ext_resource type="Texture2D" uid="uid://k1onegaedhti" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="3_8duet"]
+[ext_resource type="Texture2D" uid="uid://d2pef68okqu8n" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabC-Sheet.png" id="4_8duet"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fake_input"]
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 0.8)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8duet"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ekf4m"]
+texture = ExtResource("3_8duet")
+expand_margin_top = 5.0
+expand_margin_bottom = 5.0
+region_rect = Rect2(9.403561, 1.7053108, 80.75658, 29.676697)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_e5nt5"]
+texture = ExtResource("4_8duet")
+expand_margin_top = 5.0
+expand_margin_bottom = 5.0
+region_rect = Rect2(298.40326, 0.45930958, 79.80496, 30.769241)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_on03g"]
+texture = ExtResource("4_8duet")
+expand_margin_top = 5.0
+expand_margin_bottom = 5.0
+region_rect = Rect2(105.80341, 0.9869194, 84.64419, 30.248983)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pxgi3"]
+texture = ExtResource("3_8duet")
+expand_margin_top = 5.0
+expand_margin_bottom = 5.0
+region_rect = Rect2(200.70346, 0.26227188, 85.59955, 30.935719)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.6)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_54s74"]
+texture = ExtResource("3_8duet")
+region_rect = Rect2(105.519, 0.742, 86.69829, 31.23)
+
+[node name="ChatBox" type="Control" unique_id=2065769119]
+custom_minimum_size = Vector2(300, 40)
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+offset_right = 300.0
+grow_vertical = 0
+script = ExtResource("1_script")
+
+[node name="FakeInput" type="LineEdit" parent="." unique_id=1733821694]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -24.0
+offset_right = 20.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 1
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.6)
+theme_override_styles/normal = SubResource("StyleBoxFlat_fake_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_fake_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_fake_input")
+placeholder_text = "No messages yet..."
+editable = false
+context_menu_enabled = false
+shortcut_keys_enabled = false
+middle_mouse_paste_enabled = false
+selecting_enabled = false
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+
+[node name="ChatPanel" type="Panel" parent="." unique_id=1299220153]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 0
+offset_left = -494.0
+offset_top = -608.0
+offset_right = -67.0
+offset_bottom = 40.0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_8duet")
+
+[node name="TextureRect" type="TextureRect" parent="ChatPanel" unique_id=1811200690]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_ekf4m")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ChatPanel" unique_id=1562125884]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 38.0
+offset_top = 94.0
+offset_right = -35.0
+offset_bottom = -88.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TabContainer" type="HBoxContainer" parent="ChatPanel/VBoxContainer" unique_id=291931917]
+layout_mode = 2
+
+[node name="GlobalBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=923167655]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_ttgj5")
+theme_override_styles/normal = SubResource("StyleBoxTexture_ekf4m")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_ekf4m")
+theme_override_styles/hover = SubResource("StyleBoxTexture_ekf4m")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_e5nt5")
+text = "Global"
+
+[node name="LocalBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=123456789]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_ttgj5")
+theme_override_styles/normal = SubResource("StyleBoxTexture_on03g")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_on03g")
+theme_override_styles/hover = SubResource("StyleBoxTexture_on03g")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_e5nt5")
+text = "Local"
+
+[node name="FriendBtn" type="Button" parent="ChatPanel/VBoxContainer/TabContainer" unique_id=807212193]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_ttgj5")
+theme_override_styles/normal = SubResource("StyleBoxTexture_pxgi3")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_pxgi3")
+theme_override_styles/hover = SubResource("StyleBoxTexture_pxgi3")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_e5nt5")
+text = "Friends"
+
+[node name="ContentHBox" type="HBoxContainer" parent="ChatPanel/VBoxContainer" unique_id=954597114]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="FriendsListScroll" type="ScrollContainer" parent="ChatPanel/VBoxContainer/ContentHBox" unique_id=2056069187]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="FriendsListVBox" type="VBoxContainer" parent="ChatPanel/VBoxContainer/ContentHBox/FriendsListScroll" unique_id=85254825]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ChatPanel/VBoxContainer/ContentHBox" unique_id=1129583243]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="MessagesMargin" type="MarginContainer" parent="ChatPanel/VBoxContainer/ContentHBox/ScrollContainer" unique_id=1129583244]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="MessagesVBox" type="VBoxContainer" parent="ChatPanel/VBoxContainer/ContentHBox/ScrollContainer/MessagesMargin" unique_id=1475129079]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="InputHBox" type="HBoxContainer" parent="ChatPanel/VBoxContainer" unique_id=725803065]
+layout_mode = 2
+
+[node name="RealInput" type="LineEdit" parent="ChatPanel/VBoxContainer/InputHBox" unique_id=225915263]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxFlat_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_input")
+placeholder_text = "Type message..."
+
+[node name="SendButton" type="Button" parent="ChatPanel/VBoxContainer/InputHBox" unique_id=1634010114]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = ExtResource("2_ttgj5")
+theme_override_styles/normal = SubResource("StyleBoxTexture_54s74")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_54s74")
+theme_override_styles/hover = SubResource("StyleBoxTexture_54s74")
+text = "Send"
+
+[connection signal="pressed" from="ChatPanel/VBoxContainer/TabContainer/GlobalBtn" to="." method="_switch_tab" binds=["global"]]
+[connection signal="pressed" from="ChatPanel/VBoxContainer/TabContainer/LocalBtn" to="." method="_switch_tab" binds=["local"]]
+[connection signal="pressed" from="ChatPanel/VBoxContainer/TabContainer/FriendBtn" to="." method="_switch_tab" binds=["friends"]]
+[connection signal="gui_input" from="FakeInput" to="." method="_on_fake_input_gui_input"]
+[connection signal="text_submitted" from="ChatPanel/VBoxContainer/InputHBox/RealInput" to="." method="_on_send_pressed"]
+[connection signal="pressed" from="ChatPanel/VBoxContainer/InputHBox/SendButton" to="." method="_on_send_pressed"]

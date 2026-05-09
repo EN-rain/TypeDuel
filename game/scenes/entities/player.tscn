@@ -7,10 +7,10 @@
 [ext_resource type="Texture2D" uid="uid://bli5tth4ovr8t" path="res://assets/sprites/character-quickslash.png" id="5_quickslash"]
 [ext_resource type="Texture2D" uid="uid://tknjl8pqs5y5" path="res://assets/sprites/character-soulbreak.png" id="6_soulbreak"]
 [ext_resource type="Texture2D" uid="uid://ch84dyxvdl7k0" path="res://assets/sprites/character-whipsplash.png" id="7_whiplash"]
-[ext_resource type="AudioStream" uid="uid://eucr874kfnnj" path="res://assets/sfxx/human-vocal-female-02-death-02.ogg" id="8_73kkf"]
-[ext_resource type="AudioStream" uid="uid://brjns803cs2v4" path="res://assets/sfxx/human-vocal-male-death-short-01.ogg" id="9_n5sgd"]
-[ext_resource type="AudioStream" uid="uid://yd7wa7tywo3s" path="res://assets/sfxx/weapons-sword-hit-flesh-bone-01.ogg" id="10_5ki56"]
-[ext_resource type="AudioStream" uid="uid://q2ins8y6utjq" path="res://assets/sfxx/weapons-sword-hit-flesh-bone-02.ogg" id="11_saib0"]
+[ext_resource type="AudioStream" uid="uid://eucr874kfnnj" path="res://assets/sfx/human-vocal-female-02-death-02.ogg" id="8_73kkf"]
+[ext_resource type="AudioStream" uid="uid://brjns803cs2v4" path="res://assets/sfx/human-vocal-male-death-short-01.ogg" id="9_n5sgd"]
+[ext_resource type="AudioStream" uid="uid://yd7wa7tywo3s" path="res://assets/sfx/weapons-sword-hit-flesh-bone-01.ogg" id="10_5ki56"]
+[ext_resource type="AudioStream" uid="uid://q2ins8y6utjq" path="res://assets/sfx/weapons-sword-hit-flesh-bone-02.ogg" id="11_saib0"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_idle1"]
 atlas = ExtResource("4_idle")

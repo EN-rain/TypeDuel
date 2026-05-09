@@ -1,0 +1,213 @@
+[gd_scene format=3 uid="uid://ddvx3nrcraoi2"]
+
+[ext_resource type="Script" uid="uid://dsdrb5rouqcn" path="res://scenes/ui/menus/login_scene.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/terrain/Legacy-Fantasy - High Forest 2.3/Background/Background.png" id="2_lbwr1"]
+[ext_resource type="Texture2D" uid="uid://qyxdpvractgy" path="res://assets/gui/panels/wide.png" id="3_lbwr1"]
+[ext_resource type="FontFile" uid="uid://5ubrm6llr3w" path="res://assets/fonts/pixel_operator/PixelOperatorHB.ttf" id="4_lbwr1"]
+[ext_resource type="Texture2D" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/20250420manaTabG-Sheet.png" id="4_y4nnd"]
+[ext_resource type="Texture2D" path="res://assets/gui/tinyRPG_manaSoulGUI_v_1_0/20250420manaSoulHeaderB-Sheet.png" id="5_lbwr1"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_2y4yy"]
+texture = ExtResource("4_y4nnd")
+region_rect = Rect2(6.8021755, 1.8212166, 84.11852, 30.588554)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_w0kpr"]
+texture = ExtResource("4_y4nnd")
+texture_margin_left = 5.0
+texture_margin_right = 5.0
+region_rect = Rect2(5.9094925, 1.9423103, 82.843994, 27.08361)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_fqs66"]
+texture = ExtResource("4_y4nnd")
+texture_margin_left = 5.0
+texture_margin_right = 5.0
+region_rect = Rect2(7.104553, 1.9501419, 82.04617, 27.638893)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_b28s0"]
+texture = ExtResource("4_y4nnd")
+texture_margin_left = 5.0
+texture_margin_right = 5.0
+region_rect = Rect2(7.7334366, 0.96408844, 81.32618, 28.818863)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_x2kxg"]
+texture = ExtResource("4_y4nnd")
+texture_margin_left = 5.0
+texture_margin_right = 5.0
+region_rect = Rect2(6.725113, 1.5133936, 83.86608, 29.863846)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_y4btu"]
+texture = ExtResource("4_y4nnd")
+texture_margin_left = 5.0
+texture_margin_right = 5.0
+region_rect = Rect2(1.6115499, 1.7793274, 88.792694, 29.597565)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_login_input"]
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4oet8"]
+texture = ExtResource("5_lbwr1")
+expand_margin_top = 5.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_lbwr1"]
+texture = ExtResource("5_lbwr1")
+expand_margin_top = 5.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_y4nnd"]
+texture = ExtResource("5_lbwr1")
+expand_margin_top = 5.0
+expand_margin_bottom = 5.0
+region_rect = Rect2(-0.30527687, -0.39167976, 96.79671, 21.910067)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_gd0qc"]
+texture = ExtResource("5_lbwr1")
+texture_margin_top = 5.0
+texture_margin_bottom = 5.0
+
+[node name="LoginScene" type="Control" unique_id=1989823630]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="TextureRectBG" type="TextureRect" parent="." unique_id=37374678]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_lbwr1")
+
+[node name="TextureRect2" type="TextureRect" parent="." unique_id=702788667]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -342.75
+offset_top = -251.0
+offset_right = 342.75
+offset_bottom = 251.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_lbwr1")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1476602903]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -127.5
+offset_top = -86.0
+offset_right = 127.5
+offset_bottom = 86.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="ModeSelection" type="HBoxContainer" parent="VBoxContainer" unique_id=1347137463]
+layout_mode = 2
+alignment = 1
+
+[node name="LoginMode" type="Button" parent="VBoxContainer/ModeSelection" unique_id=1796452491]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_lbwr1")
+theme_override_styles/normal = SubResource("StyleBoxTexture_2y4yy")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_w0kpr")
+theme_override_styles/hover = SubResource("StyleBoxTexture_fqs66")
+toggle_mode = true
+button_pressed = true
+text = "Login"
+
+[node name="Control" type="Control" parent="VBoxContainer/ModeSelection" unique_id=635886030]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RegisterMode" type="Button" parent="VBoxContainer/ModeSelection" unique_id=765247541]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_lbwr1")
+theme_override_styles/normal = SubResource("StyleBoxTexture_b28s0")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_x2kxg")
+theme_override_styles/hover = SubResource("StyleBoxTexture_y4btu")
+toggle_mode = true
+text = "Register"
+
+[node name="UsernameInput" type="LineEdit" parent="VBoxContainer" unique_id=1595294602]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.5)
+theme_override_colors/caret_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_lbwr1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_login_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_login_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_login_input")
+placeholder_text = "Username"
+
+[node name="PasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=2125274411]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.5)
+theme_override_colors/caret_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_lbwr1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_login_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_login_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_login_input")
+placeholder_text = "Password"
+secret = true
+
+[node name="ConfirmPasswordInput" type="LineEdit" parent="VBoxContainer" unique_id=2125274412]
+visible = false
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_placeholder_color = Color(0, 0, 0, 0.5)
+theme_override_colors/caret_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_lbwr1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_login_input")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_login_input")
+theme_override_styles/focus = SubResource("StyleBoxFlat_login_input")
+placeholder_text = "Confirm Password"
+secret = true
+
+[node name="ConfirmButton" type="Button" parent="VBoxContainer" unique_id=1401338039]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_lbwr1")
+theme_override_styles/normal = SubResource("StyleBoxTexture_4oet8")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_lbwr1")
+theme_override_styles/hover = SubResource("StyleBoxTexture_y4nnd")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_gd0qc")
+text = "Confirm"
+
+[node name="ErrorLabel" type="Label" parent="VBoxContainer" unique_id=968648316]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_lbwr1")
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="HTTPRequest" type="HTTPRequest" parent="." unique_id=407115910]
+unique_name_in_owner = true
+
+[connection signal="pressed" from="VBoxContainer/ModeSelection/LoginMode" to="." method="_on_mode_selected" binds=[true]]
+[connection signal="pressed" from="VBoxContainer/ModeSelection/RegisterMode" to="." method="_on_mode_selected" binds=[false]]
+[connection signal="pressed" from="VBoxContainer/ConfirmButton" to="." method="_on_confirm_pressed"]
+[connection signal="request_completed" from="HTTPRequest" to="." method="_on_request_completed"]

@@ -3,7 +3,7 @@ extends Node
 ## Global Game Manager Singleton
 ## Register this in Project Settings > Autoload as 'Game' or 'GameManager'
 
-const SERVER_URL = "https://typeduel-267041003037.asia-southeast1.run.app"
+const SERVER_URL = "http://127.0.0.1:3000"
 
 signal game_started
 signal game_ended(results: Dictionary)
@@ -12,7 +12,7 @@ signal connection_status_changed(online: bool)
 var is_online: bool = true
 var _connection_error_overlay: CanvasLayer = null
 var _consecutive_connection_failures: int = 0
-const CONNECTION_LOST_SCENE = preload("res://scenes/ui/connection_lost_overlay.tscn")
+const CONNECTION_LOST_SCENE = preload("res://scenes/ui/hud/connection_lost_overlay.tscn")
 
 const PASSIVES = [
 	{"id": "reversal", "name": "Reversal"},
@@ -97,12 +97,16 @@ func set_connection_online(online: bool) -> void:
 	connection_status_changed.emit(is_online)
 	_toggle_connection_overlay(!is_online)
 
-func _on_scene_changed(node: Node) -> void:
+func _on_scene_changed(_node: Node) -> void:
 	# Hide the persistent background in scenes that have their own background.
 	# Show it in all other UI scenes to prevent black flashes between transitions.
 	var bg_layer = get_node_or_null("PersistentBackground")
 	if bg_layer == null: return
-	var scene_name = node.name if node else ""
+	
+	# Check current scene name to decide visibility
+	var current_scene = get_tree().current_scene
+	var scene_name = current_scene.name if current_scene else ""
+	
 	# These scenes have their own backgrounds — hide the persistent one
 	var has_own_bg = scene_name in ["Game", "CustomRoom"]
 	bg_layer.visible = not has_own_bg
@@ -194,7 +198,7 @@ func send_logout():
 
 # ── Profile picture loading ───────────────────────────────────────────────────
 # Shared cache so every scene reuses already-fetched textures.
-const DEFAULT_PFP = preload("res://assets/GUI/def.png")
+const DEFAULT_PFP = preload("res://assets/gui/hud/def.png")
 var _pfp_cache: Dictionary = {}
 
 ## Load a profile icon into a TextureRect.

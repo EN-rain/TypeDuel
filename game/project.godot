@@ -25,6 +25,7 @@ ManaManager="*res://scripts/autoload/ManaManager.gd"
 TransitionManager="*res://scripts/autoload/TransitionManager.gd"
 VoiceManager="*res://scripts/autoload/VoiceManager.gd"
 SoundManager="*res://scenes/music/sound_manager.tscn"
+BotManager="*res://scripts/autoload/BotManager.gd"
 
 [display]
 

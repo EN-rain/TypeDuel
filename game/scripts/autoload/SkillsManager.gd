@@ -15,9 +15,9 @@ const SKILL_COSTS = {
 }
 
 const SKILL_ICONS = {
-	"quickslash": preload("res://assets/GUI/FREE RPG SKILL ICONS 32x32/quickstrike.png"),
-	"whiplash":   preload("res://assets/GUI/FREE RPG SKILL ICONS 32x32/doubleslash.png"),
-	"soulbreak":  preload("res://assets/GUI/FREE RPG SKILL ICONS 32x32/horizontalcut.png")
+	"quickslash": preload("res://assets/gui/icons/FREE RPG SKILL ICONS 32x32/quickstrike.png"),
+	"whiplash":   preload("res://assets/gui/icons/FREE RPG SKILL ICONS 32x32/doubleslash.png"),
+	"soulbreak":  preload("res://assets/gui/icons/FREE RPG SKILL ICONS 32x32/horizontalcut.png")
 }
 
 # ─────────────────────────────────────────────
