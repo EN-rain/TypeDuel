@@ -22,5 +22,9 @@ server/data/feedback.json
 .DS_Store
 Thumbs.db
 
-# Kilo
+# Tools
+.kilo/
 .kilocode/
+.kiro/
+.orchids/
+.vscode/
